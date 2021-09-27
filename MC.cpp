@@ -19,6 +19,14 @@ public:
     double anistropic_parameter = 0;
 };
 
+// Information about base in the cell
+class BaseSite {
+public:
+    // Information from POSCAR
+    vector<vector<double>> coordinate;
+    vector<char[2]> elements;
+};
+
 // Information to control Monte Carlo circling.
 class MonteCarlo {
 public:
@@ -39,7 +47,6 @@ public:
 // Data of each site.
 class Site {
 public:
-    vector<int> coordinate = {0, 0, 0};
     vector<double> spin = {0, 0, 0};
 
     // Information connected with chemical elements.
@@ -58,4 +65,36 @@ public:
 
 int main() {
     return 0;
+}
+
+int ReadOptions() {
+    //TODO: Process options from command line.
+}
+
+int ReadPOSCAR() {
+    //TODO: Read information about base and lattice from POSCAR(default).
+}
+
+int ReadSettingFile() {
+    //TODO: Read information about enlarging and Monte Carlo from given setting file.
+}
+
+int EnlargeCell() {
+    //TODO: Enlarge the system with given number.
+}
+
+int MonteCarloStep() {
+    //TODO: Do Monte Carlo simulation, with given flipping number.
+}
+
+int Flip() {
+    //TODO: Flip one spin.
+}
+
+int WriteSpin() {
+    //TODO: Output spin states of all atoms.
+}
+
+int WriteOutput() {
+    //TODO: Output Monte Carlo results.
 }
