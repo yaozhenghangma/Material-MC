@@ -75,7 +75,12 @@ public:
 
 class SuperCell {
 public:
-//TODO: overwrite the operator []
+    Lattice lattice;
+    BaseSite base_site;
+    vector<vector<vector<vector<Site>>>> site;
+
+    Site & operator[](vector<int> n);
+    double energy();
 };
 
 int main() {
@@ -90,8 +95,27 @@ int main() {
     return 0;
 }
 
-int RandomInt(int n) {
-    //TODO: Return a integer between 0 and n.
+Site & SuperCell::operator[](vector<int> n) {
+    return this->site[n[0]][n[1]][n[2]][n[3]];
+}
+
+double SuperCell::energy() {
+    double energy = 0;
+    for(int i=0; i<this->lattice.n_x; i++) {
+        for(int j=0; j<this->lattice.n_y; j++) {
+            for(int k=0; k<this->lattice.n_z; k++) {
+                for(int l=0; l<this->base_site.number; k++) {
+                    energy += this->site[i][j][k][l].energy;
+                }
+            }
+        }
+    }
+
+    return energy*0.5;
+}
+
+vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
+    //TODO: Return the site index randomly.
 }
 
 vector<double> RandomSpin() {
@@ -118,21 +142,22 @@ int EnlargeCell() {
     //TODO: Enlarge the system with given number.
 }
 
-int MonteCarloStep(Lattice & lattice_data, BaseSite & base_data, SuperCell & site_data, MonteCarlo & monte_carlo, double T) {
-    //TODO: Do Monte Carlo simulation, with given flipping number.
-    int x, y, z = 0;
-    int base_n = 0;
+double MonteCarloStep(SuperCell & super_cell, MonteCarlo & monte_carlo, double T) {
+    // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
+    vector<int> site_chosen;
+    double total_energy = 0;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
-            x = RandomInt(lattice_data.n_x);
-            y = RandomInt(lattice_data.n_y);
-            z = RandomInt(lattice_data.n_z);
-            base_n = RandomInt(base_data.number);
+            site_chosen = RandomSite(super_cell.lattice.n_x, super_cell.lattice.n_y, super_cell.lattice.n_z, super_cell.base_site.number);
+            Flip(super_cell.lattice, super_cell.base_site, super_cell[site_chosen], T);
         }
+        total_energy += super_cell.energy();
     }
+    
+    return total_energy / monte_carlo.count_step;
 }
 
-int Flip(Lattice & lattice_data, BaseSite & base_data, Site & one_site, double T) {
+int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     // Flip one spin.
     // Energy and spin before flip.
     double energy = one_site.energy;
@@ -140,7 +165,7 @@ int Flip(Lattice & lattice_data, BaseSite & base_data, Site & one_site, double T
 
     // Energy and spin after flip.
     one_site.spin = RandomSpin();
-    one_site.energy = lattice_data.Hamiltonian(base_data, one_site);
+    one_site.energy = lattice.Hamiltonian(base_site, one_site);
     double de = one_site.energy - energy;
 
     // Judge whether to flip.
