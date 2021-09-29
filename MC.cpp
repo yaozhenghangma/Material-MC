@@ -142,6 +142,19 @@ int EnlargeCell() {
     //TODO: Enlarge the system with given number.
 }
 
+int MonteCarloRelaxing(SuperCell & super_cell, MonteCarlo & monte_carlo, double T) {
+    // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
+    vector<int> site_chosen;
+    for(int i=0; i<monte_carlo.relax_step; i++) {
+        for(int j=0; j<monte_carlo.flip_number; j++) {
+            site_chosen = RandomSite(super_cell.lattice.n_x, super_cell.lattice.n_y, super_cell.lattice.n_z, super_cell.base_site.number);
+            Flip(super_cell.lattice, super_cell.base_site, super_cell[site_chosen], T);
+        }
+    }
+    
+    return 0;
+}
+
 double MonteCarloStep(SuperCell & super_cell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
