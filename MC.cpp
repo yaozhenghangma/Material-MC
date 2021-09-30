@@ -82,10 +82,17 @@ public:
     double energy();
 };
 
+int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file);
 int usage(char* program);
 
-int main() {
-    //TODO: Read information from command line.
+int main(int argc, char** argv) {
+    // Read information from command line.
+    string  cell_structure_file = "POSCAR";
+    string input_file = "input.txt"; 
+    string output_file = "output.txt";
+    string spin_structure_file = "spin.txt";
+    ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file);
+
     //TODO: Read information from POSCAR
     //TODO: Read information from input file.
     //TODO: Enlarge the cell with given n.
