@@ -2,6 +2,8 @@
 #include<math.h>
 #include<iostream>
 #include<random>
+#include<stdlib.h>
+#include<unistd.h>
 #include<vector>
 
 using namespace std;
@@ -80,6 +82,8 @@ public:
     double energy();
 };
 
+int usage(char* program);
+
 int main() {
     //TODO: Read information from command line.
     //TODO: Read information from POSCAR
@@ -145,11 +149,36 @@ vector<double> RandomSpin() {
 }
 
 double RandomFloat() {
-    //TODO: Return a float number between 0 and 1.
+    // Return a float number between 0 and 1.
+    static random_device rd;
+    static mt19937 engine(rd());
+    static uniform_real_distribution<double> double_distribution(0, 1);
+
+    return double_distribution(engine);
 }
 
-int ReadOptions() {
-    //TODO: Process options from command line.
+int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file) {
+    // Process options from command line.
+    char option;
+    while ((option = getopt(argc, argv, "c:i:o:s:h")) != -1) {
+        switch (option) {
+            case 'c':
+                cell_structure_file = optarg; break;
+            case 'i':
+                input_file = optarg; break;
+            case 'o':
+                output_file = optarg; break;
+            case 's':
+                spin_structure_file = optarg; break;
+            case 'h':
+                usage(argv[0]);
+        }
+    }
+}
+
+int usage(char* program) {
+    //TODO: Usage of the program.
+    exit(1);
 }
 
 int ReadPOSCAR() {
