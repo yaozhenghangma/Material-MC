@@ -1,3 +1,4 @@
+#include<fmt/core.h>
 #include<functional>
 #include<math.h>
 #include<iostream>
