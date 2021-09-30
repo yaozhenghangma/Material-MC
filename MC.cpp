@@ -1,6 +1,7 @@
 #include<functional>
 #include<math.h>
 #include<iostream>
+#include<random>
 #include<vector>
 
 using namespace std;
@@ -21,7 +22,7 @@ public:
     int n_y = 0;
     int n_z = 0;
     double anistropic_parameter = 0;
-
+    int neighbor_number = 3;
 
     // Hamiltonian function to calculate energy for one site
     function<double(BaseSite &, Site &)> Hamiltonian;
@@ -45,15 +46,11 @@ public:
     char element[2];
     float spin_scaling = 0;
     double magnetic_factor = 0;
-    double super_exchange_parameter[5];
+    vector<double> super_exchange_parameter = {};
     double energy = 0;
 
     // Nearest neighbors.
-    vector<Site*> first_nn;
-    vector<Site*> second_nn;
-    vector<Site*> third_nn;
-    vector<Site*> fourth_nn;
-    vector<Site*> fifth_nn;
+    vector<vector<Site*>> neighbor = {};
 };
 
 // Information to control Monte Carlo circling.
@@ -115,11 +112,36 @@ double SuperCell::energy() {
 }
 
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
-    //TODO: Return the site index randomly.
+    // Return the site index randomly.
+    static random_device rd;
+    static mt19937 engine(rd());
+    static uniform_int_distribution<int> int_distribution_x(0, n_x-1);
+    static uniform_int_distribution<int> int_distribution_y(0, n_y-1);
+    static uniform_int_distribution<int> int_distribution_z(0, n_z-1);
+    static uniform_int_distribution<int> int_distribution_base(0, base_n-1);
+
+    vector<int> index = {0, 0, 0, 0};
+
+    index[0] = int_distribution_x(engine);
+    index[1] = int_distribution_y(engine);
+    index[2] = int_distribution_z(engine);
+    index[3] = int_distribution_base(engine);
+
+    return index;
 }
 
 vector<double> RandomSpin() {
-    //TODO: Return a spin vector randomly.
+    // Return a unit spin vector randomly.
+    static random_device rd;
+    static mt19937 engine(rd());
+    static normal_distribution<double> normal{0, 1};
+
+    double x1 = normal(engine);
+    double x2 = normal(engine);
+    double x3 = normal(engine);
+    double factor = 1/sqrt(x1*x1+x2*x2+x3*x3);
+
+    return {x1*factor, x2*factor, x3*factor};
 }
 
 double RandomFloat() {
