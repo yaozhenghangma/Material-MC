@@ -37,7 +37,7 @@ public:
     // Information from POSCAR
     int number;
     vector<vector<double>> coordinate;
-    vector<char[2]> elements;
+    vector<char[3]> elements;
 };
 
 // Data of each site.
@@ -46,7 +46,7 @@ public:
     vector<double> spin = {0, 0, 0};
 
     // Information connected with chemical elements.
-    char element[2];
+    char element[3] = "  ";
     float spin_scaling = 0;
     double magnetic_factor = 0;
     vector<double> super_exchange_parameter = {};
@@ -73,7 +73,7 @@ public:
     int flip_number = 0;
 };
 
-class SuperCell {
+class Supercell {
 public:
     Lattice lattice;
     BaseSite base_site;
@@ -104,11 +104,11 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-Site & SuperCell::operator[](vector<int> n) {
+Site & Supercell::operator[](vector<int> n) {
     return this->site[n[0]][n[1]][n[2]][n[3]];
 }
 
-double SuperCell::energy() {
+double Supercell::energy() {
     double energy = 0;
     for(int i=0; i<this->lattice.n_x; i++) {
         for(int j=0; j<this->lattice.n_y; j++) {
@@ -197,33 +197,52 @@ int ReadSettingFile() {
     //TODO: Read information about enlarging and Monte Carlo from given setting file.
 }
 
-int EnlargeCell() {
-    //TODO: Enlarge the system with given number.
+int EnlargeCell(Supercell & supercell) {
+    // Enlarge the system with given number.
+    vector<vector<vector<Site>>> site1;
+    vector<vector<Site>> site2;
+    vector<Site> site3;
+    Site site4;
+
+    for(int i=0; i<supercell.lattice.n_x; i++) {
+        supercell.site.push_back(site1);
+        for(int j=0; j<supercell.lattice.n_y; j++) {
+            supercell.site[i].push_back(site2);
+            for(int k=0; k<supercell.lattice.n_z; k++) {
+                supercell.site[i][j].push_back(site3);
+                for(int l=0; l<supercell.base_site.number; l++) {
+                    supercell.site[i][j][k].push_back(site4);
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
-int MonteCarloRelaxing(SuperCell & super_cell, MonteCarlo & monte_carlo, double T) {
+int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
     for(int i=0; i<monte_carlo.relax_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
-            site_chosen = RandomSite(super_cell.lattice.n_x, super_cell.lattice.n_y, super_cell.lattice.n_z, super_cell.base_site.number);
-            Flip(super_cell.lattice, super_cell.base_site, super_cell[site_chosen], T);
+            site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
+            Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
     }
     
     return 0;
 }
 
-double MonteCarloStep(SuperCell & super_cell, MonteCarlo & monte_carlo, double T) {
+double MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
     double total_energy = 0;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
-            site_chosen = RandomSite(super_cell.lattice.n_x, super_cell.lattice.n_y, super_cell.lattice.n_z, super_cell.base_site.number);
-            Flip(super_cell.lattice, super_cell.base_site, super_cell[site_chosen], T);
+            site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
+            Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
-        total_energy += super_cell.energy();
+        total_energy += supercell.energy();
     }
     
     return total_energy / monte_carlo.count_step;
