@@ -81,6 +81,7 @@ public:
 
     Site & operator[](vector<int> n);
     double energy();
+    double momentum();
 };
 
 int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file);
@@ -109,18 +110,35 @@ Site & Supercell::operator[](vector<int> n) {
 }
 
 double Supercell::energy() {
-    double energy = 0;
+    double e = 0;
     for(int i=0; i<this->lattice.n_x; i++) {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
                 for(int l=0; l<this->base_site.number; k++) {
-                    energy += this->site[i][j][k][l].energy;
+                    e += this->site[i][j][k][l].energy;
                 }
             }
         }
     }
 
-    return energy*0.5;
+    return e*0.5;
+}
+
+double Supercell::momentum() {
+    vector<double> m = {0, 0, 0};
+    for(int i=0; i<this->lattice.n_x; i++) {
+        for(int j=0; j<this->lattice.n_y; j++) {
+            for(int k=0; k<this->lattice.n_z; k++) {
+                for(int l=0; l<this->base_site.number; k++) {
+                    m[0] += this->site[i][j][k][l].spin[0];
+                    m[1] += this->site[i][j][k][l].spin[1];
+                    m[2] += this->site[i][j][k][l].spin[2];
+                }
+            }
+        }
+    }
+
+    return sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2]);
 }
 
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
@@ -233,19 +251,22 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
     return 0;
 }
 
-double MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
+vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
     double total_energy = 0;
+    double total_momentum = 0;
+    static double one_over_step = 1 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
             Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
         total_energy += supercell.energy();
+        total_momentum += supercell.momentum();
     }
     
-    return total_energy / monte_carlo.count_step;
+    return {total_energy * one_over_step, total_momentum * one_over_step};
 }
 
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
