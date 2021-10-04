@@ -1,0 +1,3 @@
+[submodule "include/fmt"]
+	path = include/fmt
+	url = https://github.com/fmtlib/fmt
