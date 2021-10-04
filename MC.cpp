@@ -278,7 +278,110 @@ int AddDistance(double distance, vector<double> & distance_list) {
 int InitializeSupercell(Supercell & supercell) {
     // Initialize the neighbors' link and energy.
     if(supercell.lattice.layered) {
+        // Find the neighbors for every base sites in a cell.
+        // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
+        vector<vector<vector<vector<int>>>> neighbors_index_ab;
+        vector<vector<vector<vector<int>>>> neighbors_index_c;
 
+        for(int i=0; i<supercell.base_site.number; i++) {
+            vector<vector<vector<int>>> index1;
+            neighbors_index_ab.push_back(index1);
+            neighbors_index_c.push_back(index1);
+            for(int j=0; j<supercell.lattice.neighbor_number; j++) {
+                vector<vector<int>> index2;
+                neighbors_index_ab[i].push_back(index2);
+                neighbors_index_c[i].push_back(index2);
+            }
+        }
+
+        for(int i=0; i<supercell.base_site.number; i++) {
+            // Neighbors for i-th base site.
+            vector<double> distance_list_ab(supercell.lattice.neighbor_number, 0);
+            vector<double> distance_list_c(supercell.lattice.neighbor_number, 0);
+            double distance_square = 0;
+
+            // Find the distance values.
+            for(int j=-supercell.lattice.neighbor_number; j<supercell.lattice.neighbor_number+1; j++) {
+                for(int k=-supercell.lattice.neighbor_number+abs(j); k<supercell.lattice.neighbor_number-abs(j); k++) {
+                    for(int l=-supercell.lattice.neighbor_number+abs(j)+abs(k); l<supercell.lattice.neighbor_number-abs(k)-abs(j); l++) {
+                        for(int m=0; m<supercell.base_site.number; m++) {
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
+
+                            if(distance_square == 0.0) {
+                                continue;
+                            } else if(l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
+                                AddDistance(distance_square, distance_list_c);
+                            } else {
+                                AddDistance(distance_square, distance_list_ab);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Find link.
+            for(int j=-supercell.lattice.neighbor_number; j<supercell.lattice.neighbor_number+1; j++) {
+                for(int k=-supercell.lattice.neighbor_number+abs(j); k<supercell.lattice.neighbor_number-abs(j); k++) {
+                    for(int l=-supercell.lattice.neighbor_number+abs(j)+abs(k); l<supercell.lattice.neighbor_number-abs(k)-abs(j); l++) {
+                        for(int m=0; m<supercell.base_site.number; m++) {
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
+
+                            if(distance_square == 0.0) {
+                                continue;
+                            } else if (l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
+                                for(int n=0; n<supercell.lattice.neighbor_number; n++) {
+                                    if(distance_square == distance_list_c[n]) {
+                                        vector<int> ind = {j, k, l, m};
+                                        neighbors_index_c[i][n].emplace_back(ind);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                for(int n=0; n<supercell.lattice.neighbor_number; n++) {
+                                    if(distance_square == distance_list_ab[n]) {
+                                        vector<int> ind = {j, k, l, m};
+                                        neighbors_index_ab[i][n].emplace_back(ind);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Set link for every sites.
+        for(int i=0; i<supercell.lattice.n_x; i++) {
+            for(int j=0; j<supercell.lattice.n_y; j++) {
+                for(int k=0; k<supercell.lattice.n_z; k++) {
+                    for(int l=0; l<supercell.base_site.number; l++) {
+                        vector<Site*> temp = {};
+                        for(int m=0; m<supercell.lattice.neighbor_number; m++) {
+                            supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
+                            for(int n=0; n<neighbors_index_ab[l][m].size(); n++) {
+                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( \ 
+                                & supercell.site[(i+neighbors_index_ab[l][m][n][0]+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                                [(j+neighbors_index_ab[l][m][n][1]+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                                [k] \
+                                [neighbors_index_ab[l][m][n][3]]);
+                            }
+
+                            supercell.site[i][j][k][l].neighbor_c.push_back(temp);
+                            for(int n=0; n<neighbors_index_c[l][m].size(); n++) {
+                                supercell.site[i][j][k][l].neighbor_c[m].push_back( \ 
+                                & supercell.site[(i+neighbors_index_c[l][m][n][0]+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                                [(j+neighbors_index_c[l][m][n][1]+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                                [(k+neighbors_index_c[l][m][n][2]+supercell.lattice.n_z) % supercell.lattice.n_z] \
+                                [neighbors_index_c[l][m][n][3]]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     } else {
         // Find the neighbors for every base sites in a cell.
         // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
