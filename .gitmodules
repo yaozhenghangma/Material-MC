@@ -1,3 +1,6 @@
 [submodule "include/fmt"]
 	path = include/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "include/scnlib"]
+	path = include/scnlib
+	url = https://github.com/eliaskosunen/scnlib
