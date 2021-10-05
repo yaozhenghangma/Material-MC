@@ -531,6 +531,7 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index_c[l][m][n][3]]);
                             }
                         }
+                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
@@ -613,6 +614,7 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index[l][m][n][3]]);
                             }
                         }
+                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
