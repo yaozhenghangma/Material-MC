@@ -450,8 +450,8 @@ int InitializeSupercell(Supercell & supercell) {
                             supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
                             for(int n=0; n<neighbors_index_ab[l][m].size(); n++) {
                                 supercell.site[i][j][k][l].neighbor_ab[m].push_back( \ 
-                                & supercell.site[(i+neighbors_index_ab[l][m][n][0]+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index_ab[l][m][n][1]+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                                & supercell.site[(i+neighbors_index_ab[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                                [(j+neighbors_index_ab[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
                                 [k] \
                                 [neighbors_index_ab[l][m][n][3]]);
                             }
@@ -459,9 +459,9 @@ int InitializeSupercell(Supercell & supercell) {
                             supercell.site[i][j][k][l].neighbor_c.push_back(temp);
                             for(int n=0; n<neighbors_index_c[l][m].size(); n++) {
                                 supercell.site[i][j][k][l].neighbor_c[m].push_back( \ 
-                                & supercell.site[(i+neighbors_index_c[l][m][n][0]+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index_c[l][m][n][1]+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                                [(k+neighbors_index_c[l][m][n][2]+supercell.lattice.n_z) % supercell.lattice.n_z] \
+                                & supercell.site[(i+neighbors_index_c[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                                [(j+neighbors_index_c[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                                [(k+neighbors_index_c[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
                                 [neighbors_index_c[l][m][n][3]]);
                             }
                         }
@@ -541,9 +541,9 @@ int InitializeSupercell(Supercell & supercell) {
                             supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
                             for(int n=0; n<neighbors_index[l][m].size(); n++) {
                                 supercell.site[i][j][k][l].neighbor_ab[m].push_back( \ 
-                                & supercell.site[(i+neighbors_index[l][m][n][0]+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index[l][m][n][1]+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                                [(k+neighbors_index[l][m][n][2]+supercell.lattice.n_z) % supercell.lattice.n_z] \
+                                & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                                [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                                [(k+neighbors_index[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
                                 [neighbors_index[l][m][n][3]]);
                             }
                         }
