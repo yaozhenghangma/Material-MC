@@ -1,9 +1,14 @@
+#include<ctll.hpp>
+#include<ctre.hpp>
+#include<fstream>
 #include<fmt/core.h>
 #include<functional>
 #include<math.h>
 #include<iostream>
 #include<random>
+#include<scn/scn.h>
 #include<stdlib.h>
+#include<string>
 #include<unistd.h>
 #include<vector>
 
@@ -40,10 +45,14 @@ public:
     // Information from POSCAR
     int number;
     vector<vector<double>> coordinate;
+    vector<double> spin_scaling; // Default value: 1.0.
+    vector<double> anistropic_factor; // Default value: 1.0.
+    vector<string> elements;
+
+    // Input information
+    bool all_magnetic = true;
     vector<vector<double>> super_exchange_parameter;
-    vector<double> spin_scaling;
-    vector<double> magnetic_factor;
-    vector<char[3]> elements;
+    double anistropic_factor_D = 0.0; // Factor D in Hamiltonian: anistropic_factor_D * anistropic_factor.
 };
 
 // Data of each site.
@@ -51,11 +60,7 @@ class Site {
 public:
     vector<double> spin = {0, 0, 0};
 
-    // Information connected with chemical elements.
-    //char element[3] = "  ";
-    //float spin_scaling = 0;
-    //double magnetic_factor = 0;
-    //vector<double> super_exchange_parameter = {};
+    // Statistical variations.
     double energy = 0;
     //TODO: store the momentum
 
@@ -215,8 +220,90 @@ int usage(char* program) {
     exit(1);
 }
 
-int ReadPOSCAR() {
-    //TODO: Read information about base and lattice from POSCAR(default).
+int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
+    // Read information about base and lattice from POSCAR(default).
+    string str;
+    static constexpr auto pattern = ctll::fixed_string{ R"(\s+)" };
+    ifstream in;
+    in.open(cell_structure_file, ios::in);
+
+    getline(in, str); // Comment line.
+    getline(in, str); // Lattice constant.
+    scn::scan(str, "{}", supercell.lattice.scaling);
+
+    // Vector a, b and c.
+    getline(in, str); 
+    scn::scan(str, "{} {} {}", supercell.lattice.a[0], supercell.lattice.a[1], supercell.lattice.a[2]);
+    getline(in, str); 
+    scn::scan(str, "{} {} {}", supercell.lattice.b[0], supercell.lattice.b[1], supercell.lattice.b[2]);
+    getline(in, str); 
+    scn::scan(str, "{} {} {}", supercell.lattice.c[0], supercell.lattice.c[1], supercell.lattice.c[2]);
+
+    // All elements.
+    vector<string> elements;
+    getline(in, str);
+    for(auto e: ctre::split<pattern>(str)) {
+        elements.push_back(string(e.get<0>()));
+    }
+
+    // All elements' number.
+    vector<int> elements_number;
+    getline(in, str);
+    for(auto e: ctre::split<pattern>(str)) {
+        elements_number.push_back(stoi(string(e.get<0>())));
+    }
+
+    // Store magnetic elements
+    vector<double> tmp_coordinate = {0, 0, 0};
+    string tmp_string;
+    double tmp_spin_scaling;
+    double tmp_anistropic_factor;
+    supercell.base_site.number = 0;
+    if(supercell.base_site.all_magnetic) {
+        for(int i=0; i<elements.size(); i++) {
+            for(int j=0; j<elements_number[i]; j++) {
+                getline(in, str);
+                tmp_spin_scaling = 1;
+                tmp_anistropic_factor = 1;
+                scn::scan(str, "{0} {1} {2} {3} {4} {5}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2], tmp_string, tmp_spin_scaling, tmp_anistropic_factor);
+                supercell.base_site.coordinate.push_back(tmp_coordinate);
+                supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
+                supercell.base_site.anistropic_factor.push_back(tmp_anistropic_factor);
+                supercell.base_site.elements.push_back(elements[i]);
+            }
+            supercell.base_site.number += elements_number[i];
+        }
+    } else {
+        vector<string> magnetic_elements = supercell.base_site.elements;
+        supercell.base_site.elements = {};
+        int i=0;
+        for(int k=0; k<magnetic_elements.size(); k++) {
+            for(; i<elements.size(); ) {
+                if(magnetic_elements[k] == elements[i]) {
+                    for(int j=0; j<elements_number[i]; j++) {
+                        getline(in, str);
+                        tmp_spin_scaling = 1;
+                        tmp_anistropic_factor = 1;
+                        scn::scan(str, "{0} {1} {2} {3} {4} {5}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2], tmp_string, tmp_spin_scaling, tmp_anistropic_factor);
+                        supercell.base_site.coordinate.push_back(tmp_coordinate);
+                        supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
+                        supercell.base_site.anistropic_factor.push_back(tmp_anistropic_factor);
+                        supercell.base_site.elements.push_back(elements[i]);
+                    }
+                    supercell.base_site.number += elements_number[i];
+                    i++;
+                } else {
+                    for(int j=0; j<elements_number[i]; j++) {
+                        getline(in, str);
+                    }
+                    i++;
+                    break;
+                }
+            }
+        }
+    }
+    
+    return 0;
 }
 
 int ReadSettingFile() {
