@@ -2,6 +2,7 @@
 #include<ctre.hpp>
 #include<fstream>
 #include<fmt/core.h>
+#include<fmt/os.h>
 #include<functional>
 #include<math.h>
 #include<iostream>
@@ -620,7 +621,6 @@ int InitializeSupercell(Supercell & supercell) {
             }
         }
     }
-    // TODO: initialize energy
     return 0;
 }
 
@@ -680,6 +680,15 @@ int WriteSpin() {
     //TODO: Output spin states of all atoms.
 }
 
-int WriteOutput() {
-    //TODO: Output Monte Carlo results.
+int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> Moment, vector<double> Ki, string output_file) {
+    // Output Monte Carlo results.
+    double T = monte_carlo.start_temperature;
+    auto out = fmt::output_file(output_file);
+    out.print("T\tEnergy\tCv\tMoment\tKi\n");
+    for(int i=0; i<monte_carlo.temperature_step_number; i++) {
+        out.print("{}\t{}\t{}\t{}\t{}\n", T, energy[i], Cv[i], Moment[i], Ki[i]);
+        T += monte_carlo.temperature_step;
+    }
+    out.close();
+    return 0;
 }
