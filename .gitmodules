@@ -4,3 +4,6 @@
 [submodule "include/scnlib"]
 	path = include/scnlib
 	url = https://github.com/eliaskosunen/scnlib
+[submodule "include/ctre"]
+	path = include/ctre
+	url = https://github.com/hanickadot/compile-time-regular-expressions
