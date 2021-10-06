@@ -15,7 +15,7 @@
 
 using namespace std;
 
-const double KB = 1;
+const double KB = 0.08617343;
 
 // Information about the lattice.
 class Lattice {
@@ -101,9 +101,22 @@ public:
     double momentum();
 };
 
+vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n);
+vector<double> RandomSpin(double scaling);
+double RandomFloat();
 int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file_prefix);
 int usage(char* program);
-
+int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string input_file);
+int ReadPOSCAR(Supercell & supercell, string cell_structure_file);
+int EnlargeCell(Supercell & supercell);
+double Distance(vector<double>, vector<double>, vector<double>, vector<int>, vector<double>, vector<double>);
+int AddDistance(double distance, vector<double> & distance_list);
+int InitializeSupercell(Supercell & supercell);
+int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T);
+vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T);
+int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T);
+int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T);
+int WriteOutput(MonteCarlo &, vector<double>, vector<double>, vector<double>, vector<double>, string);
 double Heisenberg(BaseSite & base_site, Site & site);
 
 int main(int argc, char** argv) {
@@ -114,13 +127,38 @@ int main(int argc, char** argv) {
     string spin_structure_file_prefix = "spin";
     ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
-    //TODO: Read information from POSCAR
-    //TODO: Read information from input file.
-    //TODO: Enlarge the cell with given n.
-    //TODO: Initialize the site information (spin and energy).
-    //TODO: Monte Carlo
-    //TODO: Output spin state at every temperature.
-    //TODO: Output the thermal dynamic result.
+    Supercell supercell;
+    MonteCarlo monte_carlo;
+
+    // Read information from input file.
+    ReadSettingFile(supercell, monte_carlo, input_file);
+    double T = monte_carlo.start_temperature;
+
+    // Read information from POSCAR
+    ReadPOSCAR(supercell, cell_structure_file);
+
+    // Enlarge the cell with given n.
+    EnlargeCell(supercell);
+    InitializeSupercell(supercell);
+
+    // Monte Carlo
+    vector<double> energy;
+    vector<double> Cv;
+    vector<double> moment;
+    vector<double> Ki;
+    vector<double> tmp_value = {0, 0, 0, 0};
+    for(int i=0; i<monte_carlo.temperature_step_number; i++) { // Loop for temperature
+        MonteCarloRelaxing(supercell, monte_carlo, T);
+        tmp_value = MonteCarloStep(supercell, monte_carlo, T);
+        energy.push_back(tmp_value[0]);
+        moment.push_back(tmp_value[2]);
+        Cv.push_back(tmp_value[1] - tmp_value[0] * tmp_value[0]);
+        Ki.push_back(tmp_value[3] - tmp_value[2] * tmp_value[2]);
+        WriteSpin(supercell, spin_structure_file_prefix, T);
+    }
+
+    // Output the thermal dynamic result.
+    WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
     return 0;
 }
 
@@ -709,19 +747,27 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
+    double tmp_energy = 0;
     double total_energy = 0;
+    double total_energy_square = 0;
+    double tmp_momentum = 0;
     double total_momentum = 0;
+    double total_momentum_square = 0;
     static double one_over_step = 1 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
             Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
-        total_energy += supercell.energy();
-        total_momentum += supercell.momentum();
+        tmp_energy = supercell.energy();
+        total_energy += tmp_energy;
+        total_energy_square += tmp_energy * tmp_energy;
+        tmp_momentum = supercell.momentum();
+        total_momentum += tmp_momentum;
+        total_momentum_square += tmp_momentum * tmp_momentum;
     }
     
-    return {total_energy * one_over_step, total_momentum * one_over_step};
+    return {total_energy * one_over_step, total_energy_square * one_over_step, total_momentum * one_over_step, total_momentum_square * one_over_step};
 }
 
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
@@ -775,13 +821,13 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
     return 0;
 }
 
-int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> Moment, vector<double> Ki, string output_file) {
+int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> moment, vector<double> Ki, string output_file) {
     // Output Monte Carlo results.
     double T = monte_carlo.start_temperature;
     auto out = fmt::output_file(output_file);
     out.print("T\tEnergy\tCv\tMoment\tKi\n");
     for(int i=0; i<monte_carlo.temperature_step_number; i++) {
-        out.print("{}\t{}\t{}\t{}\t{}\n", T, energy[i], Cv[i], Moment[i], Ki[i]);
+        out.print("{}\t{}\t{}\t{}\t{}\n", T, energy[i], Cv[i], moment[i], Ki[i]);
         T += monte_carlo.temperature_step;
     }
     out.close();
