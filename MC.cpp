@@ -97,7 +97,7 @@ public:
     double momentum();
 };
 
-int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file);
+int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file_prefix);
 int usage(char* program);
 
 double Heisenberg(BaseSite & base_site, Site & site);
@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
     string  cell_structure_file = "POSCAR";
     string input_file = "input.txt"; 
     string output_file = "output.txt";
-    string spin_structure_file = "spin.txt";
-    ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file);
+    string spin_structure_file_prefix = "spin";
+    ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
     //TODO: Read information from POSCAR
     //TODO: Read information from input file.
@@ -198,7 +198,7 @@ double RandomFloat() {
     return double_distribution(engine);
 }
 
-int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file) {
+int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file_prefix) {
     // Process options from command line.
     char option;
     while ((option = getopt(argc, argv, "c:i:o:s:h")) != -1) {
@@ -210,7 +210,7 @@ int ReadOptions(int argc, char** argv, string & cell_structure_file, string & in
             case 'o':
                 output_file = optarg; break;
             case 's':
-                spin_structure_file = optarg; break;
+                spin_structure_file_prefix = optarg; break;
             case 'h':
                 usage(argv[0]);
         }
@@ -696,8 +696,34 @@ int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     return 0;
 }
 
-int WriteSpin() {
-    //TODO: Output spin states of all atoms.
+int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T) {
+    // Output spin states of all atoms.
+    string output_file_name = spin_structure_file_prefix + to_string(T) + ".xsf";
+    auto out = fmt::output_file(output_file_name);
+    out.print("CRYSTAL\n");
+    out.print("PRIMVEC\n");
+    out.print("{} {} {}\n", supercell.lattice.a[0]*supercell.lattice.n_x*5, supercell.lattice.a[1]*supercell.lattice.n_x*5, supercell.lattice.a[2]*supercell.lattice.n_x*5);
+    out.print("{} {} {}\n", supercell.lattice.b[0]*supercell.lattice.n_y*5, supercell.lattice.b[1]*supercell.lattice.n_y*5, supercell.lattice.b[2]*supercell.lattice.n_y*5);
+    out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*5, supercell.lattice.c[1]*supercell.lattice.n_z*5, supercell.lattice.c[2]*supercell.lattice.n_z*5);
+    out.print("PRIMCOORD\n");
+    out.print("{} 1\n", supercell.base_site.number*supercell.lattice.n_x*supercell.lattice.n_y*supercell.lattice.n_z);
+    for(int i=0; i<supercell.lattice.n_x; i++) {
+        for(int j=0; j<supercell.lattice.n_y; j++) {
+            for(int k=0; k<supercell.lattice.n_z; k++) {
+                for(int l=0; l<supercell.base_site.number; l++) {
+                    out.print("{} {} {} {} {} {} {}\n", supercell.base_site.elements[l], \
+                    supercell.base_site.coordinate[l][0] + i, \
+                    supercell.base_site.coordinate[l][1] + j, \
+                    supercell.base_site.coordinate[l][2] + k, \
+                    supercell.site[i][j][k][l].spin[0], \
+                    supercell.site[i][j][k][l].spin[1], \
+                    supercell.site[i][j][k][l].spin[2]);
+                }
+            }
+        }
+    }
+    out.close();
+    return 0;
 }
 
 int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> Moment, vector<double> Ki, string output_file) {
