@@ -285,6 +285,20 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
             supercell.base_site.elements.pop_back();
         }
     }
+    vector<double> tmp_vector;
+    int i=0;
+    while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+        supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
+        for(auto e:ctre::split<pattern>(str)) {
+            tmp_str = string(e.get<0>());
+            if(tmp_str[0] == '#') {
+                break;
+            } else {
+                supercell.base_site.super_exchange_parameter[i].push_back(stod(tmp_str));
+            }
+        }
+        i++;
+    }
 
     in.close();
     return 0;
@@ -330,6 +344,8 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
     double tmp_anisotropic_factor;
     supercell.base_site.number = 0;
     if(supercell.base_site.all_magnetic) {
+        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
+        supercell.base_site.super_exchange_parameter = {};
         for(int i=0; i<elements.size(); i++) {
             for(int j=0; j<elements_number[i]; j++) {
                 getline(in, str);
@@ -340,12 +356,15 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                 supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                 supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                 supercell.base_site.elements.push_back(elements[i]);
+                supercell.base_site.super_exchange_parameter.push_back(super_exchange[i]);
             }
             supercell.base_site.number += elements_number[i];
         }
     } else {
         vector<string> magnetic_elements = supercell.base_site.elements;
         supercell.base_site.elements = {};
+        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
+        supercell.base_site.super_exchange_parameter = {};
         int i=0;
         for(int k=0; k<magnetic_elements.size(); k++) {
             for(; i<elements.size(); ) {
@@ -359,6 +378,7 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                         supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                         supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                         supercell.base_site.elements.push_back(elements[i]);
+                        supercell.base_site.super_exchange_parameter.push_back(super_exchange[k]);
                     }
                     supercell.base_site.number += elements_number[i];
                     i++;
