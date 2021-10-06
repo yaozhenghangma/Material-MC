@@ -49,7 +49,9 @@ public:
     bool layered; // Layered material
     int neighbor_number;
     bool all_magnetic;
-    vector<vector<double>> super_exchange_parameter;
+    vector<vector<double>> super_exchange_parameter_ab;
+    vector<vector<double>> super_exchange_parameter_c;
+
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
 };
 
@@ -59,7 +61,8 @@ public:
     vector<double> spin = {0, 0, 0};
     double * spin_scaling;
     double * anisotropic_factor;
-    vector<double> * super_exchange_parameter;
+    vector<double> * super_exchange_parameter_ab;
+    vector<double> * super_exchange_parameter_c;
 
     // Statistical variations.
     double energy = 0;
@@ -288,18 +291,53 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     }
     vector<double> tmp_vector;
     int i=0;
-    while(getline(in, str) && !str.empty()) { // Super-exchange parameters
-        supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
-        for(auto e:ctre::split<pattern>(str)) {
-            tmp_str = string(e.get<0>());
-            if(tmp_str[0] == '#') {
-                break;
+    if (supercell.base_site.layered) {
+        bool ab = true;
+        while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+            if (ab) {
+                supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
+                for(auto e:ctre::split<pattern>(str)) {
+                    tmp_str = string(e.get<0>());
+                    if(tmp_str[0] == '#') {
+                        break;
+                    } else {
+                        supercell.base_site.super_exchange_parameter_ab[i].push_back(stod(tmp_str));
+                    }
+                }
+                i++;
+                ab = false;
             } else {
-                supercell.base_site.super_exchange_parameter[i].push_back(stod(tmp_str));
+                supercell.base_site.super_exchange_parameter_c.push_back(tmp_vector);
+                for(auto e:ctre::split<pattern>(str)) {
+                    tmp_str = string(e.get<0>());
+                    if(tmp_str[0] == '#') {
+                        break;
+                    } else {
+                        supercell.base_site.super_exchange_parameter_c[i].push_back(stod(tmp_str));
+                    }
+                }
+                i++;
+                ab = true;
             }
         }
-        i++;
+    } else {
+        double tmp_parameter;
+        while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+            supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
+            for(auto e:ctre::split<pattern>(str)) {
+                tmp_str = string(e.get<0>());
+                if(tmp_str[0] == '#') {
+                    break;
+                } else {
+                    tmp_parameter = stod(tmp_str);
+                    supercell.base_site.super_exchange_parameter_ab[i].push_back(tmp_parameter);
+                    supercell.base_site.super_exchange_parameter_c[i].push_back(tmp_parameter);
+                }
+            }
+            i++;
+        }
     }
+    
 
     in.close();
     return 0;
@@ -345,8 +383,10 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
     double tmp_anisotropic_factor;
     supercell.base_site.number = 0;
     if(supercell.base_site.all_magnetic) {
-        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
-        supercell.base_site.super_exchange_parameter = {};
+        vector<vector<double>> super_exchange_ab = supercell.base_site.super_exchange_parameter_ab;
+        vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
+        supercell.base_site.super_exchange_parameter_ab = {};
+        supercell.base_site.super_exchange_parameter_c = {};
         for(int i=0; i<elements.size(); i++) {
             for(int j=0; j<elements_number[i]; j++) {
                 getline(in, str);
@@ -357,15 +397,18 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                 supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                 supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                 supercell.base_site.elements.push_back(elements[i]);
-                supercell.base_site.super_exchange_parameter.push_back(super_exchange[i]);
+                supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[i]);
+                supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[i]);
             }
             supercell.base_site.number += elements_number[i];
         }
     } else {
         vector<string> magnetic_elements = supercell.base_site.elements;
         supercell.base_site.elements = {};
-        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
-        supercell.base_site.super_exchange_parameter = {};
+        vector<vector<double>> super_exchange_ab = supercell.base_site.super_exchange_parameter_ab;
+        vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
+        supercell.base_site.super_exchange_parameter_ab = {};
+        supercell.base_site.super_exchange_parameter_c = {};
         int i=0;
         for(int k=0; k<magnetic_elements.size(); k++) {
             for(; i<elements.size(); ) {
@@ -379,7 +422,8 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                         supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                         supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                         supercell.base_site.elements.push_back(elements[i]);
-                        supercell.base_site.super_exchange_parameter.push_back(super_exchange[k]);
+                        supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[k]);
+                        supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[k]);
                     }
                     supercell.base_site.number += elements_number[i];
                     i++;
@@ -418,7 +462,8 @@ int EnlargeCell(Supercell & supercell) {
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
-                    supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
+                    supercell.site[i][j][k][l].super_exchange_parameter_ab = & supercell.base_site.super_exchange_parameter_ab[l];
+                    supercell.site[i][j][k][l].super_exchange_parameter_c = & supercell.base_site.super_exchange_parameter_c[l];
                 }
             }
         }
@@ -746,20 +791,13 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
 double Heisenberg(BaseSite & base_site, Site & site) {
     double energy = 0;
     for(int i=0; i<base_site.neighbor_number; i++) {
-        if(base_site.layered) {
-            for(int j=0; j<site.neighbor_ab.size(); j++) {
-                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
-                + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
-            }
-            for(int j=0; j<site.neighbor_c.size(); j++) {
-                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
-                + site.spin[1]*(*site.neighbor_c[i][j]).spin[1] + site.spin[2]*(*site.neighbor_c[i][j]).spin[2]);
-            }
-        } else {
-            for(int j=0; j<site.neighbor_ab.size(); j++) {
-                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
-                + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
-            }
+        for(int j=0; j<site.neighbor_ab.size(); j++) {
+            energy = 0.5 * (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
+            + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
+        }
+        for(int j=0; j<site.neighbor_c.size(); j++) {
+            energy = 0.5 * (*site.super_exchange_parameter_c)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
+            + site.spin[1]*(*site.neighbor_c[i][j]).spin[1] + site.spin[2]*(*site.neighbor_c[i][j]).spin[2]);
         }
     }
 
