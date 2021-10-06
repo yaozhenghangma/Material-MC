@@ -30,9 +30,6 @@ public:
     int n_x;
     int n_y;
     int n_z;
-    
-    // Layered material
-    bool layered;
 
     // Hamiltonian function to calculate energy for one site
     function<double(BaseSite &, Site &)> Hamiltonian;
@@ -48,7 +45,8 @@ public:
     vector<double> anisotropic_factor; // Default value: 1.0.
     vector<string> elements;
 
-    // Input information
+    // Input information    
+    bool layered; // Layered material
     int neighbor_number;
     bool all_magnetic;
     vector<vector<double>> super_exchange_parameter;
@@ -59,6 +57,9 @@ public:
 class Site {
 public:
     vector<double> spin = {0, 0, 0};
+    double * spin_scaling;
+    double * anisotropic_factor;
+    vector<double> * super_exchange_parameter;
 
     // Statistical variations.
     double energy = 0;
@@ -175,7 +176,7 @@ vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
     return index;
 }
 
-vector<double> RandomSpin() {
+vector<double> RandomSpin(double scaling) {
     // Return a unit spin vector randomly.
     static random_device rd;
     static mt19937 engine(rd());
@@ -184,7 +185,7 @@ vector<double> RandomSpin() {
     double x1 = normal(engine);
     double x2 = normal(engine);
     double x3 = normal(engine);
-    double factor = 1/sqrt(x1*x1+x2*x2+x3*x3);
+    double factor = scaling/sqrt(x1*x1+x2*x2+x3*x3);
 
     return {x1*factor, x2*factor, x3*factor};
 }
@@ -249,9 +250,9 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     getline(in, str); // Layered or non-layered
     scn::scan(str, "{}", tmp_str);
     if(tmp_str == "T" || tmp_str == "True" || tmp_str == "true" || tmp_str == "t") {
-        supercell.lattice.layered = true;
+        supercell.base_site.layered = true;
     } else {
-        supercell.lattice.layered = false;
+        supercell.base_site.layered = false;
     }
     getline(in, str); // Number of cells.
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
@@ -415,6 +416,9 @@ int EnlargeCell(Supercell & supercell) {
                 for(int l=0; l<supercell.base_site.number; l++) {
                     supercell.site[i][j][k].push_back(site4);
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
+                    supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
+                    supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
+                    supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
                 }
             }
         }
@@ -451,7 +455,7 @@ int AddDistance(double distance, vector<double> & distance_list) {
 
 int InitializeSupercell(Supercell & supercell) {
     // Initialize the neighbors' link and energy.
-    if(supercell.lattice.layered) {
+    if(supercell.base_site.layered) {
         // Find the neighbors for every base sites in a cell.
         // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
         vector<vector<vector<vector<int>>>> neighbors_index_ab;
@@ -682,7 +686,7 @@ int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     vector<double> old_spin = one_site.spin;
 
     // Energy and spin after flip.
-    one_site.spin = RandomSpin();
+    one_site.spin = RandomSpin(*one_site.spin_scaling);
     one_site.energy = lattice.Hamiltonian(base_site, one_site);
     double de = one_site.energy - energy;
 
@@ -737,4 +741,28 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
     }
     out.close();
     return 0;
+}
+
+double Heisenberg(BaseSite & base_site, Site & site) {
+    double energy = 0;
+    for(int i=0; i<base_site.neighbor_number; i++) {
+        if(base_site.layered) {
+            for(int j=0; j<site.neighbor_ab.size(); j++) {
+                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
+                + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
+            }
+            for(int j=0; j<site.neighbor_c.size(); j++) {
+                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
+                + site.spin[1]*(*site.neighbor_c[i][j]).spin[1] + site.spin[2]*(*site.neighbor_c[i][j]).spin[2]);
+            }
+        } else {
+            for(int j=0; j<site.neighbor_ab.size(); j++) {
+                energy = 0.5 * (*site.super_exchange_parameter)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
+                + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
+            }
+        }
+    }
+
+    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2] * (*site.anisotropic_factor)*site.spin[2];
+    return energy;
 }
