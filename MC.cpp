@@ -17,24 +17,6 @@ using namespace std;
 
 const double KB = 0.08617343;
 
-// Information about the lattice.
-class Lattice {
-public:
-    // Information from POSCAR
-    vector<double> a = {0, 0, 0};
-    vector<double> b = {0, 0, 0};
-    vector<double> c = {0, 0, 0};
-    double scaling;
-
-    // Input information
-    int n_x;
-    int n_y;
-    int n_z;
-
-    // Hamiltonian function to calculate energy for one site
-    function<double(BaseSite &, Site &)> Hamiltonian;
-};
-
 // Information about base in the cell
 class BaseSite {
 public:
@@ -71,6 +53,24 @@ public:
     // Neighbors' link. For normal crystal, only variation "neighbor_ab" is used.
     vector<vector<Site*>> neighbor_ab = {};
     vector<vector<Site*>> neighbor_c = {};
+};
+
+// Information about the lattice.
+class Lattice {
+public:
+    // Information from POSCAR
+    vector<double> a = {0, 0, 0};
+    vector<double> b = {0, 0, 0};
+    vector<double> c = {0, 0, 0};
+    double scaling;
+
+    // Input information
+    int n_x;
+    int n_y;
+    int n_z;
+
+    // Hamiltonian function to calculate energy for one site
+    function<double(BaseSite &, Site &)> Hamiltonian;
 };
 
 // Information to control Monte Carlo circling.
