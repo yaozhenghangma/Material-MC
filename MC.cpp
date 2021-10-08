@@ -155,6 +155,7 @@ int main(int argc, char** argv) {
         Cv.push_back(tmp_value[1] - tmp_value[0] * tmp_value[0]);
         Ki.push_back(tmp_value[3] - tmp_value[2] * tmp_value[2]);
         WriteSpin(supercell, spin_structure_file_prefix, T);
+        T += monte_carlo.temperature_step;
     }
 
     // Output the thermal dynamic result.
@@ -171,7 +172,7 @@ double Supercell::energy() {
     for(int i=0; i<this->lattice.n_x; i++) {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
-                for(int l=0; l<this->base_site.number; k++) {
+                for(int l=0; l<this->base_site.number; l++) {
                     e += this->site[i][j][k][l].energy;
                 }
             }
@@ -186,7 +187,7 @@ double Supercell::momentum() {
     for(int i=0; i<this->lattice.n_x; i++) {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
-                for(int l=0; l<this->base_site.number; k++) {
+                for(int l=0; l<this->base_site.number; l++) {
                     m[0] += this->site[i][j][k][l].spin[0];
                     m[1] += this->site[i][j][k][l].spin[1];
                     m[2] += this->site[i][j][k][l].spin[2];
@@ -278,7 +279,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     getline(in, str); // Comment line of the simulation.
     getline(in, str); // Temperature.
     scn::scan(str, "{} {} {}", monte_carlo.start_temperature, monte_carlo.end_temperature, monte_carlo.temperature_step_number);
-    monte_carlo.temperature_step = (monte_carlo.start_temperature-monte_carlo.end_temperature) / (monte_carlo.temperature_step_number-1);
+    monte_carlo.temperature_step = (monte_carlo.end_temperature-monte_carlo.start_temperature) / (monte_carlo.temperature_step_number-1);
     getline(in, str); // Monte Carlo steps for relaxing process.
     scn::scan(str, "{}", monte_carlo.relax_step);
     getline(in, str); // Monte Carlo steps for counting.
@@ -323,7 +324,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
                 break;
             }
         }
-        for(; i<supercell.base_site.elements.size(); i++) {
+        int size = supercell.base_site.elements.size();
+        for(; i<size; i++) {
             supercell.base_site.elements.pop_back();
         }
     }
@@ -362,9 +364,10 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
         double tmp_parameter;
         while(getline(in, str) && !str.empty()) { // Super-exchange parameters
             supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
+            supercell.base_site.super_exchange_parameter_c.push_back(tmp_vector);
             for(auto e:ctre::split<pattern>(str)) {
                 tmp_str = string(e.get<0>());
-                if(tmp_str[0] == '#') {
+                if(tmp_str[0] == '#' || tmp_str == "") {
                     break;
                 } else {
                     tmp_parameter = stod(tmp_str);
@@ -403,23 +406,30 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
     // All elements.
     vector<string> elements;
     getline(in, str);
+    string tmp_string;
     for(auto e: ctre::split<pattern>(str)) {
-        elements.push_back(string(e.get<0>()));
+        tmp_string = string(e.get<0>());
+        if (tmp_string != "") {
+            elements.push_back(tmp_string);
+        }
     }
 
     // All elements' number.
     vector<int> elements_number;
     getline(in, str);
     for(auto e: ctre::split<pattern>(str)) {
-        elements_number.push_back(stoi(string(e.get<0>())));
+        tmp_string = string(e.get<0>());
+        if (tmp_string != "") {
+            elements_number.push_back(stoi(tmp_string));
+        }
     }
 
     // Store magnetic elements
     vector<double> tmp_coordinate = {0, 0, 0};
-    string tmp_string;
     double tmp_spin_scaling;
     double tmp_anisotropic_factor;
     supercell.base_site.number = 0;
+    getline(in, str); // Direct of Carsitian TODO:
     if(supercell.base_site.all_magnetic) {
         vector<vector<double>> super_exchange_ab = supercell.base_site.super_exchange_parameter_ab;
         vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
@@ -447,30 +457,26 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
         vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
         supercell.base_site.super_exchange_parameter_ab = {};
         supercell.base_site.super_exchange_parameter_c = {};
-        int i=0;
-        for(int k=0; k<magnetic_elements.size(); k++) {
-            for(; i<elements.size(); ) {
-                if(magnetic_elements[k] == elements[i]) {
-                    for(int j=0; j<elements_number[i]; j++) {
-                        getline(in, str);
-                        tmp_spin_scaling = 1;
-                        tmp_anisotropic_factor = 1;
-                        scn::scan(str, "{0} {1} {2} {3} {4} {5}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2], tmp_string, tmp_spin_scaling, tmp_anisotropic_factor);
-                        supercell.base_site.coordinate.push_back(tmp_coordinate);
-                        supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
-                        supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
-                        supercell.base_site.elements.push_back(elements[i]);
-                        supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[k]);
-                        supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[k]);
-                    }
-                    supercell.base_site.number += elements_number[i];
-                    i++;
-                } else {
-                    for(int j=0; j<elements_number[i]; j++) {
-                        getline(in, str);
-                    }
-                    i++;
-                    break;
+        int k=0;
+        for(int i=0; i<elements.size(); i++) {
+            if(magnetic_elements[k] == elements[i]) {
+                for(int j=0; j<elements_number[i]; j++) {
+                    getline(in, str);
+                    tmp_spin_scaling = 1;
+                    tmp_anisotropic_factor = 1;
+                    scn::scan(str, "{0} {1} {2} {3} {4} {5}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2], tmp_string, tmp_spin_scaling, tmp_anisotropic_factor);
+                    supercell.base_site.coordinate.push_back(tmp_coordinate);
+                    supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
+                    supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
+                    supercell.base_site.elements.push_back(elements[i]);
+                    supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[k]);
+                    supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[k]);
+                }
+                supercell.base_site.number += elements_number[i];
+                k++;
+            } else {
+                for(int j=0; j<elements_number[i]; j++) {
+                    getline(in, str);
                 }
             }
         }
@@ -753,7 +759,7 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     double tmp_momentum = 0;
     double total_momentum = 0;
     double total_momentum_square = 0;
-    static double one_over_step = 1 / monte_carlo.count_step;
+    static double one_over_step = 1.0 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
