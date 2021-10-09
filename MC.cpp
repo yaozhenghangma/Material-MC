@@ -147,13 +147,15 @@ int main(int argc, char** argv) {
     vector<double> moment;
     vector<double> Ki;
     vector<double> tmp_value = {0, 0, 0, 0};
+    static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
+    supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<monte_carlo.temperature_step_number; i++) { // Loop for temperature
         MonteCarloRelaxing(supercell, monte_carlo, T);
         tmp_value = MonteCarloStep(supercell, monte_carlo, T);
-        energy.push_back(tmp_value[0]);
-        moment.push_back(tmp_value[2]);
-        Cv.push_back(tmp_value[1] - tmp_value[0] * tmp_value[0]);
-        Ki.push_back(tmp_value[3] - tmp_value[2] * tmp_value[2]);
+        energy.push_back((tmp_value[0])*one_over_number);
+        moment.push_back((tmp_value[2])*one_over_number);
+        Cv.push_back((tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T));
+        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])*one_over_number/(KB*T));
         WriteSpin(supercell, spin_structure_file_prefix, T);
         T += monte_carlo.temperature_step;
     }
@@ -758,8 +760,7 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     double tmp_momentum = 0;
     double total_momentum = 0;
     double total_momentum_square = 0;
-    static double one_over_step_atom = 1.0 / monte_carlo.count_step / \
-    (supercell.lattice.n_x * supercell.lattice.n_y * supercell.lattice.n_z * supercell.base_site.number);
+    static double one_over_step = 1.0 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
@@ -773,8 +774,8 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
         total_momentum_square += tmp_momentum * tmp_momentum;
     }
     
-    return {total_energy * one_over_step_atom, total_energy_square * one_over_step_atom, \
-    total_momentum * one_over_step_atom, total_momentum_square * one_over_step_atom};
+    return {total_energy * one_over_step, total_energy_square * one_over_step, \
+    total_momentum * one_over_step, total_momentum_square * one_over_step};
 }
 
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
