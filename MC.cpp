@@ -338,19 +338,18 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
                 supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
                 for(auto e:ctre::split<pattern>(str)) {
                     tmp_str = string(e.get<0>());
-                    if(tmp_str[0] == '#') {
+                    if(tmp_str[0] == '#' || tmp_str == "") {
                         break;
                     } else {
                         supercell.base_site.super_exchange_parameter_ab[i].push_back(stod(tmp_str));
                     }
                 }
-                i++;
                 ab = false;
             } else {
                 supercell.base_site.super_exchange_parameter_c.push_back(tmp_vector);
                 for(auto e:ctre::split<pattern>(str)) {
                     tmp_str = string(e.get<0>());
-                    if(tmp_str[0] == '#') {
+                    if(tmp_str[0] == '#' || tmp_str == "") {
                         break;
                     } else {
                         supercell.base_site.super_exchange_parameter_c[i].push_back(stod(tmp_str));
