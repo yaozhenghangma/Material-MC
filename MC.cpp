@@ -521,8 +521,8 @@ vector<int> index, vector<double> base_site1, vector<double> base_site2) {
     vector<double> total_index = {index[0]+base_site2[0]-base_site1[0], index[1]+base_site2[1]-base_site1[1], index[2]+base_site2[2]-base_site1[2]};
     double result = 0;
     for(int i=0; i<3; i++) {
-        result += (total_index[0]*lattice_constant1[i] + total_index[1]*lattice_constant1[i] + total_index[2]*lattice_constant1[i]) \
-        * (total_index[0]*lattice_constant1[i] + total_index[1]*lattice_constant1[i] + total_index[2]*lattice_constant1[i]);
+        result += (total_index[0]*lattice_constant1[i] + total_index[1]*lattice_constant2[i] + total_index[2]*lattice_constant3[i]) \
+        * (total_index[0]*lattice_constant1[i] + total_index[1]*lattice_constant2[i] + total_index[2]*lattice_constant3[i]);
     }
     return result;
 }
@@ -531,7 +531,7 @@ int AddDistance(double distance, vector<double> & distance_list) {
     int s = distance_list.size()-1;
     if(distance_list[s] == 0 || distance_list[s] > distance) {
         distance_list[s] = distance;
-        for(int i=s-1; i>=0; i--) {
+        for(int i=s-2; i>=0; i--) {
             if(distance_list[i] == 0 || distance_list[i] > distance) {
                 distance_list[i+1] = distance_list[i];
                 distance_list[i] = distance;
@@ -568,18 +568,18 @@ int InitializeSupercell(Supercell & supercell) {
 
             // Find the distance values.
             for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number+abs(j); k<supercell.base_site.neighbor_number-abs(j); k++) {
-                    for(int l=-supercell.base_site.neighbor_number+abs(j)+abs(k); l<supercell.base_site.neighbor_number-abs(k)-abs(j); l++) {
+                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
                         for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
                             supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
                             if(distance_square == 0.0) {
                                 continue;
                             } else if(l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
-                                AddDistance(distance_square, distance_list_c);
-                            } else {
                                 AddDistance(distance_square, distance_list_ab);
+                            } else {
+                                AddDistance(distance_square, distance_list_c);
                             }
                         }
                     }
@@ -588,27 +588,27 @@ int InitializeSupercell(Supercell & supercell) {
 
             // Find link.
             for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number+abs(j); k<supercell.base_site.neighbor_number-abs(j); k++) {
-                    for(int l=-supercell.base_site.neighbor_number+abs(j)+abs(k); l<supercell.base_site.neighbor_number-abs(k)-abs(j); l++) {
+                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
                         for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
                             supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
                             if(distance_square == 0.0) {
                                 continue;
                             } else if (l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
                                 for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                    if(distance_square == distance_list_c[n]) {
+                                    if(distance_square == distance_list_ab[n]) {
                                         vector<int> ind = {j, k, l, m};
-                                        neighbors_index_c[i][n].emplace_back(ind);
+                                        neighbors_index_ab[i][n].emplace_back(ind);
                                         break;
                                     }
                                 }
                             } else {
                                 for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                    if(distance_square == distance_list_ab[n]) {
+                                    if(distance_square == distance_list_c[n]) {
                                         vector<int> ind = {j, k, l, m};
-                                        neighbors_index_ab[i][n].emplace_back(ind);
+                                        neighbors_index_c[i][n].emplace_back(ind);
                                         break;
                                     }
                                 }
@@ -670,10 +670,10 @@ int InitializeSupercell(Supercell & supercell) {
 
             // Find the distance values.
             for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number+abs(j); k<supercell.base_site.neighbor_number-abs(j); k++) {
-                    for(int l=-supercell.base_site.neighbor_number+abs(j)+abs(k); l<supercell.base_site.neighbor_number-abs(k)-abs(j); l++) {
+                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
                         for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
                             supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
                             if(distance_square == 0.0) {
@@ -688,10 +688,10 @@ int InitializeSupercell(Supercell & supercell) {
 
             // Find link.
             for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number+abs(j); k<supercell.base_site.neighbor_number-abs(j); k++) {
-                    for(int l=-supercell.base_site.neighbor_number+abs(j)+abs(k); l<supercell.base_site.neighbor_number-abs(k)-abs(j); l++) {
+                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
                         for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {i, j, k}, \
+                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
                             supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
                             if(distance_square == 0.0) {
@@ -842,12 +842,12 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
 double Heisenberg(BaseSite & base_site, Site & site) {
     double energy = 0;
     for(int i=0; i<base_site.neighbor_number; i++) {
-        for(int j=0; j<site.neighbor_ab.size(); j++) {
-            energy = 0.5 * (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
+        for(int j=0; j<site.neighbor_ab[i].size(); j++) {
+            energy += 0.5 * (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
             + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
         }
-        for(int j=0; j<site.neighbor_c.size(); j++) {
-            energy = 0.5 * (*site.super_exchange_parameter_c)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
+        for(int j=0; j<site.neighbor_c[i].size(); j++) {
+            energy += 0.5 * (*site.super_exchange_parameter_c)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
             + site.spin[1]*(*site.neighbor_c[i][j]).spin[1] + site.spin[2]*(*site.neighbor_c[i][j]).spin[2]);
         }
     }
