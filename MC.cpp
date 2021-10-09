@@ -179,7 +179,7 @@ double Supercell::energy() {
         }
     }
 
-    return e*0.5;
+    return e;
 }
 
 double Supercell::momentum() {
@@ -758,7 +758,8 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     double tmp_momentum = 0;
     double total_momentum = 0;
     double total_momentum_square = 0;
-    static double one_over_step = 1.0 / monte_carlo.count_step;
+    static double one_over_step_atom = 1.0 / monte_carlo.count_step / \
+    (supercell.lattice.n_x * supercell.lattice.n_y * supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
@@ -772,7 +773,8 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
         total_momentum_square += tmp_momentum * tmp_momentum;
     }
     
-    return {total_energy * one_over_step, total_energy_square * one_over_step, total_momentum * one_over_step, total_momentum_square * one_over_step};
+    return {total_energy * one_over_step_atom, total_energy_square * one_over_step_atom, \
+    total_momentum * one_over_step_atom, total_momentum_square * one_over_step_atom};
 }
 
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
