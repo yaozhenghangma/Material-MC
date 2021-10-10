@@ -183,7 +183,7 @@ double Supercell::energy() {
         }
     }
 
-    return e;
+    return e*0.5;
 }
 
 double Supercell::momentum() {
@@ -789,7 +789,7 @@ int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     // Energy and spin after flip.
     one_site.spin = RandomSpin(*one_site.spin_scaling);
     double energy_new = lattice.Hamiltonian(base_site, one_site);
-    double de = 2*(energy_new - energy_old);
+    double de = energy_new - energy_old;
 
     // Judge whether to flip.
     double crition = RandomFloat();
@@ -862,17 +862,25 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
 
 double Heisenberg(BaseSite & base_site, Site & site) {
     double energy = 0;
+    vector<double> spin_sum;
     for(int i=0; i<base_site.neighbor_number; i++) {
+        spin_sum = {0, 0, 0};
         for(int j=0; j<site.neighbor_ab[i].size(); j++) {
-            energy += 0.5 * (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*(*site.neighbor_ab[i][j]).spin[0] \
-            + site.spin[1]*(*site.neighbor_ab[i][j]).spin[1] + site.spin[2]*(*site.neighbor_ab[i][j]).spin[2]);
+            spin_sum[0] += (*site.neighbor_ab[i][j]).spin[0];
+            spin_sum[1] += (*site.neighbor_ab[i][j]).spin[1];
+            spin_sum[2] += (*site.neighbor_ab[i][j]).spin[2];
         }
+        energy += (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
+
+        spin_sum = {0, 0, 0};
         for(int j=0; j<site.neighbor_c[i].size(); j++) {
-            energy += 0.5 * (*site.super_exchange_parameter_c)[i] * (site.spin[0]*(*site.neighbor_c[i][j]).spin[0] \
-            + site.spin[1]*(*site.neighbor_c[i][j]).spin[1] + site.spin[2]*(*site.neighbor_c[i][j]).spin[2]);
+            spin_sum[0] += (*site.neighbor_c[i][j]).spin[0];
+            spin_sum[1] += (*site.neighbor_c[i][j]).spin[1];
+            spin_sum[2] += (*site.neighbor_c[i][j]).spin[2];
         }
+        energy += (*site.super_exchange_parameter_c)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
     }
 
-    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
+    energy += 2 * base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
     return energy;
 }
