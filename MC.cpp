@@ -835,7 +835,7 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
     auto out = fmt::output_file(output_file);
     out.print("T\tEnergy\tCv\tMoment\tKi\n");
     for(int i=0; i<monte_carlo.temperature_step_number; i++) {
-        out.print("{}\t{}\t{}\t{}\t{}\n", T, energy[i], Cv[i], moment[i], Ki[i]);
+        out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\n", T, energy[i], Cv[i], moment[i], Ki[i]);
         T += monte_carlo.temperature_step;
     }
     out.close();
