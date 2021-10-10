@@ -1,18 +1,19 @@
 Example input file. #Comment line
 Part 1: Monte Carlo simulation #Comment line
-0 400 10 #Temperature: start_temperature, end_temperature and temperature_points_number, separated by whitespace.
+0 400 11 #Temperature: start_temperature, end_temperature and temperature_points_number, separated by whitespace.
 8000 #Monte Carlo steps to relaxing the system
 6000 #Monte Carlo steps to average the physical quantities
-6000 #Flip number for one Monte Carlo step.
+3000 #Flip number for one Monte Carlo step.
 Part 2: Lattice #Comment line
 True #Layered material or non-layered material. (T, t, True, true)
 8 8 4 #Number of cells along a, b, and c direction, separated by whitespace
 Default #Hamiltonian function type, default is H = 1/2 * Sigma_ij(J1*Si*Sj + J2*Si*Sj) + D*Si^z*Sj^z
+2.0 #Magnify the output lattice.
 Part 3: Base #Comment line
 1 #Nearest neighbors
 0 #Anisotropic factor
 Ni Ir #List magnetic elements, separated by whitespace.
 -7.50 0 0 #List of super-exchange parameters of 1-st magnetic element.(ab-plane for layered material)
--7.50 0 0 #List of super-exchange parameters of 1-st magnetic element.(c-direction for layered material)
+-7.50 0 0 #List of super-exchange parameters of 1-st magnetic element.(c direction or layered material)
 -7.50 0 0 
--7.50 0 0
+-7.50 0 0 
