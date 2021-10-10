@@ -6,6 +6,7 @@
 #include<functional>
 #include<math.h>
 #include<iostream>
+#include<omp.h>
 #include<random>
 #include<scn/scn.h>
 #include<stdlib.h>
@@ -144,23 +145,40 @@ int main(int argc, char** argv) {
     InitializeSupercell(supercell);
 
     // Monte Carlo
-    vector<double> energy;
-    vector<double> Cv;
-    vector<double> moment;
-    vector<double> Ki;
+    vector<double> energy(monte_carlo.temperature_step_number, 0);
+    vector<double> Cv(monte_carlo.temperature_step_number, 0);
+    vector<double> moment(monte_carlo.temperature_step_number, 0);
+    vector<double> Ki(monte_carlo.temperature_step_number, 0);
     vector<double> tmp_value = {0, 0, 0, 0};
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
-    for(int i=0; i<monte_carlo.temperature_step_number; i++) { // Loop for temperature
+
+    // Private variation for openmp
+    Supercell supercell_private;
+    int i;
+
+    // Setting for openmp
+    omp_set_num_threads(20);
+#pragma omp parallel private(i, supercell_private, T, tmp_value) shared(energy, Cv, moment, Ki)
+{
+#pragma omp for nowait
+    for(i=0; i<monte_carlo.temperature_step_number; i++) { // Loop for temperature
+        // Initialize private variation
+        T = monte_carlo.start_temperature + i*monte_carlo.temperature_step;
+        supercell_private = supercell;
+
+        // Monte Carlo
         MonteCarloRelaxing(supercell, monte_carlo, T);
         tmp_value = MonteCarloStep(supercell, monte_carlo, T);
+
+        // Record
         energy.push_back((tmp_value[0])*one_over_number);
         moment.push_back((tmp_value[2])*one_over_number);
         Cv.push_back((tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T));
         Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T));
         WriteSpin(supercell, spin_structure_file_prefix, T);
-        T += monte_carlo.temperature_step;
     }
+}
 
     // Output the thermal dynamic result.
     WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
