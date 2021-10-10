@@ -810,14 +810,21 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
     out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*5, supercell.lattice.c[1]*supercell.lattice.n_z*5, supercell.lattice.c[2]*supercell.lattice.n_z*5);
     out.print("PRIMCOORD\n");
     out.print("{} 1\n", supercell.base_site.number*supercell.lattice.n_x*supercell.lattice.n_y*supercell.lattice.n_z);
+
+    vector<double> index = {0, 0, 0};
+    vector<double> coordinate = {0, 0, 0};
     for(int i=0; i<supercell.lattice.n_x; i++) {
         for(int j=0; j<supercell.lattice.n_y; j++) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
                 for(int l=0; l<supercell.base_site.number; l++) {
+                    index = {supercell.base_site.coordinate[l][0] + i, supercell.base_site.coordinate[l][1] + j, supercell.base_site.coordinate[l][2] + k};
+                    for(int m=0; m<3; m++) {
+                        coordinate[m] = index[0]*supercell.lattice.a[m]*5 + index[1] * supercell.lattice.b[m]*5 + index[2] * supercell.lattice.c[m]*5;
+                    }
                     out.print("{} {} {} {} {} {} {}\n", supercell.base_site.elements[l], \
-                    supercell.base_site.coordinate[l][0] + i, \
-                    supercell.base_site.coordinate[l][1] + j, \
-                    supercell.base_site.coordinate[l][2] + k, \
+                    coordinate[0], \
+                    coordinate[1], \
+                    coordinate[2], \
                     supercell.site[i][j][k][l].spin[0], \
                     supercell.site[i][j][k][l].spin[1], \
                     supercell.site[i][j][k][l].spin[2]);
