@@ -71,6 +71,9 @@ public:
 
     // Hamiltonian function to calculate energy for one site
     function<double(BaseSite &, Site &)> Hamiltonian;
+    
+    // Output information
+    double magnify_factor = 2.0;
 };
 
 // Information to control Monte Carlo circling.
@@ -155,7 +158,7 @@ int main(int argc, char** argv) {
         energy.push_back((tmp_value[0])*one_over_number);
         moment.push_back((tmp_value[2])*one_over_number);
         Cv.push_back((tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T));
-        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])*one_over_number/(KB*T));
+        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T));
         WriteSpin(supercell, spin_structure_file_prefix, T);
         T += monte_carlo.temperature_step;
     }
@@ -303,6 +306,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     getline(in, str); // Hamiltonion function.
     scn::scan(str, "{}", tmp_str);
     supercell.lattice.Hamiltonian = Heisenberg;
+    getline(in, str); // Magnifying factor
+    scn::scan(str, "{}", supercell.lattice.magnify_factor);
 
     // Information about base.
     getline(in, str); // Comment line
@@ -805,9 +810,15 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
     auto out = fmt::output_file(output_file_name);
     out.print("CRYSTAL\n");
     out.print("PRIMVEC\n");
-    out.print("{} {} {}\n", supercell.lattice.a[0]*supercell.lattice.n_x*5, supercell.lattice.a[1]*supercell.lattice.n_x*5, supercell.lattice.a[2]*supercell.lattice.n_x*5);
-    out.print("{} {} {}\n", supercell.lattice.b[0]*supercell.lattice.n_y*5, supercell.lattice.b[1]*supercell.lattice.n_y*5, supercell.lattice.b[2]*supercell.lattice.n_y*5);
-    out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*5, supercell.lattice.c[1]*supercell.lattice.n_z*5, supercell.lattice.c[2]*supercell.lattice.n_z*5);
+    out.print("{} {} {}\n", supercell.lattice.a[0]*supercell.lattice.n_x*supercell.lattice.magnify_factor, \
+    supercell.lattice.a[1]*supercell.lattice.n_x*supercell.lattice.magnify_factor, \
+    supercell.lattice.a[2]*supercell.lattice.n_x*supercell.lattice.magnify_factor);
+    out.print("{} {} {}\n", supercell.lattice.b[0]*supercell.lattice.n_y*supercell.lattice.magnify_factor, \
+    supercell.lattice.b[1]*supercell.lattice.n_y*supercell.lattice.magnify_factor, \
+    supercell.lattice.b[2]*supercell.lattice.n_y*supercell.lattice.magnify_factor);
+    out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*supercell.lattice.magnify_factor, \
+    supercell.lattice.c[1]*supercell.lattice.n_z*supercell.lattice.magnify_factor, \
+    supercell.lattice.c[2]*supercell.lattice.n_z*supercell.lattice.magnify_factor);
     out.print("PRIMCOORD\n");
     out.print("{} 1\n", supercell.base_site.number*supercell.lattice.n_x*supercell.lattice.n_y*supercell.lattice.n_z);
 
@@ -819,7 +830,9 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
                 for(int l=0; l<supercell.base_site.number; l++) {
                     index = {supercell.base_site.coordinate[l][0] + i, supercell.base_site.coordinate[l][1] + j, supercell.base_site.coordinate[l][2] + k};
                     for(int m=0; m<3; m++) {
-                        coordinate[m] = index[0]*supercell.lattice.a[m]*5 + index[1] * supercell.lattice.b[m]*5 + index[2] * supercell.lattice.c[m]*5;
+                        coordinate[m] = index[0]*supercell.lattice.a[m]*supercell.lattice.magnify_factor + \
+                        index[1] * supercell.lattice.b[m]*supercell.lattice.magnify_factor + \
+                        index[2] * supercell.lattice.c[m]*supercell.lattice.magnify_factor;
                     }
                     out.print("{} {} {} {} {} {} {}\n", supercell.base_site.elements[l], \
                     coordinate[0], \
@@ -862,6 +875,6 @@ double Heisenberg(BaseSite & base_site, Site & site) {
         }
     }
 
-    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2] * (*site.anisotropic_factor)*site.spin[2];
+    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
     return energy;
 }
