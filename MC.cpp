@@ -178,7 +178,7 @@ double Supercell::energy() {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
                 for(int l=0; l<this->base_site.number; l++) {
-                    e += this->site[i][j][k][l].energy;
+                    e += this->lattice.Hamiltonian(this->base_site, this->site[i][j][k][l]);
                 }
             }
         }
@@ -651,7 +651,6 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index_c[l][m][n][3]]);
                             }
                         }
-                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
@@ -734,7 +733,6 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index[l][m][n][3]]);
                             }
                         }
-                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
@@ -786,19 +784,18 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     // Flip one spin.
     // Energy and spin before flip.
-    double energy = one_site.energy;
+    double energy_old = lattice.Hamiltonian(base_site, one_site);
     vector<double> old_spin = one_site.spin;
 
     // Energy and spin after flip.
     one_site.spin = RandomSpin(*one_site.spin_scaling);
-    one_site.energy = lattice.Hamiltonian(base_site, one_site);
-    double de = one_site.energy - energy;
+    double energy_new = lattice.Hamiltonian(base_site, one_site);
+    double de = energy_new - energy_old;
 
     // Judge whether to flip.
     double crition = RandomFloat();
-    if (crition > exp(-de/(KB*T))) {
+    if (crition > exp(-2*de/(KB*T))) {
         one_site.spin = old_spin;
-        one_site.energy = energy;
     }
 
     return 0;
