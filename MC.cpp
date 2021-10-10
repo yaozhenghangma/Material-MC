@@ -46,8 +46,6 @@ public:
     vector<double> * super_exchange_parameter_ab;
     vector<double> * super_exchange_parameter_c;
 
-    // Statistical variations.
-    double energy = 0;
     //TODO: store the momentum
 
     // Neighbors' link. For normal crystal, only variation "neighbor_ab" is used.
@@ -71,6 +69,7 @@ public:
 
     // Hamiltonian function to calculate energy for one site
     function<double(BaseSite &, Site &)> Hamiltonian;
+    double total_energy;
     
     // Output information
     double magnify_factor = 2.0;
@@ -738,6 +737,8 @@ int InitializeSupercell(Supercell & supercell) {
             }
         }
     }
+
+    supercell.lattice.total_energy = supercell.energy();
     return 0;
 }
 
@@ -757,7 +758,6 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
-    double tmp_energy = 0;
     double total_energy = 0;
     double total_energy_square = 0;
     double tmp_momentum = 0;
@@ -769,9 +769,8 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
             Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
-        tmp_energy = supercell.energy();
-        total_energy += tmp_energy;
-        total_energy_square += tmp_energy * tmp_energy;
+        total_energy += supercell.lattice.total_energy;
+        total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
         tmp_momentum = supercell.momentum();
         total_momentum += tmp_momentum;
         total_momentum_square += tmp_momentum * tmp_momentum;
@@ -790,12 +789,14 @@ int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     // Energy and spin after flip.
     one_site.spin = RandomSpin(*one_site.spin_scaling);
     double energy_new = lattice.Hamiltonian(base_site, one_site);
-    double de = energy_new - energy_old;
+    double de = 2*(energy_new - energy_old);
 
     // Judge whether to flip.
     double crition = RandomFloat();
-    if (crition > exp(-2*de/(KB*T))) {
+    if (crition > exp(-de/(KB*T))) {
         one_site.spin = old_spin;
+    } else {
+        lattice.total_energy += de;
     }
 
     return 0;
