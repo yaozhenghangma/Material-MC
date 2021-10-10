@@ -46,8 +46,6 @@ public:
     vector<double> * super_exchange_parameter_ab;
     vector<double> * super_exchange_parameter_c;
 
-    // Statistical variations.
-    double energy = 0;
     //TODO: store the momentum
 
     // Neighbors' link. For normal crystal, only variation "neighbor_ab" is used.
@@ -71,6 +69,10 @@ public:
 
     // Hamiltonian function to calculate energy for one site
     function<double(BaseSite &, Site &)> Hamiltonian;
+    double total_energy;
+    
+    // Output information
+    double magnify_factor = 2.0;
 };
 
 // Information to control Monte Carlo circling.
@@ -155,7 +157,7 @@ int main(int argc, char** argv) {
         energy.push_back((tmp_value[0])*one_over_number);
         moment.push_back((tmp_value[2])*one_over_number);
         Cv.push_back((tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T));
-        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])*one_over_number/(KB*T));
+        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T));
         WriteSpin(supercell, spin_structure_file_prefix, T);
         T += monte_carlo.temperature_step;
     }
@@ -175,7 +177,7 @@ double Supercell::energy() {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
                 for(int l=0; l<this->base_site.number; l++) {
-                    e += this->site[i][j][k][l].energy;
+                    e += this->lattice.Hamiltonian(this->base_site, this->site[i][j][k][l]);
                 }
             }
         }
@@ -303,6 +305,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     getline(in, str); // Hamiltonion function.
     scn::scan(str, "{}", tmp_str);
     supercell.lattice.Hamiltonian = Heisenberg;
+    getline(in, str); // Magnifying factor
+    scn::scan(str, "{}", supercell.lattice.magnify_factor);
 
     // Information about base.
     getline(in, str); // Comment line
@@ -646,7 +650,6 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index_c[l][m][n][3]]);
                             }
                         }
-                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
@@ -729,12 +732,13 @@ int InitializeSupercell(Supercell & supercell) {
                                 [neighbors_index[l][m][n][3]]);
                             }
                         }
-                        supercell.site[i][j][k][l].energy = supercell.lattice.Hamiltonian(supercell.base_site, supercell.site[i][j][k][l]);
                     }
                 }
             }
         }
     }
+
+    supercell.lattice.total_energy = supercell.energy();
     return 0;
 }
 
@@ -754,7 +758,6 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     vector<int> site_chosen;
-    double tmp_energy = 0;
     double total_energy = 0;
     double total_energy_square = 0;
     double tmp_momentum = 0;
@@ -766,9 +769,8 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
             Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
         }
-        tmp_energy = supercell.energy();
-        total_energy += tmp_energy;
-        total_energy_square += tmp_energy * tmp_energy;
+        total_energy += supercell.lattice.total_energy;
+        total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
         tmp_momentum = supercell.momentum();
         total_momentum += tmp_momentum;
         total_momentum_square += tmp_momentum * tmp_momentum;
@@ -781,19 +783,20 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
 int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     // Flip one spin.
     // Energy and spin before flip.
-    double energy = one_site.energy;
+    double energy_old = lattice.Hamiltonian(base_site, one_site);
     vector<double> old_spin = one_site.spin;
 
     // Energy and spin after flip.
     one_site.spin = RandomSpin(*one_site.spin_scaling);
-    one_site.energy = lattice.Hamiltonian(base_site, one_site);
-    double de = one_site.energy - energy;
+    double energy_new = lattice.Hamiltonian(base_site, one_site);
+    double de = 2*(energy_new - energy_old);
 
     // Judge whether to flip.
     double crition = RandomFloat();
     if (crition > exp(-de/(KB*T))) {
         one_site.spin = old_spin;
-        one_site.energy = energy;
+    } else {
+        lattice.total_energy += de;
     }
 
     return 0;
@@ -805,19 +808,34 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
     auto out = fmt::output_file(output_file_name);
     out.print("CRYSTAL\n");
     out.print("PRIMVEC\n");
-    out.print("{} {} {}\n", supercell.lattice.a[0]*supercell.lattice.n_x*5, supercell.lattice.a[1]*supercell.lattice.n_x*5, supercell.lattice.a[2]*supercell.lattice.n_x*5);
-    out.print("{} {} {}\n", supercell.lattice.b[0]*supercell.lattice.n_y*5, supercell.lattice.b[1]*supercell.lattice.n_y*5, supercell.lattice.b[2]*supercell.lattice.n_y*5);
-    out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*5, supercell.lattice.c[1]*supercell.lattice.n_z*5, supercell.lattice.c[2]*supercell.lattice.n_z*5);
+    out.print("{} {} {}\n", supercell.lattice.a[0]*supercell.lattice.n_x*supercell.lattice.magnify_factor, \
+    supercell.lattice.a[1]*supercell.lattice.n_x*supercell.lattice.magnify_factor, \
+    supercell.lattice.a[2]*supercell.lattice.n_x*supercell.lattice.magnify_factor);
+    out.print("{} {} {}\n", supercell.lattice.b[0]*supercell.lattice.n_y*supercell.lattice.magnify_factor, \
+    supercell.lattice.b[1]*supercell.lattice.n_y*supercell.lattice.magnify_factor, \
+    supercell.lattice.b[2]*supercell.lattice.n_y*supercell.lattice.magnify_factor);
+    out.print("{} {} {}\n", supercell.lattice.c[0]*supercell.lattice.n_z*supercell.lattice.magnify_factor, \
+    supercell.lattice.c[1]*supercell.lattice.n_z*supercell.lattice.magnify_factor, \
+    supercell.lattice.c[2]*supercell.lattice.n_z*supercell.lattice.magnify_factor);
     out.print("PRIMCOORD\n");
     out.print("{} 1\n", supercell.base_site.number*supercell.lattice.n_x*supercell.lattice.n_y*supercell.lattice.n_z);
+
+    vector<double> index = {0, 0, 0};
+    vector<double> coordinate = {0, 0, 0};
     for(int i=0; i<supercell.lattice.n_x; i++) {
         for(int j=0; j<supercell.lattice.n_y; j++) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
                 for(int l=0; l<supercell.base_site.number; l++) {
+                    index = {supercell.base_site.coordinate[l][0] + i, supercell.base_site.coordinate[l][1] + j, supercell.base_site.coordinate[l][2] + k};
+                    for(int m=0; m<3; m++) {
+                        coordinate[m] = index[0]*supercell.lattice.a[m]*supercell.lattice.magnify_factor + \
+                        index[1] * supercell.lattice.b[m]*supercell.lattice.magnify_factor + \
+                        index[2] * supercell.lattice.c[m]*supercell.lattice.magnify_factor;
+                    }
                     out.print("{} {} {} {} {} {} {}\n", supercell.base_site.elements[l], \
-                    supercell.base_site.coordinate[l][0] + i, \
-                    supercell.base_site.coordinate[l][1] + j, \
-                    supercell.base_site.coordinate[l][2] + k, \
+                    coordinate[0], \
+                    coordinate[1], \
+                    coordinate[2], \
                     supercell.site[i][j][k][l].spin[0], \
                     supercell.site[i][j][k][l].spin[1], \
                     supercell.site[i][j][k][l].spin[2]);
@@ -855,6 +873,6 @@ double Heisenberg(BaseSite & base_site, Site & site) {
         }
     }
 
-    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2] * (*site.anisotropic_factor)*site.spin[2];
+    energy += base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
     return energy;
 }
