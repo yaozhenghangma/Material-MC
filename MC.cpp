@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     int i;
 
     // Setting for openmp
-    omp_set_num_threads(20);
+    omp_set_num_threads(1);
 #pragma omp parallel private(i, supercell_private, T, tmp_value) shared(energy, Cv, moment, Ki)
 {
 #pragma omp for nowait
@@ -168,15 +168,15 @@ int main(int argc, char** argv) {
         supercell_private = supercell;
 
         // Monte Carlo
-        MonteCarloRelaxing(supercell, monte_carlo, T);
-        tmp_value = MonteCarloStep(supercell, monte_carlo, T);
+        MonteCarloRelaxing(supercell_private, monte_carlo, T);
+        tmp_value = MonteCarloStep(supercell_private, monte_carlo, T);
 
         // Record
-        energy.push_back((tmp_value[0])*one_over_number);
-        moment.push_back((tmp_value[2])*one_over_number);
-        Cv.push_back((tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T));
-        Ki.push_back((tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T));
-        WriteSpin(supercell, spin_structure_file_prefix, T);
+        energy[i] = (tmp_value[0])*one_over_number;
+        moment[i] = (tmp_value[2])*one_over_number;
+        Cv[i] = (tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T);
+        Ki[i] = (tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T);
+        WriteSpin(supercell_private, spin_structure_file_prefix, T);
     }
 }
 
