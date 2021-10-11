@@ -91,6 +91,9 @@ public:
 
     // Length of Monte Carlo steps.
     int flip_number = 0;
+
+    // Number of threads
+    int num_thread = 64;
 };
 
 class Supercell {
@@ -158,7 +161,7 @@ int main(int argc, char** argv) {
     int i;
 
     // Setting for openmp
-    omp_set_num_threads(10);
+    omp_set_num_threads(monte_carlo.num_thread);
 #pragma omp parallel private(i, supercell_private, T, tmp_value) shared(energy, Cv, moment, Ki)
 {
 #pragma omp for nowait
@@ -300,6 +303,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 
     // Information to control Monte Carlo simulation.
     getline(in, str); // Comment line of the simulation.
+    getline(in, str); // Number of threads.
+    scn::scan(str, "{}", monte_carlo.num_thread);
     getline(in, str); // Temperature.
     scn::scan(str, "{} {} {}", monte_carlo.start_temperature, monte_carlo.end_temperature, monte_carlo.temperature_step_number);
     monte_carlo.temperature_step = (monte_carlo.end_temperature-monte_carlo.start_temperature) / (monte_carlo.temperature_step_number-1);
