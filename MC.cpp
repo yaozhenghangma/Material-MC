@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
 
     // Enlarge the cell with given n.
     EnlargeCell(supercell);
-    InitializeSupercell(supercell);
+    //InitializeSupercell(supercell);
 
     // Monte Carlo
     vector<double> energy(monte_carlo.temperature_step_number, 0);
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
     int i;
 
     // Setting for openmp
-    omp_set_num_threads(1);
+    omp_set_num_threads(10);
 #pragma omp parallel private(i, supercell_private, T, tmp_value) shared(energy, Cv, moment, Ki)
 {
 #pragma omp for nowait
@@ -166,6 +166,7 @@ int main(int argc, char** argv) {
         // Initialize private variation
         T = monte_carlo.start_temperature + i*monte_carlo.temperature_step;
         supercell_private = supercell;
+        InitializeSupercell(supercell_private);
 
         // Monte Carlo
         MonteCarloRelaxing(supercell_private, monte_carlo, T);
