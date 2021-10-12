@@ -263,6 +263,7 @@ int main(int argc, char** argv) {
     vector<double> tmp_value = {0, 0, 0, 0};
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
+    MPI_Status status;
     for(int i=0; i<quotient+1; i++) {
         if(i<quotient || process_id<remainder) {
             T = monte_carlo.start_temperature + (i*num_process+process_id)*monte_carlo.temperature_step;
@@ -270,11 +271,38 @@ int main(int argc, char** argv) {
             result_value = MonteCarloStep(supercell, monte_carlo, T);
             WriteSpin(supercell, spin_structure_file_prefix, T);
 
-            // TODO: Collect data form all processors.
-            //energy[i] = (tmp_value[0])*one_over_number;
-            //moment[i] = (tmp_value[2])*one_over_number;
-            //Cv[i] = (tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T);
-            //Ki[i] = (tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T);
+            result_value[1] = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
+            result_value[3] = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
+            result_value[0] *= one_over_number; //energy
+            result_value[2] *= one_over_number; //moment
+            
+            // Collect data form all processors.
+            if(process_id == 0) {
+                energy[i*num_process] = result_value[0];
+                Cv[i*num_process] = result_value[1];
+                moment[i*num_process] = result_value[2];
+                Ki[i*num_process] = result_value[3];
+                if(i<quotient) {
+                    for(int j=1; j<num_process; j++) {
+                        MPI_Recv(& (energy[i*num_process+j]), 1, MPI_DOUBLE, j, j*4, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (Cv[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+1, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (moment[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+2, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (Ki[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+3, MPI_COMM_WORLD, & status);
+                    }
+                } else {
+                    for(int j=1; j<remainder; j++) {
+                        MPI_Recv(& (energy[i*num_process+j]), 1, MPI_DOUBLE, j, j*4, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (Cv[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+1, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (moment[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+2, MPI_COMM_WORLD, & status);
+                        MPI_Recv(& (Ki[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+3, MPI_COMM_WORLD, & status);
+                    }
+                }
+            } else {
+                MPI_Send(& (result_value[0]), 1, MPI_DOUBLE, 0, process_id*4, MPI_COMM_WORLD);
+                MPI_Send(& (result_value[1]), 1, MPI_DOUBLE, 0, process_id*4+1, MPI_COMM_WORLD);
+                MPI_Send(& (result_value[2]), 1, MPI_DOUBLE, 0, process_id*4+2, MPI_COMM_WORLD);
+                MPI_Send(& (result_value[3]), 1, MPI_DOUBLE, 0, process_id*4+3, MPI_COMM_WORLD);
+            }
         }
     }
 
