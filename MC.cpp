@@ -5,8 +5,8 @@
 #include<fmt/os.h>
 #include<functional>
 #include<math.h>
+#include<mpi.h>
 #include<iostream>
-#include<omp.h>
 #include<random>
 #include<scn/scn.h>
 #include<stdlib.h>
@@ -91,9 +91,6 @@ public:
 
     // Length of Monte Carlo steps.
     int flip_number = 0;
-
-    // Number of threads
-    int num_thread = 64;
 };
 
 class Supercell {
@@ -126,28 +123,50 @@ int WriteOutput(MonteCarlo &, vector<double>, vector<double>, vector<double>, ve
 double Heisenberg(BaseSite & base_site, Site & site);
 
 int main(int argc, char** argv) {
-    // Read information from command line.
-    string  cell_structure_file = "POSCAR";
-    string input_file = "input.txt"; 
-    string output_file = "output.txt";
-    string spin_structure_file_prefix = "spin";
-    ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
+    int process_id, num_process;
+    MPI_Init(&argc,&argv); // Initialize mpi environment
+
+    MPI_Comm_size(MPI_COMM_WORLD,&num_process);
+    MPI_Comm_rank(MPI_COMM_WORLD,&process_id);
+
+    // TODO: Compatibility for single processors.
+    if(num_process == 1) {
+        MPI_Finalize();
+        return 0;
+    }
 
     Supercell supercell;
     MonteCarlo monte_carlo;
+    string cell_structure_file = "POSCAR";
+    string input_file = "input.txt"; 
+    string output_file = "output.txt";
+    string spin_structure_file_prefix = "spin";
 
-    // Read information from input file.
-    ReadSettingFile(supercell, monte_carlo, input_file);
-    double T = monte_carlo.start_temperature;
+    // Read parameters and broadcast data using root processor
+    if(process_id == 0) {
+        // Read information from command line.
+        ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
-    // Read information from POSCAR
-    ReadPOSCAR(supercell, cell_structure_file);
+        // Read information from input file.
+        ReadSettingFile(supercell, monte_carlo, input_file);
+        double T = monte_carlo.start_temperature;
+
+        // Read information from POSCAR
+        ReadPOSCAR(supercell, cell_structure_file);
+    }
+    // TODO: Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
 
     // Enlarge the cell with given n.
     EnlargeCell(supercell);
-    //InitializeSupercell(supercell);
+    InitializeSupercell(supercell);
+
+    // Arrange the processors.
+    int quotient = monte_carlo.temperature_step_number / num_process;
+    int remainder = monte_carlo.temperature_step_number % num_process;
 
     // Monte Carlo
+    double T;
+    vector<double> result_value;
     vector<double> energy(monte_carlo.temperature_step_number, 0);
     vector<double> Cv(monte_carlo.temperature_step_number, 0);
     vector<double> moment(monte_carlo.temperature_step_number, 0);
@@ -155,37 +174,26 @@ int main(int argc, char** argv) {
     vector<double> tmp_value = {0, 0, 0, 0};
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
+    for(int i=0; i<quotient+1; i++) {
+        if(i<quotient || process_id<remainder) {
+            T = monte_carlo.start_temperature + (i*num_process+process_id)*monte_carlo.temperature_step;
+            MonteCarloRelaxing(supercell, monte_carlo, T);
+            result_value = MonteCarloStep(supercell, monte_carlo, T);
+            WriteSpin(supercell, spin_structure_file_prefix, T);
 
-    // Private variation for openmp
-    Supercell supercell_private;
-    int i;
-
-    // Setting for openmp
-    omp_set_num_threads(monte_carlo.num_thread);
-#pragma omp parallel private(i, supercell_private, T, tmp_value) shared(energy, Cv, moment, Ki)
-{
-#pragma omp for nowait
-    for(i=0; i<monte_carlo.temperature_step_number; i++) { // Loop for temperature
-        // Initialize private variation
-        T = monte_carlo.start_temperature + i*monte_carlo.temperature_step;
-        supercell_private = supercell;
-        InitializeSupercell(supercell_private);
-
-        // Monte Carlo
-        MonteCarloRelaxing(supercell_private, monte_carlo, T);
-        tmp_value = MonteCarloStep(supercell_private, monte_carlo, T);
-
-        // Record
-        energy[i] = (tmp_value[0])*one_over_number;
-        moment[i] = (tmp_value[2])*one_over_number;
-        Cv[i] = (tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T);
-        Ki[i] = (tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T);
-        WriteSpin(supercell_private, spin_structure_file_prefix, T);
+            // TODO: Collect data form all processors.
+            //energy[i] = (tmp_value[0])*one_over_number;
+            //moment[i] = (tmp_value[2])*one_over_number;
+            //Cv[i] = (tmp_value[1] - tmp_value[0] * tmp_value[0])*one_over_number/(KB*T*T);
+            //Ki[i] = (tmp_value[3] - tmp_value[2] * tmp_value[2])/(KB*T);
+        }
     }
-}
 
-    // Output the thermal dynamic result.
-    WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
+    // Output the thermal dynamic result using root processor.
+    if(process_id == 0) {
+        WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
+    }
+    MPI_Finalize();
     return 0;
 }
 
@@ -303,8 +311,6 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 
     // Information to control Monte Carlo simulation.
     getline(in, str); // Comment line of the simulation.
-    getline(in, str); // Number of threads.
-    scn::scan(str, "{}", monte_carlo.num_thread);
     getline(in, str); // Temperature.
     scn::scan(str, "{} {} {}", monte_carlo.start_temperature, monte_carlo.end_temperature, monte_carlo.temperature_step_number);
     monte_carlo.temperature_step = (monte_carlo.end_temperature-monte_carlo.start_temperature) / (monte_carlo.temperature_step_number-1);
