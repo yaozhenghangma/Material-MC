@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(include/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(include/scnlib EXCLUDE_FROM_ALL)
 add_subdirectory(include/ctre EXCLUDE_FROM_ALL)
-include_directories("include/cereal/include/cereal")
+include_directories("include/cereal/include")
 
 add_executable(MC.out MC.cpp)
 

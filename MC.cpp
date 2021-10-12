@@ -10,9 +10,15 @@
 #include<random>
 #include<scn/scn.h>
 #include<stdlib.h>
+#include<sstream>
 #include<string>
 #include<unistd.h>
 #include<vector>
+
+#include<cereal/archives/binary.hpp>
+#include<cereal/types/vector.hpp>
+#include<cereal/types/string.hpp>
+#include<cereal/types/functional.hpp>
 
 using namespace std;
 
@@ -36,6 +42,13 @@ public:
     vector<vector<double>> super_exchange_parameter_c;
 
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
+
+    // Serialization using cereal
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(number, coordinate, spin_scaling, anisotropic_factor, elements, layered, neighbor_number, \
+        all_magnetic, super_exchange_parameter_ab, super_exchange_parameter_c, anisotropic_factor_D);
+    }
 };
 
 // Data of each site.
@@ -74,6 +87,12 @@ public:
     
     // Output information
     double magnify_factor = 2.0;
+
+    // Serialization using cereal
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(a, b, c, scaling, n_x, n_y, n_z, Hamiltonian, total_energy, magnify_factor);
+    }
 };
 
 // Information to control Monte Carlo circling.
@@ -91,6 +110,12 @@ public:
 
     // Length of Monte Carlo steps.
     int flip_number = 0;
+
+    // Serialization using cereal
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(start_temperature, end_temperature, temperature_step, temperature_step_number, relax_step, count_step, flip_number);
+    }
 };
 
 class Supercell {
@@ -154,7 +179,71 @@ int main(int argc, char** argv) {
         // Read information from POSCAR
         ReadPOSCAR(supercell, cell_structure_file);
     }
-    // TODO: Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
+    // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
+    int base_site_stream_len;
+    int lattice_stream_len;
+    int monte_carlo_stream_len;
+    stringstream base_site_stream;
+    stringstream lattice_stream;
+    stringstream monte_carlo_stream;
+    char * base_site_char;
+    char * lattice_char;
+    char * monte_carlo_char;
+
+    cereal::BinaryOutputArchive base_site_archive_out(base_site_stream);
+    cereal::BinaryOutputArchive lattice_archive_out(lattice_stream);
+    cereal::BinaryOutputArchive monte_carlo_archive_out(monte_carlo_stream);
+
+    cereal::BinaryInputArchive base_site_archive_in(base_site_stream);
+    cereal::BinaryInputArchive lattice_archive_in(lattice_stream);
+    cereal::BinaryInputArchive monte_carlo_archive_in(monte_carlo_stream);
+
+    if(process_id == 0) {
+        base_site_archive_out(supercell.base_site);
+        lattice_archive_out(supercell.lattice);
+        monte_carlo_archive_out(monte_carlo);
+
+        base_site_stream_len = base_site_stream.str().size();
+        lattice_stream_len = lattice_stream.str().size();
+        monte_carlo_stream_len = monte_carlo_stream.str().size();
+    }
+    MPI_Bcast(&base_site_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&lattice_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&monte_carlo_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    base_site_char = new char[base_site_stream_len+1];
+    lattice_char = new char[lattice_stream_len+1];
+    monte_carlo_char = new char[monte_carlo_stream_len+1];
+    if(process_id == 0) {
+        for(int i=0; i<base_site_stream_len; i++) {
+            base_site_char[i] = base_site_stream.str().c_str()[i];
+        }
+        base_site_char[base_site_stream_len] = '\0';
+
+        for(int i=0; i<lattice_stream_len; i++) {
+            lattice_char[i] = lattice_stream.str().c_str()[i];
+        }
+        lattice_char[base_site_stream_len] = '\0';
+
+        for(int i=0; i<monte_carlo_stream_len; i++) {
+            monte_carlo_char[i] = monte_carlo_stream.str().c_str()[i];
+        }
+        monte_carlo_char[base_site_stream_len] = '\0';
+    }
+    MPI_Bcast(base_site_char, base_site_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(lattice_char, lattice_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(monte_carlo_char, monte_carlo_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
+
+    base_site_stream.write((const char*) base_site_char, base_site_stream_len);
+    lattice_stream.write((const char*) lattice_char, lattice_stream_len);
+    monte_carlo_stream.write((const char*) monte_carlo_char, monte_carlo_stream_len);
+    base_site_archive_in(supercell.base_site);
+    lattice_archive_in(supercell.lattice);
+    monte_carlo_archive_in(monte_carlo);
+
+    delete base_site_char;
+    delete lattice_char;
+    delete monte_carlo_char;
 
     // Enlarge the cell with given n.
     EnlargeCell(supercell);
