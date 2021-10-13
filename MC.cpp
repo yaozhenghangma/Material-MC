@@ -81,8 +81,6 @@ public:
     int n_y;
     int n_z;
 
-    // Hamiltonian function to calculate energy for one site
-    function<double(BaseSite &, Site &)> Hamiltonian;
     double total_energy;
     
     // Output information
@@ -91,7 +89,7 @@ public:
     // Serialization using cereal
     template <class Archive>
     void serialize(Archive & ar) {
-        ar(a, b, c, scaling, n_x, n_y, n_z, Hamiltonian, total_energy, magnify_factor);
+        ar(a, b, c, scaling, n_x, n_y, n_z, total_energy, magnify_factor);
     }
 };
 
@@ -124,6 +122,9 @@ public:
     BaseSite base_site;
     vector<vector<vector<vector<Site>>>> site;
 
+    // Hamiltonian function to calculate energy for one site
+    function<double(BaseSite &, Site &)> Hamiltonian;
+
     Site & operator[](vector<int> n);
     double energy();
     double momentum();
@@ -142,7 +143,7 @@ int AddDistance(double distance, vector<double> & distance_list);
 int InitializeSupercell(Supercell & supercell);
 int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T);
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T);
-int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T);
+int Flip(Supercell & supercell, Site & one_site, double T);
 int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T);
 int WriteOutput(MonteCarlo &, vector<double>, vector<double>, vector<double>, vector<double>, string);
 double Heisenberg(BaseSite & base_site, Site & site);
@@ -324,7 +325,7 @@ double Supercell::energy() {
         for(int j=0; j<this->lattice.n_y; j++) {
             for(int k=0; k<this->lattice.n_z; k++) {
                 for(int l=0; l<this->base_site.number; l++) {
-                    e += this->lattice.Hamiltonian(this->base_site, this->site[i][j][k][l]);
+                    e += this->Hamiltonian(this->base_site, this->site[i][j][k][l]);
                 }
             }
         }
@@ -451,7 +452,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
     getline(in, str); // Hamiltonion function.
     scn::scan(str, "{}", tmp_str);
-    supercell.lattice.Hamiltonian = Heisenberg;
+    supercell.Hamiltonian = Heisenberg;
     getline(in, str); // Magnifying factor
     scn::scan(str, "{}", supercell.lattice.magnify_factor);
 
@@ -895,7 +896,7 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
     for(int i=0; i<monte_carlo.relax_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
+            Flip(supercell, supercell[site_chosen], T);
         }
     }
     
@@ -914,7 +915,7 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            Flip(supercell.lattice, supercell.base_site, supercell[site_chosen], T);
+            Flip(supercell, supercell[site_chosen], T);
         }
         total_energy += supercell.lattice.total_energy;
         total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
@@ -927,15 +928,15 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     total_momentum * one_over_step, total_momentum_square * one_over_step};
 }
 
-int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
+int Flip(Supercell & supercell, Site & one_site, double T) {
     // Flip one spin.
     // Energy and spin before flip.
-    double energy_old = lattice.Hamiltonian(base_site, one_site);
+    double energy_old = supercell.Hamiltonian(supercell.base_site, one_site);
     vector<double> old_spin = one_site.spin;
 
     // Energy and spin after flip.
     one_site.spin = RandomSpin(*one_site.spin_scaling);
-    double energy_new = lattice.Hamiltonian(base_site, one_site);
+    double energy_new = supercell.Hamiltonian(supercell.base_site, one_site);
     double de = energy_new - energy_old;
 
     // Judge whether to flip.
@@ -943,7 +944,7 @@ int Flip(Lattice & lattice, BaseSite & base_site, Site & one_site, double T) {
     if (crition > exp(-de/(KB*T))) {
         one_site.spin = old_spin;
     } else {
-        lattice.total_energy += de;
+        supercell.lattice.total_energy += de;
     }
 
     return 0;
