@@ -259,10 +259,10 @@ int main(int argc, char** argv) {
     // Monte Carlo
     double T;
     vector<double> result_value;
-    vector<double> energy(monte_carlo.temperature_step_number, 0);
-    vector<double> Cv(monte_carlo.temperature_step_number, 0);
-    vector<double> moment(monte_carlo.temperature_step_number, 0);
-    vector<double> Ki(monte_carlo.temperature_step_number, 0);
+    vector<double> energy(num_process*(quotient+1), 0);
+    vector<double> Cv(num_process*(quotient+1), 0);
+    vector<double> moment(num_process*(quotient+1), 0);
+    vector<double> Ki(num_process*(quotient+1), 0);
     double * temp_energy = NULL;
     double * temp_Cv = NULL;
     double * temp_moment = NULL;
@@ -998,7 +998,7 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
     double T = monte_carlo.start_temperature;
     auto out = fmt::output_file(output_file);
     out.print("T\tEnergy\tCv\tMoment\tKi\n");
-    for(int i=0; i<monte_carlo.temperature_step_number; i++) {
+    for(int i=0; i<energy.size(); i++) {
         out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\n", T, energy[i], Cv[i], moment[i], Ki[i]);
         T += monte_carlo.temperature_step;
     }
