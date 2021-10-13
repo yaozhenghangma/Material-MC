@@ -156,10 +156,12 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD,&process_id);
 
     // TODO: Compatibility for single processors.
+    /*
     if(num_process == 1) {
         MPI_Finalize();
         return 0;
     }
+    */
 
     Supercell supercell;
     MonteCarlo monte_carlo;
@@ -261,12 +263,15 @@ int main(int argc, char** argv) {
     vector<double> Cv(monte_carlo.temperature_step_number, 0);
     vector<double> moment(monte_carlo.temperature_step_number, 0);
     vector<double> Ki(monte_carlo.temperature_step_number, 0);
-    vector<double> tmp_value = {0, 0, 0, 0};
+    double * temp_energy = NULL;
+    double * temp_Cv = NULL;
+    double * temp_moment = NULL;
+    double * temp_Ki = NULL;
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
     MPI_Status status;
     for(int i=0; i<quotient+1; i++) {
-        if(i<quotient || process_id<remainder) {
+        if(i<quotient || remainder !=0 ) {
             T = monte_carlo.start_temperature + (i*num_process+process_id)*monte_carlo.temperature_step;
             MonteCarloRelaxing(supercell, monte_carlo, T);
             result_value = MonteCarloStep(supercell, monte_carlo, T);
@@ -276,33 +281,26 @@ int main(int argc, char** argv) {
             result_value[3] = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
             result_value[0] *= one_over_number; //energy
             result_value[2] *= one_over_number; //moment
+
+            if(process_id == 0) {
+                temp_energy = new double[num_process];
+                temp_Cv = new double[num_process];
+                temp_moment = new double[num_process];
+                temp_Ki = new double[num_process];
+            }
             
             // Collect data form all processors.
-            if(process_id == 0) {
-                energy[i*num_process] = result_value[0];
-                Cv[i*num_process] = result_value[1];
-                moment[i*num_process] = result_value[2];
-                Ki[i*num_process] = result_value[3];
-                if(i<quotient) {
-                    for(int j=1; j<num_process; j++) {
-                        MPI_Recv(& (energy[i*num_process+j]), 1, MPI_DOUBLE, j, j*4, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (Cv[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+1, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (moment[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+2, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (Ki[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+3, MPI_COMM_WORLD, & status);
-                    }
-                } else {
-                    for(int j=1; j<remainder; j++) {
-                        MPI_Recv(& (energy[i*num_process+j]), 1, MPI_DOUBLE, j, j*4, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (Cv[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+1, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (moment[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+2, MPI_COMM_WORLD, & status);
-                        MPI_Recv(& (Ki[i*num_process+j]), 1, MPI_DOUBLE, j, j*4+3, MPI_COMM_WORLD, & status);
-                    }
-                }
-            } else {
-                MPI_Send(& (result_value[0]), 1, MPI_DOUBLE, 0, process_id*4, MPI_COMM_WORLD);
-                MPI_Send(& (result_value[1]), 1, MPI_DOUBLE, 0, process_id*4+1, MPI_COMM_WORLD);
-                MPI_Send(& (result_value[2]), 1, MPI_DOUBLE, 0, process_id*4+2, MPI_COMM_WORLD);
-                MPI_Send(& (result_value[3]), 1, MPI_DOUBLE, 0, process_id*4+3, MPI_COMM_WORLD);
+            MPI_Gather(&(result_value[0]), 1, MPI_DOUBLE, temp_energy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Gather(&(result_value[1]), 1, MPI_DOUBLE, temp_Cv, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Gather(&(result_value[2]), 1, MPI_DOUBLE, temp_moment, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Gather(&(result_value[3]), 1, MPI_DOUBLE, temp_Ki, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+            // Store these data
+            for(int j=0; j<num_process; j++) {
+                energy[i*num_process+j] = temp_energy[j];
+                Cv[i*num_process+j] = temp_Cv[j];
+                moment[i*num_process+j] = temp_moment[j];
+                Ki[i*num_process+j] = temp_Ki[j];
             }
         }
     }
