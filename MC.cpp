@@ -1,24 +1,31 @@
-#include<ctll.hpp>
-#include<ctre.hpp>
 #include<fstream>
-#include<fmt/core.h>
-#include<fmt/os.h>
 #include<functional>
 #include<math.h>
 #include<mpi.h>
 #include<iostream>
 #include<random>
-#include<scn/scn.h>
 #include<stdlib.h>
 #include<sstream>
 #include<string>
 #include<unistd.h>
 #include<vector>
 
-#include<cereal/archives/binary.hpp>
-#include<cereal/types/vector.hpp>
-#include<cereal/types/string.hpp>
-#include<cereal/types/functional.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
+
+#include <boost/mpi.hpp>
+
+#include"include/fmt/include/fmt/core.h"
+#include"include/fmt/include/fmt/os.h"
+
+#include"include/ctre/include/ctll.hpp"
+#include"include/ctre/include/ctre.hpp"
+
+#include"include/scnlib/include/scn/scn.h"
+
+namespace mpi = boost::mpi;
 
 using namespace std;
 
@@ -296,12 +303,15 @@ int main(int argc, char** argv) {
             MPI_Gather(&(result_value[3]), 1, MPI_DOUBLE, temp_Ki, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
             // Store these data
-            for(int j=0; j<num_process; j++) {
-                energy[i*num_process+j] = temp_energy[j];
-                Cv[i*num_process+j] = temp_Cv[j];
-                moment[i*num_process+j] = temp_moment[j];
-                Ki[i*num_process+j] = temp_Ki[j];
+            if(process_id == 0) {
+                for(int j=0; j<num_process; j++) {
+                    energy[i*num_process+j] = temp_energy[j];
+                    Cv[i*num_process+j] = temp_Cv[j];
+                    moment[i*num_process+j] = temp_moment[j];
+                    Ki[i*num_process+j] = temp_Ki[j];
+                }
             }
+            
         }
     }
 

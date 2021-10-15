@@ -7,6 +7,3 @@
 [submodule "include/ctre"]
 	path = include/ctre
 	url = https://github.com/hanickadot/compile-time-regular-expressions
-[submodule "include/cereal"]
-	path = include/cereal
-	url = https://github.com/USCiLab/cereal
