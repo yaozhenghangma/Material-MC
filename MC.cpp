@@ -17,6 +17,7 @@
 
 #include <boost/mpi.hpp>
 
+#define FMT_HEADER_ONLY
 #include"include/fmt/include/fmt/core.h"
 #include"include/fmt/include/fmt/os.h"
 
@@ -49,14 +50,29 @@ public:
     vector<vector<double>> super_exchange_parameter_c;
 
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
-
-    // Serialization using cereal
-    template <class Archive>
-    void serialize(Archive & ar) {
-        ar(number, coordinate, spin_scaling, anisotropic_factor, elements, layered, neighbor_number, \
-        all_magnetic, super_exchange_parameter_ab, super_exchange_parameter_c, anisotropic_factor_D);
-    }
 };
+
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
+{
+    ar & base_site.number;
+    ar & base_site.coordinate;
+    ar & base_site.spin_scaling;
+    ar & base_site.anisotropic_factor;
+    ar & base_site.elements;
+    ar & base_site.layered;
+    ar & base_site.neighbor_number;
+    ar & base_site.all_magnetic;
+    ar & base_site.super_exchange_parameter_ab;
+    ar & base_site.super_exchange_parameter_c;
+    ar & base_site.anisotropic_factor_D;
+}
+
+}
+}
 
 // Data of each site.
 class Site {
@@ -89,16 +105,33 @@ public:
     int n_z;
 
     double total_energy;
+
+    string function_choice;
     
     // Output information
     double magnify_factor = 2.0;
-
-    // Serialization using cereal
-    template <class Archive>
-    void serialize(Archive & ar) {
-        ar(a, b, c, scaling, n_x, n_y, n_z, total_energy, magnify_factor);
-    }
 };
+
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
+{
+    ar & lattice.a;
+    ar & lattice.b;
+    ar & lattice.c;
+    ar & lattice.scaling;
+    ar & lattice.n_x;
+    ar & lattice.n_y;
+    ar & lattice.n_z;
+    ar & lattice.total_energy;
+    ar & lattice.magnify_factor;
+    ar & lattice.function_choice;
+}
+
+}
+}
 
 // Information to control Monte Carlo circling.
 class MonteCarlo {
@@ -115,13 +148,25 @@ public:
 
     // Length of Monte Carlo steps.
     int flip_number = 0;
-
-    // Serialization using cereal
-    template <class Archive>
-    void serialize(Archive & ar) {
-        ar(start_temperature, end_temperature, temperature_step, temperature_step_number, relax_step, count_step, flip_number);
-    }
 };
+
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, MonteCarlo & monte_carlo, const unsigned int version)
+{
+    ar & monte_carlo.start_temperature;
+    ar & monte_carlo.end_temperature;
+    ar & monte_carlo.temperature_step;
+    ar & monte_carlo.temperature_step_number;
+    ar & monte_carlo.relax_step;
+    ar & monte_carlo.count_step;
+    ar & monte_carlo.flip_number;
+}
+
+}
+}
 
 class Supercell {
 public:
@@ -141,7 +186,7 @@ vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n);
 vector<double> RandomSpin(double scaling);
 double RandomFloat();
 int ReadOptions(int argc, char** argv, string & cell_structure_file, string & input_file, string & output_file, string & spin_structure_file_prefix);
-int usage(char* program);
+void usage(char* program);
 int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string input_file);
 int ReadPOSCAR(Supercell & supercell, string cell_structure_file);
 int EnlargeCell(Supercell & supercell);
@@ -156,19 +201,8 @@ int WriteOutput(MonteCarlo &, vector<double>, vector<double>, vector<double>, ve
 double Heisenberg(BaseSite & base_site, Site & site);
 
 int main(int argc, char** argv) {
-    int process_id, num_process;
-    MPI_Init(&argc,&argv); // Initialize mpi environment
-
-    MPI_Comm_size(MPI_COMM_WORLD,&num_process);
-    MPI_Comm_rank(MPI_COMM_WORLD,&process_id);
-
-    // TODO: Compatibility for single processors.
-    /*
-    if(num_process == 1) {
-        MPI_Finalize();
-        return 0;
-    }
-    */
+    mpi::environment env;
+    mpi::communicator world;
 
     Supercell supercell;
     MonteCarlo monte_carlo;
@@ -178,137 +212,71 @@ int main(int argc, char** argv) {
     string spin_structure_file_prefix = "spin";
 
     // Read parameters and broadcast data using root processor
-    if(process_id == 0) {
+    if(world.rank() == 0) {
         // Read information from command line.
         ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
         // Read information from input file.
         ReadSettingFile(supercell, monte_carlo, input_file);
-        double T = monte_carlo.start_temperature;
 
         // Read information from POSCAR
         ReadPOSCAR(supercell, cell_structure_file);
     }
     // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
-    int base_site_stream_len;
-    int lattice_stream_len;
-    int monte_carlo_stream_len;
-    stringstream base_site_stream;
-    stringstream lattice_stream;
-    stringstream monte_carlo_stream;
-    char * base_site_char;
-    char * lattice_char;
-    char * monte_carlo_char;
-
-    cereal::BinaryOutputArchive base_site_archive_out(base_site_stream);
-    cereal::BinaryOutputArchive lattice_archive_out(lattice_stream);
-    cereal::BinaryOutputArchive monte_carlo_archive_out(monte_carlo_stream);
-
-    cereal::BinaryInputArchive base_site_archive_in(base_site_stream);
-    cereal::BinaryInputArchive lattice_archive_in(lattice_stream);
-    cereal::BinaryInputArchive monte_carlo_archive_in(monte_carlo_stream);
-
-    if(process_id == 0) {
-        base_site_archive_out(supercell.base_site);
-        lattice_archive_out(supercell.lattice);
-        monte_carlo_archive_out(monte_carlo);
-
-        base_site_stream_len = base_site_stream.str().size();
-        lattice_stream_len = lattice_stream.str().size();
-        monte_carlo_stream_len = monte_carlo_stream.str().size();
-    }
-    MPI_Bcast(&base_site_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&lattice_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&monte_carlo_stream_len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    base_site_char = new char[base_site_stream_len+1];
-    lattice_char = new char[lattice_stream_len+1];
-    monte_carlo_char = new char[monte_carlo_stream_len+1];
-    if(process_id == 0) {
-        for(int i=0; i<base_site_stream_len; i++) {
-            base_site_char[i] = base_site_stream.str().c_str()[i];
-        }
-        base_site_char[base_site_stream_len] = '\0';
-
-        for(int i=0; i<lattice_stream_len; i++) {
-            lattice_char[i] = lattice_stream.str().c_str()[i];
-        }
-        lattice_char[base_site_stream_len] = '\0';
-
-        for(int i=0; i<monte_carlo_stream_len; i++) {
-            monte_carlo_char[i] = monte_carlo_stream.str().c_str()[i];
-        }
-        monte_carlo_char[base_site_stream_len] = '\0';
-    }
-    MPI_Bcast(base_site_char, base_site_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(lattice_char, lattice_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(monte_carlo_char, monte_carlo_stream_len+1, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    base_site_stream.write((const char*) base_site_char, base_site_stream_len);
-    lattice_stream.write((const char*) lattice_char, lattice_stream_len);
-    monte_carlo_stream.write((const char*) monte_carlo_char, monte_carlo_stream_len);
-    base_site_archive_in(supercell.base_site);
-    lattice_archive_in(supercell.lattice);
-    monte_carlo_archive_in(monte_carlo);
-
-    delete base_site_char;
-    delete lattice_char;
-    delete monte_carlo_char;
+    broadcast(world, supercell.base_site, 0);
+    broadcast(world, supercell.lattice, 0);
+    broadcast(world, monte_carlo, 0);
 
     // Enlarge the cell with given n.
     EnlargeCell(supercell);
     InitializeSupercell(supercell);
 
     // Arrange the processors.
-    int quotient = monte_carlo.temperature_step_number / num_process;
-    int remainder = monte_carlo.temperature_step_number % num_process;
+    int quotient = monte_carlo.temperature_step_number / world.size();
+    int remainder = monte_carlo.temperature_step_number % world.size();
 
     // Monte Carlo
     double T;
     vector<double> result_value;
-    vector<double> energy(num_process*(quotient+1), 0);
-    vector<double> Cv(num_process*(quotient+1), 0);
-    vector<double> moment(num_process*(quotient+1), 0);
-    vector<double> Ki(num_process*(quotient+1), 0);
-    double * temp_energy = NULL;
-    double * temp_Cv = NULL;
-    double * temp_moment = NULL;
-    double * temp_Ki = NULL;
+    vector<double> energy;
+    vector<double> Cv;
+    vector<double> moment;
+    vector<double> Ki;
+    double energy_every_processor;
+    double Cv_every_processor;
+    double moment_every_processor;
+    double Ki_every_processor;
+    vector<double> gathered_energy;
+    vector<double> gathered_Cv;
+    vector<double> gathered_moment;
+    vector<double> gathered_Ki;
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
-    MPI_Status status;
     for(int i=0; i<quotient+1; i++) {
         if(i<quotient || remainder !=0 ) {
-            T = monte_carlo.start_temperature + (i*num_process+process_id)*monte_carlo.temperature_step;
+            T = monte_carlo.start_temperature + (i*world.size()+world.rank())*monte_carlo.temperature_step;
             MonteCarloRelaxing(supercell, monte_carlo, T);
             result_value = MonteCarloStep(supercell, monte_carlo, T);
             WriteSpin(supercell, spin_structure_file_prefix, T);
 
-            result_value[1] = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
-            result_value[3] = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
-            result_value[0] *= one_over_number; //energy
-            result_value[2] *= one_over_number; //moment
-
-            if(process_id == 0) {
-                temp_energy = new double[num_process];
-                temp_Cv = new double[num_process];
-                temp_moment = new double[num_process];
-                temp_Ki = new double[num_process];
-            }
+            Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
+            Ki_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
+            energy_every_processor = result_value[0] * one_over_number; //energy
+            moment_every_processor = result_value[2] * one_over_number; //moment
             
             // Collect data form all processors.
-            MPI_Gather(&(result_value[0]), 1, MPI_DOUBLE, temp_energy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Gather(&(result_value[1]), 1, MPI_DOUBLE, temp_Cv, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Gather(&(result_value[2]), 1, MPI_DOUBLE, temp_moment, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            MPI_Gather(&(result_value[3]), 1, MPI_DOUBLE, temp_Ki, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            gather(world, energy_every_processor, gathered_energy, 0);
+            gather(world, Cv_every_processor, gathered_Cv, 0);
+            gather(world, moment_every_processor, gathered_moment, 0);
+            gather(world, Ki_every_processor, gathered_Ki, 0);
 
             // Store these data
-            if(process_id == 0) {
-                for(int j=0; j<num_process; j++) {
-                    energy[i*num_process+j] = temp_energy[j];
-                    Cv[i*num_process+j] = temp_Cv[j];
-                    moment[i*num_process+j] = temp_moment[j];
-                    Ki[i*num_process+j] = temp_Ki[j];
+            if(world.rank() == 0) {
+                for(int j=0; j<world.size(); j++) {
+                    energy.push_back(gathered_energy[j]);
+                    Cv.push_back(gathered_Cv[j]);
+                    moment.push_back(gathered_moment[j]);
+                    Ki.push_back(gathered_Ki[j]);
                 }
             }
             
@@ -316,10 +284,9 @@ int main(int argc, char** argv) {
     }
 
     // Output the thermal dynamic result using root processor.
-    if(process_id == 0) {
+    if(world.rank() == 0) {
         WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
     }
-    MPI_Finalize();
     return 0;
 }
 
@@ -418,9 +385,11 @@ int ReadOptions(int argc, char** argv, string & cell_structure_file, string & in
                 usage(argv[0]);
         }
     }
+
+    return 0;
 }
 
-int usage(char* program) {
+void usage(char* program) {
     //TODO: Usage of the program.
     exit(1);
 }
@@ -460,6 +429,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
     getline(in, str); // Hamiltonion function.
     scn::scan(str, "{}", tmp_str);
+    supercell.lattice.function_choice = "Heisenberg";
     supercell.Hamiltonian = Heisenberg;
     getline(in, str); // Magnifying factor
     scn::scan(str, "{}", supercell.lattice.magnify_factor);
@@ -704,6 +674,11 @@ int AddDistance(double distance, vector<double> & distance_list) {
 }
 
 int InitializeSupercell(Supercell & supercell) {
+    // Initialize Hamiltonian
+    if(supercell.lattice.function_choice == "Heisenberg") {
+        supercell.Hamiltonian = Heisenberg;
+    }
+
     // Initialize the neighbors' link and energy.
     if(supercell.base_site.layered) {
         // Find the neighbors for every base sites in a cell.
@@ -790,7 +765,7 @@ int InitializeSupercell(Supercell & supercell) {
                         for(int m=0; m<supercell.base_site.neighbor_number; m++) {
                             supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
                             for(int n=0; n<neighbors_index_ab[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( \ 
+                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( 
                                 & supercell.site[(i+neighbors_index_ab[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
                                 [(j+neighbors_index_ab[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
                                 [k] \
@@ -799,7 +774,7 @@ int InitializeSupercell(Supercell & supercell) {
 
                             supercell.site[i][j][k][l].neighbor_c.push_back(temp);
                             for(int n=0; n<neighbors_index_c[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_c[m].push_back( \ 
+                                supercell.site[i][j][k][l].neighbor_c[m].push_back( 
                                 & supercell.site[(i+neighbors_index_c[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
                                 [(j+neighbors_index_c[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
                                 [(k+neighbors_index_c[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
@@ -881,7 +856,7 @@ int InitializeSupercell(Supercell & supercell) {
                         for(int m=0; m<supercell.base_site.neighbor_number; m++) {
                             supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
                             for(int n=0; n<neighbors_index[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( \ 
+                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( 
                                 & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
                                 [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
                                 [(k+neighbors_index[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
