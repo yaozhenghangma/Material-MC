@@ -44,6 +44,8 @@ public:
     bool all_magnetic;
     vector<vector<double>> super_exchange_parameter;
 
+    //TODO: record and output coordination number
+
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
 };
 
@@ -121,6 +123,7 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.n_z;
     ar & lattice.total_energy;
     ar & lattice.magnify_factor;
+    ar & lattice.tolerance_percentage;
     ar & lattice.function_choice;
 }
 
@@ -712,7 +715,7 @@ int InitializeSupercell(Supercell & supercell) {
                             supercell.site[i][j][k][l].neighbor[m].push_back( 
                             & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
                             [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                            [k] \
+                            [(k+neighbors_index[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
                             [neighbors_index[l][m][n][3]]);
                         }
                     }
