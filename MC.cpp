@@ -17,14 +17,11 @@
 
 #include <boost/mpi.hpp>
 
-#define FMT_HEADER_ONLY
-#include"include/fmt/include/fmt/core.h"
-#include"include/fmt/include/fmt/os.h"
-
-#include"include/ctre/include/ctll.hpp"
-#include"include/ctre/include/ctre.hpp"
-
-#include"include/scnlib/include/scn/scn.h"
+#include<ctll.hpp>
+#include<ctre.hpp>
+#include<fmt/core.h>
+#include<fmt/os.h>
+#include<scn/scn.h>
 
 namespace mpi = boost::mpi;
 
