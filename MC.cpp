@@ -40,11 +40,9 @@ public:
     vector<string> elements;
 
     // Input information    
-    bool layered; // Layered material
     int neighbor_number;
     bool all_magnetic;
-    vector<vector<double>> super_exchange_parameter_ab;
-    vector<vector<double>> super_exchange_parameter_c;
+    vector<vector<double>> super_exchange_parameter;
 
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
 };
@@ -60,11 +58,9 @@ void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
     ar & base_site.spin_scaling;
     ar & base_site.anisotropic_factor;
     ar & base_site.elements;
-    ar & base_site.layered;
     ar & base_site.neighbor_number;
     ar & base_site.all_magnetic;
-    ar & base_site.super_exchange_parameter_ab;
-    ar & base_site.super_exchange_parameter_c;
+    ar & base_site.super_exchange_parameter;
     ar & base_site.anisotropic_factor_D;
 }
 
@@ -77,14 +73,12 @@ public:
     vector<double> spin = {0, 0, 0};
     double * spin_scaling;
     double * anisotropic_factor;
-    vector<double> * super_exchange_parameter_ab;
-    vector<double> * super_exchange_parameter_c;
+    vector<double> * super_exchange_parameter;
 
     //TODO: store the momentum
 
-    // Neighbors' link. For normal crystal, only variation "neighbor_ab" is used.
-    vector<vector<Site*>> neighbor_ab = {};
-    vector<vector<Site*>> neighbor_c = {};
+    // Neighbors' link.
+    vector<vector<Site*>> neighbor = {};
 };
 
 // Information about the lattice.
@@ -415,13 +409,6 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 
     // Information about lattice.
     getline(in, str); // Comment line
-    getline(in, str); // Layered or non-layered
-    scn::scan(str, "{}", tmp_str);
-    if(tmp_str == "T" || tmp_str == "True" || tmp_str == "true" || tmp_str == "t") {
-        supercell.base_site.layered = true;
-    } else {
-        supercell.base_site.layered = false;
-    }
     getline(in, str); // Number of cells.
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
     getline(in, str); // Hamiltonion function.
@@ -460,51 +447,17 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     }
     vector<double> tmp_vector;
     int i=0;
-    if (supercell.base_site.layered) {
-        bool ab = true;
-        while(getline(in, str) && !str.empty()) { // Super-exchange parameters
-            if (ab) {
-                supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
-                for(auto e:ctre::split<pattern>(str)) {
-                    tmp_str = string(e.get<0>());
-                    if(tmp_str[0] == '#' || tmp_str == "") {
-                        break;
-                    } else {
-                        supercell.base_site.super_exchange_parameter_ab[i].push_back(stod(tmp_str));
-                    }
-                }
-                ab = false;
+    while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+        supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
+        for(auto e:ctre::split<pattern>(str)) {
+            tmp_str = string(e.get<0>());
+            if(tmp_str[0] == '#' || tmp_str == "") {
+                break;
             } else {
-                supercell.base_site.super_exchange_parameter_c.push_back(tmp_vector);
-                for(auto e:ctre::split<pattern>(str)) {
-                    tmp_str = string(e.get<0>());
-                    if(tmp_str[0] == '#' || tmp_str == "") {
-                        break;
-                    } else {
-                        supercell.base_site.super_exchange_parameter_c[i].push_back(stod(tmp_str));
-                    }
-                }
-                i++;
-                ab = true;
+                supercell.base_site.super_exchange_parameter[i].push_back(stod(tmp_str));
             }
         }
-    } else {
-        double tmp_parameter;
-        while(getline(in, str) && !str.empty()) { // Super-exchange parameters
-            supercell.base_site.super_exchange_parameter_ab.push_back(tmp_vector);
-            supercell.base_site.super_exchange_parameter_c.push_back(tmp_vector);
-            for(auto e:ctre::split<pattern>(str)) {
-                tmp_str = string(e.get<0>());
-                if(tmp_str[0] == '#' || tmp_str == "") {
-                    break;
-                } else {
-                    tmp_parameter = stod(tmp_str);
-                    supercell.base_site.super_exchange_parameter_ab[i].push_back(tmp_parameter);
-                    supercell.base_site.super_exchange_parameter_c[i].push_back(tmp_parameter);
-                }
-            }
-            i++;
-        }
+        i++;
     }
     
 
@@ -559,10 +512,8 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
     supercell.base_site.number = 0;
     getline(in, str); // Direct of Carsitian TODO:
     if(supercell.base_site.all_magnetic) {
-        vector<vector<double>> super_exchange_ab = supercell.base_site.super_exchange_parameter_ab;
-        vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
-        supercell.base_site.super_exchange_parameter_ab = {};
-        supercell.base_site.super_exchange_parameter_c = {};
+        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
+        supercell.base_site.super_exchange_parameter = {};
         for(int i=0; i<elements.size(); i++) {
             for(int j=0; j<elements_number[i]; j++) {
                 getline(in, str);
@@ -573,18 +524,15 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                 supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                 supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                 supercell.base_site.elements.push_back(elements[i]);
-                supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[i]);
-                supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[i]);
+                supercell.base_site.super_exchange_parameter.push_back(super_exchange[i]);
             }
             supercell.base_site.number += elements_number[i];
         }
     } else {
         vector<string> magnetic_elements = supercell.base_site.elements;
         supercell.base_site.elements = {};
-        vector<vector<double>> super_exchange_ab = supercell.base_site.super_exchange_parameter_ab;
-        vector<vector<double>> super_exchange_c = supercell.base_site.super_exchange_parameter_c;
-        supercell.base_site.super_exchange_parameter_ab = {};
-        supercell.base_site.super_exchange_parameter_c = {};
+        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
+        supercell.base_site.super_exchange_parameter = {};
         int k=0;
         for(int i=0; i<elements.size(); i++) {
             if(magnetic_elements[k] == elements[i]) {
@@ -597,8 +545,7 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                     supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                     supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                     supercell.base_site.elements.push_back(elements[i]);
-                    supercell.base_site.super_exchange_parameter_ab.push_back(super_exchange_ab[k]);
-                    supercell.base_site.super_exchange_parameter_c.push_back(super_exchange_c[k]);
+                    supercell.base_site.super_exchange_parameter.push_back(super_exchange[k]);
                 }
                 supercell.base_site.number += elements_number[i];
                 k++;
@@ -634,8 +581,7 @@ int EnlargeCell(Supercell & supercell) {
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
-                    supercell.site[i][j][k][l].super_exchange_parameter_ab = & supercell.base_site.super_exchange_parameter_ab[l];
-                    supercell.site[i][j][k][l].super_exchange_parameter_c = & supercell.base_site.super_exchange_parameter_c[l];
+                    supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
                 }
             }
         }
@@ -677,187 +623,59 @@ int InitializeSupercell(Supercell & supercell) {
     }
 
     // Initialize the neighbors' link and energy.
-    if(supercell.base_site.layered) {
-        // Find the neighbors for every base sites in a cell.
-        // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
-        vector<vector<vector<vector<int>>>> neighbors_index_ab;
-        vector<vector<vector<vector<int>>>> neighbors_index_c;
+    // Find the neighbors for every base sites in a cell.
+    // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
+    vector<vector<vector<vector<int>>>> neighbors_index;
 
-        for(int i=0; i<supercell.base_site.number; i++) {
-            vector<vector<vector<int>>> index1;
-            neighbors_index_ab.push_back(index1);
-            neighbors_index_c.push_back(index1);
-            for(int j=0; j<supercell.base_site.neighbor_number; j++) {
-                vector<vector<int>> index2;
-                neighbors_index_ab[i].push_back(index2);
-                neighbors_index_c[i].push_back(index2);
-            }
+    for(int i=0; i<supercell.base_site.number; i++) {
+        vector<vector<vector<int>>> index1;
+        neighbors_index.push_back(index1);
+        for(int j=0; j<supercell.base_site.neighbor_number; j++) {
+            vector<vector<int>> index2;
+            neighbors_index[i].push_back(index2);
         }
+    }
 
-        for(int i=0; i<supercell.base_site.number; i++) {
-            // Neighbors for i-th base site.
-            vector<double> distance_list_ab(supercell.base_site.neighbor_number, 0);
-            vector<double> distance_list_c(supercell.base_site.neighbor_number, 0);
-            double distance_square = 0;
+    for(int i=0; i<supercell.base_site.number; i++) {
+        // Neighbors for i-th base site.
+        vector<double> distance_list(supercell.base_site.neighbor_number, 0);
+        double distance_square = 0;
 
-            // Find the distance values.
-            for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
-                        for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
-                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
+        // Find the distance values.
+        for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
+            for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
+                    for(int m=0; m<supercell.base_site.number; m++) {
+                        distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
+                        supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
-                            if(distance_square == 0.0) {
-                                continue;
-                            } else if(l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
-                                AddDistance(distance_square, distance_list_ab);
-                            } else {
-                                AddDistance(distance_square, distance_list_c);
-                            }
+                        if(distance_square == 0.0) {
+                            continue;
+                        } else {
+                            AddDistance(distance_square, distance_list);
                         }
                     }
                 }
             }
+        }
 
-            // Find link.
-            for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
-                        for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
-                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
+        // Find link.
+        for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
+            for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
+                for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
+                    for(int m=0; m<supercell.base_site.number; m++) {
+                        distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
+                        supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
 
-                            if(distance_square == 0.0) {
-                                continue;
-                            } else if (l == 0 && supercell.base_site.coordinate[m][2] == supercell.base_site.coordinate[i][2]){
-                                for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                    if(distance_square == distance_list_ab[n]) {
-                                        vector<int> ind = {j, k, l, m};
-                                        neighbors_index_ab[i][n].emplace_back(ind);
-                                        break;
-                                    }
+                        if(distance_square == 0.0) {
+                            continue;
+                        } else {
+                            for(int n=0; n<supercell.base_site.neighbor_number; n++) {
+                                if(distance_square == distance_list[n]) {
+                                    vector<int> ind = {j, k, l, m};
+                                    neighbors_index[i][n].emplace_back(ind);
+                                    break;
                                 }
-                            } else {
-                                for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                    if(distance_square == distance_list_c[n]) {
-                                        vector<int> ind = {j, k, l, m};
-                                        neighbors_index_c[i][n].emplace_back(ind);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Set link for every sites.
-        for(int i=0; i<supercell.lattice.n_x; i++) {
-            for(int j=0; j<supercell.lattice.n_y; j++) {
-                for(int k=0; k<supercell.lattice.n_z; k++) {
-                    for(int l=0; l<supercell.base_site.number; l++) {
-                        vector<Site*> temp = {};
-                        for(int m=0; m<supercell.base_site.neighbor_number; m++) {
-                            supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
-                            for(int n=0; n<neighbors_index_ab[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( 
-                                & supercell.site[(i+neighbors_index_ab[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index_ab[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                                [k] \
-                                [neighbors_index_ab[l][m][n][3]]);
-                            }
-
-                            supercell.site[i][j][k][l].neighbor_c.push_back(temp);
-                            for(int n=0; n<neighbors_index_c[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_c[m].push_back( 
-                                & supercell.site[(i+neighbors_index_c[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index_c[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                                [(k+neighbors_index_c[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
-                                [neighbors_index_c[l][m][n][3]]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } else {
-        // Find the neighbors for every base sites in a cell.
-        // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
-        vector<vector<vector<vector<int>>>> neighbors_index;
-
-        for(int i=0; i<supercell.base_site.number; i++) {
-            vector<vector<vector<int>>> index1;
-            neighbors_index.push_back(index1);
-            for(int j=0; j<supercell.base_site.neighbor_number; j++) {
-                vector<vector<int>> index2;
-                neighbors_index[i].push_back(index2);
-            }
-        }
-
-        for(int i=0; i<supercell.base_site.number; i++) {
-            // Neighbors for i-th base site.
-            vector<double> distance_list(supercell.base_site.neighbor_number, 0);
-            double distance_square = 0;
-
-            // Find the distance values.
-            for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
-                        for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
-                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
-
-                            if(distance_square == 0.0) {
-                                continue;
-                            } else {
-                                AddDistance(distance_square, distance_list);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Find link.
-            for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-                for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                    for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
-                        for(int m=0; m<supercell.base_site.number; m++) {
-                            distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
-                            supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
-
-                            if(distance_square == 0.0) {
-                                continue;
-                            } else {
-                                for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                    if(distance_square == distance_list[n]) {
-                                        vector<int> ind = {j, k, l, m};
-                                        neighbors_index[i][n].emplace_back(ind);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Set link for every sites.
-        for(int i=0; i<supercell.lattice.n_x; i++) {
-            for(int j=0; j<supercell.lattice.n_y; j++) {
-                for(int k=0; k<supercell.lattice.n_z; k++) {
-                    for(int l=0; l<supercell.base_site.number; l++) {
-                        vector<Site*> temp = {};
-                        for(int m=0; m<supercell.base_site.neighbor_number; m++) {
-                            supercell.site[i][j][k][l].neighbor_ab.push_back(temp);
-                            for(int n=0; n<neighbors_index[l][m].size(); n++) {
-                                supercell.site[i][j][k][l].neighbor_ab[m].push_back( 
-                                & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
-                                [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
-                                [(k+neighbors_index[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
-                                [neighbors_index[l][m][n][3]]);
                             }
                         }
                     }
@@ -865,6 +683,28 @@ int InitializeSupercell(Supercell & supercell) {
             }
         }
     }
+
+    // Set link for every sites.
+    for(int i=0; i<supercell.lattice.n_x; i++) {
+        for(int j=0; j<supercell.lattice.n_y; j++) {
+            for(int k=0; k<supercell.lattice.n_z; k++) {
+                for(int l=0; l<supercell.base_site.number; l++) {
+                    vector<Site*> temp = {};
+                    for(int m=0; m<supercell.base_site.neighbor_number; m++) {
+                        supercell.site[i][j][k][l].neighbor.push_back(temp);
+                        for(int n=0; n<neighbors_index[l][m].size(); n++) {
+                            supercell.site[i][j][k][l].neighbor[m].push_back( 
+                            & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
+                            [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
+                            [k] \
+                            [neighbors_index[l][m][n][3]]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     supercell.lattice.total_energy = supercell.energy();
     return 0;
@@ -993,20 +833,12 @@ double Heisenberg(BaseSite & base_site, Site & site) {
     vector<double> spin_sum;
     for(int i=0; i<base_site.neighbor_number; i++) {
         spin_sum = {0, 0, 0};
-        for(int j=0; j<site.neighbor_ab[i].size(); j++) {
-            spin_sum[0] += (*site.neighbor_ab[i][j]).spin[0];
-            spin_sum[1] += (*site.neighbor_ab[i][j]).spin[1];
-            spin_sum[2] += (*site.neighbor_ab[i][j]).spin[2];
+        for(int j=0; j<site.neighbor[i].size(); j++) {
+            spin_sum[0] += (*site.neighbor[i][j]).spin[0];
+            spin_sum[1] += (*site.neighbor[i][j]).spin[1];
+            spin_sum[2] += (*site.neighbor[i][j]).spin[2];
         }
-        energy += (*site.super_exchange_parameter_ab)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
-
-        spin_sum = {0, 0, 0};
-        for(int j=0; j<site.neighbor_c[i].size(); j++) {
-            spin_sum[0] += (*site.neighbor_c[i][j]).spin[0];
-            spin_sum[1] += (*site.neighbor_c[i][j]).spin[1];
-            spin_sum[2] += (*site.neighbor_c[i][j]).spin[2];
-        }
-        energy += (*site.super_exchange_parameter_c)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
+        energy += (*site.super_exchange_parameter)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
     }
 
     energy += 2 * base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
