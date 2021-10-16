@@ -48,7 +48,7 @@ package_end()
 package("fmt_local")
     set_sourcedir(path.join(os.scriptdir(), "include/fmt"))
     on_load(function (package)
-        package:add("deps", "cmake")
+        package:add("deps", "cmake_local")
         if package:config("shared") then
             package:add("defines", "FMT_EXPORT")
         end
@@ -79,7 +79,7 @@ package("fmt_local")
 package_end()
 
 package("ctre_local")
-    add_deps("cmake")
+    add_deps("cmake_local")
     set_sourcedir(path.join(os.scriptdir(), "include/ctre"))
     on_install(function (package)
         local configs = {"-DCTRE_BUILD_TESTS=OFF"}
