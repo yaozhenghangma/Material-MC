@@ -98,6 +98,9 @@ public:
     double total_energy;
 
     string function_choice;
+
+    // Maximum relative error in distance computation
+    double tolerance_percentage;
     
     // Output information
     double magnify_factor = 2.0;
@@ -182,7 +185,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 int ReadPOSCAR(Supercell & supercell, string cell_structure_file);
 int EnlargeCell(Supercell & supercell);
 double Distance(vector<double>, vector<double>, vector<double>, vector<int>, vector<double>, vector<double>);
-int AddDistance(double distance, vector<double> & distance_list);
+int AddDistance(double distance, vector<double> & distance_list, double tolerance_percentage);
 int InitializeSupercell(Supercell & supercell);
 int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T);
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T);
@@ -409,6 +412,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 
     // Information about lattice.
     getline(in, str); // Comment line
+    getline(in, str); // Tolerance percentage
+    scn::scan(str, "{}", supercell.lattice.tolerance_percentage);
     getline(in, str); // Number of cells.
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
     getline(in, str); // Hamiltonion function.
@@ -602,8 +607,18 @@ vector<int> index, vector<double> base_site1, vector<double> base_site2) {
     return result;
 }
 
-int AddDistance(double distance, vector<double> & distance_list) {
+int AddDistance(double distance, vector<double> & distance_list, double tolerance_percentage) {
     int s = distance_list.size()-1;
+    // Check similar distance
+    for(int i=0; i<s+1; i++) {
+        if(distance_list[i] == 0) {
+            break;
+        } else if (abs(distance_list[i]-distance) < min(distance, distance_list[i]) * tolerance_percentage){
+            return 0;
+        }
+    }
+
+    // Add new distance and order
     if(distance_list[s] == 0 || distance_list[s] > distance) {
         distance_list[s] = distance;
         for(int i=s-2; i>=0; i--) {
@@ -652,7 +667,7 @@ int InitializeSupercell(Supercell & supercell) {
                         if(distance_square == 0.0) {
                             continue;
                         } else {
-                            AddDistance(distance_square, distance_list);
+                            AddDistance(distance_square, distance_list, supercell.lattice.tolerance_percentage);
                         }
                     }
                 }
@@ -671,7 +686,8 @@ int InitializeSupercell(Supercell & supercell) {
                             continue;
                         } else {
                             for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                if(distance_square == distance_list[n]) {
+                                if(abs(distance_square - distance_list[n]) \
+                                < supercell.lattice.tolerance_percentage*min(distance_square, distance_list[n])) {
                                     vector<int> ind = {j, k, l, m};
                                     neighbors_index[i][n].emplace_back(ind);
                                     break;
