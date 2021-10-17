@@ -228,6 +228,16 @@ int main(int argc, char** argv) {
     EnlargeCell(supercell);
     InitializeSupercell(supercell);
 
+    // Output the coordinate number
+    if(world.rank() == 0) {
+        cout << "Coordinate number:" << endl;
+        for(int i=0; i<supercell.base_site.number; i++) {
+            for(int j=0; j<supercell.base_site.neighbor_number; j++) {
+                cout << supercell.site[0][0][0][i].neighbor[j].size() << "\t";
+            }
+            cout << endl;
+        }
+    }
     // Arrange the processors.
     int quotient = monte_carlo.temperature_step_number / world.size();
     int remainder = monte_carlo.temperature_step_number % world.size();
@@ -624,7 +634,7 @@ int AddDistance(double distance, vector<double> & distance_list, double toleranc
     // Add new distance and order
     if(distance_list[s] == 0 || distance_list[s] > distance) {
         distance_list[s] = distance;
-        for(int i=s-2; i>=0; i--) {
+        for(int i=s-1; i>=0; i--) {
             if(distance_list[i] == 0 || distance_list[i] > distance) {
                 distance_list[i+1] = distance_list[i];
                 distance_list[i] = distance;
