@@ -1,6 +1,6 @@
 # 晶体通用蒙特卡洛模拟
 
-[**中文版**](./README_ZH.md) ｜ [**English**](./READEME.md)
+[**中文版**](./README_ZH.md) ｜ [**English**](./README.md)
 
 ## 编译
 ### 依赖项
