@@ -6,6 +6,7 @@ add_rules("mode.release", "mode.debug")
 --set_warnings("all", "error")
 set_languages("c++17")
 
+--[[
 package("cmake_local")
     set_kind("binary")
 
@@ -20,9 +21,10 @@ package("cmake_local")
         os.vrun("cmake --version")
     end)
 package_end()
+]]]
 
 package("scn_local")
-    add_deps("cmake_local")
+    add_deps("cmake")
     set_sourcedir(path.join(os.scriptdir(), "include/scnlib"))
     on_install(function (package)
         local configs = {"-DSCN_TESTS=OFF", "-DSCN_DOCS=OFF", "-DSCN_EXAMPLES=OFF", "-DSCN_BENCHMARKS=OFF", "-DSCN_PENDANTIC=OFF", "-DSCN_BUILD_FUZZING=OFF"}
@@ -48,7 +50,7 @@ package_end()
 package("fmt_local")
     set_sourcedir(path.join(os.scriptdir(), "include/fmt"))
     on_load(function (package)
-        package:add("deps", "cmake_local")
+        package:add("deps", "cmake")
         if package:config("shared") then
             package:add("defines", "FMT_EXPORT")
         end
@@ -79,7 +81,7 @@ package("fmt_local")
 package_end()
 
 package("ctre_local")
-    add_deps("cmake_local")
+    add_deps("cmake")
     set_sourcedir(path.join(os.scriptdir(), "include/ctre"))
     on_install(function (package)
         local configs = {"-DCTRE_BUILD_TESTS=OFF"}
