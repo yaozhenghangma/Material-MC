@@ -23,6 +23,7 @@ jobs:
 
       - name: Install packages
         run: |
+          ls /home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib
           brew install open-mpi
           brew install boost
           brew install boost-mpi
