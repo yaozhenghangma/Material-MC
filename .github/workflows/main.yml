@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install xmake
+        run: brew install xmake
+
+      - name: Install packages
+        run: |
+          brew install open-mpi
+          brew install boost
+          brew install boost-mpi
+        
+      - name: Build the target
+        run: |
+          xmake -y -rv
