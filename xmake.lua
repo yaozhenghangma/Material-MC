@@ -1,4 +1,4 @@
-set_project("MC")
+set_project("Material_MC")
 set_version("0.0.1")
 
 add_rules("mode.release", "mode.debug")
@@ -98,9 +98,9 @@ add_requires("brew::open-mpi/ompi-cxx", {alias = "mpi"})
 --add_requires("brew::boost", {alias = "boost"})
 --add_requires("brew::boost-mpi", {alias = "boost-mpi"})
 
-target("MC")
+target("MMC")
     set_kind("binary")
-    add_files("MC.cpp")
+    add_files("src/MMC.cpp")
     -- MPI
     add_packages("mpi")
     -- Boost
