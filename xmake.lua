@@ -1,27 +1,10 @@
 set_project("Material_MC")
-set_version("0.0.1")
+set_version("0.1.0")
 
 add_rules("mode.release", "mode.debug")
 
 --set_warnings("all", "error")
 set_languages("c++17")
-
---[[
-package("cmake_local")
-    set_kind("binary")
-
-    on_install( function (package)
-        os.cp("/usr/local/Cellar/cmake/3.21.2/bin", package:installdir())
-        os.cp("/usr/local/Cellar/cmake/3.21.2/share", package:installdir())
-        --os.cp("/public3/soft/cmake/3.17.0/bin", package:installdir())
-        --os.cp("/public3/soft/cmake/3.17.0/share", package:installdir())
-    end)
-
-    on_test(function (package)
-        os.vrun("cmake --version")
-    end)
-package_end()
---]]
 
 package("scn_local")
     add_deps("cmake")
@@ -104,9 +87,15 @@ target("MMC")
     -- MPI
     add_packages("mpi")
     -- Boost
-    add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/lib")
-    add_includedirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/include")
-    add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib")
+    if is_plat("macos") then
+        add_linkdirs("/usr/local/Cellar/boost/1.76.0/lib")
+        add_includedirs("/usr/local/Cellar/boost/1.76.0/include")
+        add_linkdirs("/usr/local/Cellar/boost-mpi/1.76.0/lib")
+    elseif is_plat("linux") then
+        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/lib")
+        add_includedirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/include")
+        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib")
+    end
     add_links("boost_mpi-mt", "boost_serialization")
     --add_packages("boost")
     --add_packages("boost-mpi")
@@ -114,3 +103,7 @@ target("MMC")
     add_packages("scn_local")
     add_packages("fmt_local")
     add_packages("ctre_local")
+
+    after_build(function (target)
+        os.mv("$(buildir)/MMC", "$(curdir)/MMC")
+    end)
