@@ -26,8 +26,8 @@ jobs:
           brew install open-mpi
           brew install boost
           brew install boost-mpi
-          ls /home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib
         
       - name: Build the target
         run: |
+          xmake f -y -m debug
           xmake -y -rv
