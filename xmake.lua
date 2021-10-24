@@ -105,5 +105,5 @@ target("MMC")
     add_packages("ctre_local")
 
     after_build(function (target)
-        os.mv("$(buildir)/MMC", "$(curdir)/MMC")
+        os.mv("$(buildir)/$(plat)/$(arch)/$(mode)/MMC", "$(curdir)/MMC")
     end)
