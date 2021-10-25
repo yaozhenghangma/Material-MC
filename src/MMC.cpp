@@ -40,8 +40,10 @@ public:
     vector<string> elements;
 
     // Input information    
-    int neighbor_number;
     bool all_magnetic;
+    vector<int> neighbor_number;
+    vector<vector<string>> neighbor_elements;
+    vector<vector<double>> neighbor_distance_square;
     vector<vector<double>> super_exchange_parameter;
 
     //TODO: record and output coordination number
@@ -60,8 +62,10 @@ void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
     ar & base_site.spin_scaling;
     ar & base_site.anisotropic_factor;
     ar & base_site.elements;
-    ar & base_site.neighbor_number;
     ar & base_site.all_magnetic;
+    ar & base_site.neighbor_number;
+    ar & base_site.neighbor_elements;
+    ar & base_site.neighbor_distance_square;
     ar & base_site.super_exchange_parameter;
     ar & base_site.anisotropic_factor_D;
 }
@@ -464,17 +468,21 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
         }
     }
     vector<double> tmp_vector;
+    vector<string> tmp_string_vector
     int i=0;
     while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+        supercell.base_site.neighbor_number.push_back(0);
+        scn::scan(str, "{} {}", tmp_str, supercell.base_site.neighbor_number[i])
         supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
-        for(auto e:ctre::split<pattern>(str)) {
-            tmp_str = string(e.get<0>());
-            if(tmp_str[0] == '#' || tmp_str == "") {
-                break;
-            } else {
-                supercell.base_site.super_exchange_parameter[i].push_back(stod(tmp_str));
-            }
+        supercell.base_site.neighbor_elements.push_back(tmp_string_vector);
+        for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
+            getline(in, str);
+            supercell.base_site.super_exchange_parameter[i].push_back(0);
+
+            supercell.base_site.neighbor_elements[i].push_back('');
+            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j])
         }
+
         i++;
     }
     
@@ -665,27 +673,7 @@ int InitializeSupercell(Supercell & supercell) {
     }
 
     for(int i=0; i<supercell.base_site.number; i++) {
-        // Neighbors for i-th base site.
-        vector<double> distance_list(supercell.base_site.neighbor_number, 0);
         double distance_square = 0;
-
-        // Find the distance values.
-        for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-            for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
-                    for(int m=0; m<supercell.base_site.number; m++) {
-                        distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
-                        supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
-
-                        if(distance_square == 0.0) {
-                            continue;
-                        } else {
-                            AddDistance(distance_square, distance_list, supercell.lattice.tolerance_percentage);
-                        }
-                    }
-                }
-            }
-        }
 
         // Find link.
         for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
@@ -698,9 +686,10 @@ int InitializeSupercell(Supercell & supercell) {
                         if(distance_square == 0.0) {
                             continue;
                         } else {
-                            for(int n=0; n<supercell.base_site.neighbor_number; n++) {
-                                if(abs(distance_square - distance_list[n]) \
-                                < supercell.lattice.tolerance_percentage*min(distance_square, distance_list[n])) {
+                            for(int n=0; n<supercell.base_site.neighbor_number[i]; n++) {
+                                if(supercell.base_site.elements[m] == supercell.base_site.neighbor_elements[i][n] \
+                                && abs(distance_square - supercell.base_site.neighbor_distance_square[i][n]) \
+                                < supercell.lattice.tolerance_percentage*min(distance_square, supercell.base_site.neighbor_distance_square[i][n])) {
                                     vector<int> ind = {j, k, l, m};
                                     neighbors_index[i][n].emplace_back(ind);
                                     break;
