@@ -77,7 +77,7 @@ package_end()
 add_requires("ctre_local")
 add_requires("fmt_local")
 add_requires("scn_local")
-if is_plat("macos") then 
+if is_plat("macosx") then 
     add_requires("brew::open-mpi/ompi-cxx", {alias = "mpi"})
     add_requires("brew::boost", {alias = "boost"})
     add_requires("brew::boost-mpi", {alias = "boost-mpi"})
@@ -87,7 +87,7 @@ target("MMC")
     set_kind("binary")
     add_files("src/MMC.cpp")
     -- Boost
-    if is_plat("macos") then
+    if is_plat("macosx") then
         add_packages("mpi")
         add_packages("boost")
         add_packages("boost-mpi")

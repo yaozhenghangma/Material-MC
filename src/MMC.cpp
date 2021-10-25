@@ -79,6 +79,7 @@ public:
     vector<double> spin = {0, 0, 0};
     double * spin_scaling;
     double * anisotropic_factor;
+    int * neighbor_number;
     vector<double> * super_exchange_parameter;
 
     //TODO: store the momentum
@@ -236,7 +237,7 @@ int main(int argc, char** argv) {
     if(world.rank() == 0) {
         cout << "Coordinate number:" << endl;
         for(int i=0; i<supercell.base_site.number; i++) {
-            for(int j=0; j<supercell.base_site.neighbor_number; j++) {
+            for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
                 cout << supercell.site[0][0][0][i].neighbor[j].size() << "\t";
             }
             cout << endl;
@@ -442,8 +443,6 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
 
     // Information about base.
     getline(in, str); // Comment line
-    getline(in, str); // Nearest neighbors.
-    scn::scan(str, "{}", supercell.base_site.neighbor_number);
     getline(in, str); // Anisotropic factor.
     scn::scan(str, "{}", supercell.base_site.anisotropic_factor_D);
     getline(in, str); // Magnetic elements
@@ -468,19 +467,19 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
         }
     }
     vector<double> tmp_vector;
-    vector<string> tmp_string_vector
+    vector<string> tmp_string_vector;
     int i=0;
     while(getline(in, str) && !str.empty()) { // Super-exchange parameters
         supercell.base_site.neighbor_number.push_back(0);
-        scn::scan(str, "{} {}", tmp_str, supercell.base_site.neighbor_number[i])
+        scn::scan(str, "{} {}", tmp_str, supercell.base_site.neighbor_number[i]);
         supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
         supercell.base_site.neighbor_elements.push_back(tmp_string_vector);
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             getline(in, str);
             supercell.base_site.super_exchange_parameter[i].push_back(0);
 
-            supercell.base_site.neighbor_elements[i].push_back('');
-            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j])
+            supercell.base_site.neighbor_elements[i].push_back(" ");
+            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j]);
         }
 
         i++;
@@ -608,6 +607,7 @@ int EnlargeCell(Supercell & supercell) {
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
                     supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
+                    supercell.site[i][j][k][l].neighbor_number = & supercell.base_site.neighbor_number[l];
                 }
             }
         }
@@ -666,7 +666,7 @@ int InitializeSupercell(Supercell & supercell) {
     for(int i=0; i<supercell.base_site.number; i++) {
         vector<vector<vector<int>>> index1;
         neighbors_index.push_back(index1);
-        for(int j=0; j<supercell.base_site.neighbor_number; j++) {
+        for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             vector<vector<int>> index2;
             neighbors_index[i].push_back(index2);
         }
@@ -676,9 +676,9 @@ int InitializeSupercell(Supercell & supercell) {
         double distance_square = 0;
 
         // Find link.
-        for(int j=-supercell.base_site.neighbor_number; j<supercell.base_site.neighbor_number+1; j++) {
-            for(int k=-supercell.base_site.neighbor_number; k<supercell.base_site.neighbor_number+1; k++) {
-                for(int l=-supercell.base_site.neighbor_number; l<supercell.base_site.neighbor_number+1; l++) {
+        for(int j=-supercell.base_site.neighbor_number[i]; j<supercell.base_site.neighbor_number[i]+1; j++) {
+            for(int k=-supercell.base_site.neighbor_number[i]; k<supercell.base_site.neighbor_number[i]+1; k++) {
+                for(int l=-supercell.base_site.neighbor_number[i]; l<supercell.base_site.neighbor_number[i]+1; l++) {
                     for(int m=0; m<supercell.base_site.number; m++) {
                         distance_square = Distance(supercell.lattice.a, supercell.lattice.b, supercell.lattice.c, {j, k, l}, \
                         supercell.base_site.coordinate[i], supercell.base_site.coordinate[m]);
@@ -708,7 +708,7 @@ int InitializeSupercell(Supercell & supercell) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
                 for(int l=0; l<supercell.base_site.number; l++) {
                     vector<Site*> temp = {};
-                    for(int m=0; m<supercell.base_site.neighbor_number; m++) {
+                    for(int m=0; m<supercell.base_site.neighbor_number[l]; m++) {
                         supercell.site[i][j][k][l].neighbor.push_back(temp);
                         for(int n=0; n<neighbors_index[l][m].size(); n++) {
                             supercell.site[i][j][k][l].neighbor[m].push_back( 
@@ -849,7 +849,7 @@ int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> 
 double Heisenberg(BaseSite & base_site, Site & site) {
     double energy = 0;
     vector<double> spin_sum;
-    for(int i=0; i<base_site.neighbor_number; i++) {
+    for(int i=0; i<*site.neighbor_number; i++) {
         spin_sum = {0, 0, 0};
         for(int j=0; j<site.neighbor[i].size(); j++) {
             spin_sum[0] += (*site.neighbor[i][j]).spin[0];

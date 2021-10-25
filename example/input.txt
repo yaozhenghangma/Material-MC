@@ -10,8 +10,11 @@ Example input file. #Comment line
 Default #Hamiltonian function type, default is H = 1/2 * Sigma_ij(J1*Si*Sj + J2*Si*Sj) + D*Si^z*Sj^z
 2.0 #Magnify the output lattice.
 =======================================Part 3: Base #Comment line=========================================================
-1 #Nearest neighbors
 0 #Anisotropic factor
 Ni Ir #List magnetic elements, separated by whitespace.
--7.50 0 0 #List of super-exchange parameters of 1-st magnetic element.
--7.50 0 0 #List of super-exchange parameters of 2-ed magnetic element.
+Ni
+Ir -7.50 #List of super-exchange parameters of 1-st magnetic element.
+Ni 0
+Ir
+Ni -7.50 #List of super-exchange parameters of 2-ed magnetic element.
+Ir 0
