@@ -13,8 +13,8 @@ Default #Hamiltonian function type, default is H = 1/2 * Sigma_ij(J1*Si*Sj + J2*
 0 #Anisotropic factor
 Ni Ir #List magnetic elements, separated by whitespace.
 Ni
-Ir -7.50 #List of super-exchange parameters of 1-st magnetic element.
-Ni 0
+Ir -7.50 4.02 #List of super-exchange parameters of 1-st magnetic element.(element super-exchange_parameter distance)
+Ni 0 5.68
 Ir
-Ni -7.50 #List of super-exchange parameters of 2-ed magnetic element.
-Ir 0
+Ni -7.50 4.02#List of super-exchange parameters of 2-ed magnetic element.
+Ir 0 5.68

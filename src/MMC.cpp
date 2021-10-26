@@ -473,13 +473,16 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
         supercell.base_site.neighbor_number.push_back(0);
         scn::scan(str, "{} {}", tmp_str, supercell.base_site.neighbor_number[i]);
         supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
+        supercell.base_site.neighbor_distance_square.push_back(tmp_vector);
         supercell.base_site.neighbor_elements.push_back(tmp_string_vector);
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             getline(in, str);
             supercell.base_site.super_exchange_parameter[i].push_back(0);
+            supercell.base_site.neighbor_distance_square[i].push_back(0);
 
             supercell.base_site.neighbor_elements[i].push_back(" ");
-            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j]);
+            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j], supercell.base_site.neighbor_distance_square[i][j]);
+            supercell.base_site.neighbor_distance_square[i][j] = supercell.base_site.neighbor_distance_square[i][j] * supercell.base_site.neighbor_distance_square[i][j];
         }
 
         i++;
