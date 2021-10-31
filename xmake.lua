@@ -6,6 +6,24 @@ add_rules("mode.release", "mode.debug")
 --set_warnings("all", "error")
 set_languages("c++17")
 
+
+--[[
+package("cmake")
+    set_kind("binary")
+
+    on_install( function (package)
+        os.cp("/usr/local/Cellar/cmake/3.21.2/bin", package:installdir())
+        os.cp("/usr/local/Cellar/cmake/3.21.2/share", package:installdir())
+        --os.cp("/public3/soft/cmake/3.17.0/bin", package:installdir())
+        --os.cp("/public3/soft/cmake/3.17.0/share", package:installdir())
+    end)
+
+    on_test(function (package)
+        os.vrun("cmake --version")
+    end)
+package_end()
+]]
+
 package("scn_local")
     add_deps("cmake")
     set_sourcedir(path.join(os.scriptdir(), "include/scnlib"))
@@ -106,13 +124,13 @@ target("MMC")
         add_linkdirs("/public3/soft/intel/2020u4/compilers_and_libraries/linux/mpi/intel64/lib")
         add_linkdirs("/public3/soft/intel/2020u4/compilers_and_libraries/linux/mpi/intel64/lib/release")
         add_links("mpi")
-        add_links("boost_mpi-mt", "boost_serialization")
+        add_links("boost_mpi", "boost_serialization")
     end
     -- Third part
     add_packages("scn_local")
     add_packages("fmt_local")
     add_packages("ctre_local")
 
-    after_build(function (target)
-        os.mv("$(buildir)/$(plat)/$(arch)/$(mode)/MMC", "$(curdir)/MMC")
-    end)
+    --after_build(function (target)
+    --    os.mv("$(buildir)/$(plat)/$(arch)/$(mode)/MMC", "$(curdir)/MMC")
+    --end)

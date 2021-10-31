@@ -237,10 +237,17 @@ int main(int argc, char** argv) {
     if(world.rank() == 0) {
         cout << "Coordinate number:" << endl;
         for(int i=0; i<supercell.base_site.number; i++) {
+            cout << supercell.base_site.elements[i] << "\t" << supercell.base_site.spin_scaling[i] << endl;
             for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
                 cout << supercell.site[0][0][0][i].neighbor[j].size() << "\t";
             }
             cout << endl;
+            for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
+                for(int k=0; k<supercell.site[0][0][0][i].neighbor[j].size(); k++) {
+                    cout << *(supercell.site[0][0][0][i].neighbor[j][k]->spin_scaling) << "\t";
+                }
+                cout << endl;
+            }
         }
     }
     // Arrange the processors.
@@ -481,7 +488,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
             supercell.base_site.neighbor_distance_square[i].push_back(0);
 
             supercell.base_site.neighbor_elements[i].push_back(" ");
-            scn::scan(str, "{} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j], supercell.base_site.neighbor_distance_square[i][j]);
+            scn::scan(str, "{} {} {}", supercell.base_site.neighbor_elements[i][j], supercell.base_site.super_exchange_parameter[i][j], supercell.base_site.neighbor_distance_square[i][j]);
             supercell.base_site.neighbor_distance_square[i][j] = supercell.base_site.neighbor_distance_square[i][j] * supercell.base_site.neighbor_distance_square[i][j];
         }
 
@@ -558,8 +565,14 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
         }
     } else {
         vector<string> magnetic_elements = supercell.base_site.elements;
+        vector<int> neighbor_number = supercell.base_site.neighbor_number;
+        vector<vector<string>> neighbor_elements = supercell.base_site.neighbor_elements;
+        vector<vector<double>> neighbor_distance_square = supercell.base_site.neighbor_distance_square;
+        vector<vector<double>> super_exchange_parameter = supercell.base_site.super_exchange_parameter;
         supercell.base_site.elements = {};
-        vector<vector<double>> super_exchange = supercell.base_site.super_exchange_parameter;
+        supercell.base_site.neighbor_number = {};
+        supercell.base_site.neighbor_elements = {};
+        supercell.base_site.neighbor_distance_square = {};
         supercell.base_site.super_exchange_parameter = {};
         int k=0;
         for(int i=0; i<elements.size(); i++) {
@@ -573,7 +586,10 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                     supercell.base_site.spin_scaling.push_back(tmp_spin_scaling);
                     supercell.base_site.anisotropic_factor.push_back(tmp_anisotropic_factor);
                     supercell.base_site.elements.push_back(elements[i]);
-                    supercell.base_site.super_exchange_parameter.push_back(super_exchange[k]);
+                    supercell.base_site.neighbor_number.push_back(neighbor_number[k]);
+                    supercell.base_site.neighbor_elements.push_back(neighbor_elements[k]);
+                    supercell.base_site.neighbor_distance_square.push_back(neighbor_distance_square[k]);
+                    supercell.base_site.super_exchange_parameter.push_back(super_exchange_parameter[k]);
                 }
                 supercell.base_site.number += elements_number[i];
                 k++;
