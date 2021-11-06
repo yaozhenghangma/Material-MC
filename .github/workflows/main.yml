@@ -31,7 +31,5 @@ jobs:
         
       - name: Build the target
         run: |
-          xmake f -y --boost_mpi=n
-          xmake f -y --boost_mpi_mt=y
-          xmake f -y -m debug
+          xmake f -y --boost_mpi=boost_mpi_mt
           xmake -y -rv

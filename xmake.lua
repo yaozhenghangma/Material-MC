@@ -34,17 +34,13 @@ if is_plat("macosx") then
     add_requires("brew::boost-mpi", {alias = "boost-mpi"})
 else
     add_requires("boost")
-    option("boost_mpi")
-        set_default(true)
-        set_showmenu(true)
-        add_links("boost_mpi")
-    option("boost_mpi_mt")
-        set_default(false)
-        set_showmenu(true)
-        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib")
-        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/lib")
-        add_links("boost_mpi-mt")
 end 
+
+option("boost_mpi")
+    set_showmenu(true)
+    set_values("boost_mpi", "boost_mpi_mt")
+    set_default("boost_mpi")
+option_end()
 
 target("MMC")
     set_kind("binary")
@@ -57,9 +53,14 @@ target("MMC")
     else 
         add_packages("mpi")
         add_packages("boost")
+        if is_config("boost_mpi", "boost_mpi") then
+            add_links("boost_mpi")
+        elseif is_config("boost_mpi", "boost_mpi_mt") then
+            add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib")
+            add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/lib")
+            add_links("boost_mpi-mt")
+        end
         add_links("boost_serialization")
-        add_options("boost_mpi")
-        add_options("boost_mpi_mt")
     end
 
     -- Third part
