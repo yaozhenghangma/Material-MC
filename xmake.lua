@@ -36,9 +36,13 @@ else
     add_requires("boost")
     option("boost_mpi")
         set_default(true)
+        set_showmenu(true)
         add_links("boost_mpi")
-    option("boost_mpi-mt")
-        set_default(true)
+    option("boost_mpi_mt")
+        set_default(false)
+        set_showmenu(true)
+        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost-mpi/1.76.0/lib")
+        add_linkdirs("/home/linuxbrew/.linuxbrew/Cellar/boost/1.76.0/lib")
         add_links("boost_mpi-mt")
 end 
 
@@ -55,14 +59,10 @@ target("MMC")
         add_packages("boost")
         add_links("boost_serialization")
         add_options("boost_mpi")
-        add_options("boost_mpi-mt")
+        add_options("boost_mpi_mt")
     end
 
     -- Third part
     add_packages("scnlib")
     add_packages("fmt")
     add_packages("ctre")
-
-    after_build(function (target)
-        os.cp("$(buildir)/$(plat)/$(arch)/$(mode)/MMC", "$(curdir)/MMC")
-    end)
