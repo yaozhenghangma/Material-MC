@@ -6,7 +6,7 @@ on:
       - "*"
 
 jobs:
-  build:
+  export:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -20,25 +20,28 @@ jobs:
       - name: Install xmake
         run: brew install xmake
 
-      - name: Install packages
+      - name: Install xmake packages
         run: |
-          brew install open-mpi
-          brew install boost
-          brew install boost-mpi
-        
-      - name: Build the target
+          xrepo update-repo
+          xrepo install -y cmake
+          xrepo install -y scnlib
+          xrepo install -y fmt
+          xrepo install -y ctre
+          xrepo export -o ./packages
+
+      - name: zip
         run: |
-          xmake f -y -m debug
-          xmake -y -rv
+          cd ..
+          zip -r MMC_offline.zip MMC
 
       - name: Upload artifacts
         uses: 'actions/upload-artifact@v2'
         with:
-          name: MMC_${{ runner.os }}
-          path: MMC
+          name: MMC_offline.zip
+          path: /home/runner/work/MMC/MMC_offline.zip
 
   release:
-    needs: build
+    needs: export
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -47,9 +50,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
-          path: build/
+          path: zip/
 
       - name: Release
         uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: zip/MMC_offline.zip

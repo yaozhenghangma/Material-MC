@@ -10,12 +10,35 @@
 
 ## 编译
 ### 依赖项
+- xmake
 - MPI
 - Boost.mpi
 - Boost.serialization
+### 离线安装xmake
+通过git下载源码到本地并上传到离线计算机。
+```bash
+git clone --recursive https://github.com/xmake-io/xmake.git
+```
+在源码所在文件夹进行编译安装。
+```bash
+make build
+./scripts/get.sh __local__ __install_only__
+source ~/.xmake/profile
+```
+xmake安装路径：`~/.local/bin`
+
+通过git下载并更新xrepo官方仓库目录。
 
 ## 使用方法
-### 命令行参数
+### 命令行输入
+帮助文档
+```bash
+./MMC -h
+```
+64进程并行运行程序
+```bash
+mpirun -np 64 ./MMC
+```
 
 ### 输入文件
 1. 结构文件POSCAR

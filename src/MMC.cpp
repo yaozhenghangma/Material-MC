@@ -28,6 +28,7 @@ namespace mpi = boost::mpi;
 using namespace std;
 
 const double KB = 0.08617343;
+const double MuB = 5.7883818012e-2;
 
 // Information about base in the cell
 class BaseSite {
@@ -48,7 +49,12 @@ public:
 
     //TODO: record and output coordination number
 
+    // Anisotropy factor
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
+    double anisotropic_factor_En = 0; //FIXME: different elements with different factor
+
+    // External field
+    vector<double> B = {0, 0, 0};
 };
 
 namespace boost {
@@ -68,6 +74,8 @@ void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
     ar & base_site.neighbor_distance_square;
     ar & base_site.super_exchange_parameter;
     ar & base_site.anisotropic_factor_D;
+    ar & base_site.anisotropic_factor_En;
+    ar & base_site.B;
 }
 
 }
@@ -182,6 +190,7 @@ public:
     Site & operator[](vector<int> n);
     double energy();
     double momentum();
+    vector<double> momentum_component();
 };
 
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n);
@@ -199,8 +208,11 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T);
 int Flip(Supercell & supercell, Site & one_site, double T);
 int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T);
-int WriteOutput(MonteCarlo &, vector<double>, vector<double>, vector<double>, vector<double>, string);
+int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> moment, vector<double> Ki, vector<double> moment_x, \
+vector<double> moment_y, vector<double> moment_z, vector<double> Ki_x, vector<double> Ki_y, vector<double> Ki_z, string output_file);
 double Heisenberg(BaseSite & base_site, Site & site);
+double Heisenberg_3_anisotropy(BaseSite & base_site, Site & site);
+double Heisenberg_external_field(BaseSite & base_site, Site & site);
 
 int main(int argc, char** argv) {
     mpi::environment env;
@@ -235,6 +247,8 @@ int main(int argc, char** argv) {
 
     // Output the coordinate number
     if(world.rank() == 0) {
+        cout << "External field: " << supercell.base_site.B[0] << "\t" << supercell.base_site.B[1] << "\t" << supercell.base_site.B[2] <<  endl;
+        cout << "Anisotropy factor: " << supercell.base_site.anisotropic_factor_D << "\t" << supercell.base_site.anisotropic_factor_En << endl;
         cout << "Coordinate number:" << endl;
         for(int i=0; i<supercell.base_site.number; i++) {
             cout << supercell.base_site.elements[i] << "\t" << supercell.base_site.spin_scaling[i] << endl;
@@ -261,14 +275,32 @@ int main(int argc, char** argv) {
     vector<double> Cv;
     vector<double> moment;
     vector<double> Ki;
+    vector<double> Ki_x;
+    vector<double> Ki_y;
+    vector<double> Ki_z;
+    vector<double> moment_x;
+    vector<double> moment_y;
+    vector<double> moment_z;
     double energy_every_processor;
     double Cv_every_processor;
     double moment_every_processor;
     double Ki_every_processor;
+    double Ki_x_every_processor;
+    double Ki_y_every_processor;
+    double Ki_z_every_processor;
+    double moment_x_ever_processor;
+    double moment_y_ever_processor;
+    double moment_z_ever_processor;
     vector<double> gathered_energy;
     vector<double> gathered_Cv;
     vector<double> gathered_moment;
     vector<double> gathered_Ki;
+    vector<double> gathered_Ki_x;
+    vector<double> gathered_Ki_y;
+    vector<double> gathered_Ki_z;
+    vector<double> gathered_moment_x;
+    vector<double> gathered_moment_y;
+    vector<double> gathered_moment_z;
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<quotient+1; i++) {
@@ -280,14 +312,26 @@ int main(int argc, char** argv) {
 
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
             Ki_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
+            Ki_x_every_processor = (result_value[5]-result_value[4]*result_value[4])/(KB*T); //Ki
+            Ki_y_every_processor = (result_value[7]-result_value[6]*result_value[6])/(KB*T); //Ki
+            Ki_z_every_processor = (result_value[9]-result_value[8]*result_value[8])/(KB*T); //Ki
             energy_every_processor = result_value[0] * one_over_number; //energy
             moment_every_processor = result_value[2] * one_over_number; //moment
+            moment_x_ever_processor = result_value[4] * one_over_number; //moment_x
+            moment_y_ever_processor = result_value[6] * one_over_number; //moment_y
+            moment_z_ever_processor = result_value[8] * one_over_number; //moment_z
             
             // Collect data form all processors.
             gather(world, energy_every_processor, gathered_energy, 0);
             gather(world, Cv_every_processor, gathered_Cv, 0);
             gather(world, moment_every_processor, gathered_moment, 0);
             gather(world, Ki_every_processor, gathered_Ki, 0);
+            gather(world, moment_x_ever_processor, gathered_moment_x, 0);
+            gather(world, moment_y_ever_processor, gathered_moment_y, 0);
+            gather(world, moment_z_ever_processor, gathered_moment_z, 0);
+            gather(world, Ki_x_every_processor, gathered_Ki_x, 0);
+            gather(world, Ki_y_every_processor, gathered_Ki_y, 0);
+            gather(world, Ki_z_every_processor, gathered_Ki_z, 0);
 
             // Store these data
             if(world.rank() == 0) {
@@ -296,6 +340,12 @@ int main(int argc, char** argv) {
                     Cv.push_back(gathered_Cv[j]);
                     moment.push_back(gathered_moment[j]);
                     Ki.push_back(gathered_Ki[j]);
+                    moment_x.push_back(gathered_moment_x[j]);
+                    moment_y.push_back(gathered_moment_y[j]);
+                    moment_z.push_back(gathered_moment_z[j]);
+                    Ki_x.push_back(gathered_Ki_x[j]);
+                    Ki_y.push_back(gathered_Ki_y[j]);
+                    Ki_z.push_back(gathered_Ki_z[j]);
                 }
             }
             
@@ -304,7 +354,7 @@ int main(int argc, char** argv) {
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
-        WriteOutput(monte_carlo, energy, Cv, moment, Ki, output_file);
+        WriteOutput(monte_carlo, energy, Cv, moment, Ki, moment_x, moment_y, moment_z, Ki_x, Ki_y, Ki_z, output_file);
     }
     return 0;
 }
@@ -343,6 +393,24 @@ double Supercell::momentum() {
     }
 
     return sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2]);
+}
+
+vector<double> Supercell::momentum_component() {
+    double mx = 0;
+    double my = 0;
+    double mz = 0;
+    for(int i=0; i<this->lattice.n_x; i++) {
+        for(int j=0; j<this->lattice.n_y; j++) {
+            for(int k=0; k<this->lattice.n_z; k++) {
+                for(int l=0; l<this->base_site.number; l++) {
+                    mx += this->site[i][j][k][l].spin[0];
+                    my += this->site[i][j][k][l].spin[1];
+                    mz += this->site[i][j][k][l].spin[2];
+                }
+            }
+        }
+    }
+    return {mx, my, mz};
 }
 
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
@@ -442,16 +510,32 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     getline(in, str); // Number of cells.
     scn::scan(str, "{} {} {}", supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z);
     getline(in, str); // Hamiltonion function.
-    scn::scan(str, "{}", tmp_str);
-    supercell.lattice.function_choice = "Heisenberg";
-    supercell.Hamiltonian = Heisenberg;
+    scn::scan(str, "{}", supercell.lattice.function_choice);
+    getline(in, str); // Anisotropic factor.
+    if(supercell.lattice.function_choice == "Heisenberg") {
+        cout << "Hamiltonion type: Heisenberg" << endl;
+        scn::scan(str, "{}", supercell.base_site.anisotropic_factor_D);
+    } else if(supercell.lattice.function_choice == "Heisenberg_3_axis_anisotropy") {
+        cout << "Hamiltonion type: Heisenberg with 3 axis anisotropy" << endl;
+        scn::scan(str, "{} {}", supercell.base_site.anisotropic_factor_D, supercell.base_site.anisotropic_factor_En);
+    } else if(supercell.lattice.function_choice == "Heisenberg_external_field") {
+        cout << "Hamiltonion type: Heisenberg with 3 axis anisotropy and external magnetic field" << endl;
+        scn::scan(str, "{} {} {}", supercell.base_site.B[0], supercell.base_site.B[1], supercell.base_site.B[2]);
+        supercell.base_site.B[0] *= MuB;
+        supercell.base_site.B[1] *= MuB;
+        supercell.base_site.B[2] *= MuB;
+        getline(in, str);
+        scn::scan(str, "{} {}", supercell.base_site.anisotropic_factor_D, supercell.base_site.anisotropic_factor_En);
+    } else {
+        cout << "Default Hamiltonion type: Heisenberg" << endl;
+        scn::scan(str, "{}", supercell.base_site.anisotropic_factor_D);
+    }
+    
     getline(in, str); // Magnifying factor
     scn::scan(str, "{}", supercell.lattice.magnify_factor);
 
     // Information about base.
     getline(in, str); // Comment line
-    getline(in, str); // Anisotropic factor.
-    scn::scan(str, "{}", supercell.base_site.anisotropic_factor_D);
     getline(in, str); // Magnetic elements
     static constexpr auto pattern = ctll::fixed_string{ R"(\s+)" };
     for(auto e: ctre::split<pattern>(str)) {
@@ -612,7 +696,7 @@ int EnlargeCell(Supercell & supercell) {
     vector<Site> site3;
     Site site4;
 
-    site4.spin[2] = 1.0;
+    site4.spin[1] = 1.0; //TODO: custom initialaztion direction
 
     for(int i=0; i<supercell.lattice.n_x; i++) {
         supercell.site.push_back(site1);
@@ -674,6 +758,12 @@ int AddDistance(double distance, vector<double> & distance_list, double toleranc
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
     if(supercell.lattice.function_choice == "Heisenberg") {
+        supercell.Hamiltonian = Heisenberg;
+    } else if(supercell.lattice.function_choice == "Heisenberg_3_axis_anisotropy") {
+        supercell.Hamiltonian = Heisenberg_3_anisotropy;
+    } else if(supercell.lattice.function_choice == "Heisenberg_external_field") {
+        supercell.Hamiltonian = Heisenberg_external_field;
+    }  else {
         supercell.Hamiltonian = Heisenberg;
     }
 
@@ -768,6 +858,9 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     double tmp_momentum = 0;
     double total_momentum = 0;
     double total_momentum_square = 0;
+    vector<double> total_m_component = {0, 0, 0};
+    vector<double> total_m_square_component = {0, 0, 0};
+    vector<double> tmp_m_component;
     static double one_over_step = 1.0 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
@@ -779,10 +872,20 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
         tmp_momentum = supercell.momentum();
         total_momentum += tmp_momentum;
         total_momentum_square += tmp_momentum * tmp_momentum;
+        tmp_m_component = supercell.momentum_component();
+        total_m_component[0] += tmp_m_component[0];
+        total_m_component[1] += tmp_m_component[1];
+        total_m_component[2] += tmp_m_component[2];
+        total_m_square_component[0] += tmp_m_component[0] * tmp_m_component[0];
+        total_m_square_component[1] += tmp_m_component[1] * tmp_m_component[1];
+        total_m_square_component[2] += tmp_m_component[2] * tmp_m_component[2];
     }
     
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
-    total_momentum * one_over_step, total_momentum_square * one_over_step};
+    total_momentum * one_over_step, total_momentum_square * one_over_step, \
+    total_m_component[0] * one_over_step, total_m_square_component[0] * one_over_step, \
+    total_m_component[1] * one_over_step, total_m_square_component[1] * one_over_step, \
+    total_m_component[2] * one_over_step, total_m_square_component[2] * one_over_step};
 }
 
 int Flip(Supercell & supercell, Site & one_site, double T) {
@@ -852,13 +955,16 @@ int WriteSpin(Supercell & supercell, string spin_structure_file_prefix, double T
     return 0;
 }
 
-int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, vector<double> moment, vector<double> Ki, string output_file) {
+int WriteOutput(MonteCarlo & monte_carlo, vector<double> energy, vector<double> Cv, \
+vector<double> moment, vector<double> Ki, vector<double> moment_x, vector<double> moment_y, vector<double> moment_z,\
+vector<double> Ki_x, vector<double> Ki_y, vector<double> Ki_z, string output_file) {
     // Output Monte Carlo results.
     double T = monte_carlo.start_temperature;
     auto out = fmt::output_file(output_file);
-    out.print("T\tEnergy\tCv\tMoment\tKi\n");
+    out.print("T\tEnergy\tCv\tMoment\tKi\tmoment_x\tKi_x\tmoment_y\tKi_y\tmoment_z\tKi_z\n");
     for(int i=0; i<energy.size(); i++) {
-        out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\n", T, energy[i], Cv[i], moment[i], Ki[i]);
+        out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\t", T, energy[i], Cv[i], moment[i], Ki[i]);
+        out.print("{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\n", moment_x[i], Ki_x[i], moment_y[i], Ki_y[i], moment_z[i], Ki_z[i]);
         T += monte_carlo.temperature_step;
     }
     out.close();
@@ -879,5 +985,51 @@ double Heisenberg(BaseSite & base_site, Site & site) {
     }
 
     energy += 2 * base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
+    return energy;
+}
+
+double Heisenberg_3_anisotropy(BaseSite & base_site, Site & site) {
+    double energy = 0;
+    vector<double> spin_sum;
+    for(int i=0; i<*site.neighbor_number; i++) {
+        spin_sum = {0, 0, 0};
+        for(int j=0; j<site.neighbor[i].size(); j++) {
+            spin_sum[0] += (*site.neighbor[i][j]).spin[0];
+            spin_sum[1] += (*site.neighbor[i][j]).spin[1];
+            spin_sum[2] += (*site.neighbor[i][j]).spin[2];
+        }
+        energy += (*site.super_exchange_parameter)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
+    }
+
+    energy += 2 * base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
+    energy += 2 * base_site.anisotropic_factor_En * site.spin[0]*site.spin[0];
+    energy -= 2 * base_site.anisotropic_factor_En * site.spin[1]*site.spin[1];
+    return energy;
+}
+
+double Heisenberg_external_field(BaseSite & base_site, Site & site) {
+    double energy = 0;
+    vector<double> spin_sum;
+
+    // Exchange energy
+    for(int i=0; i<*site.neighbor_number; i++) {
+        spin_sum = {0, 0, 0};
+        for(int j=0; j<site.neighbor[i].size(); j++) {
+            spin_sum[0] += (*site.neighbor[i][j]).spin[0];
+            spin_sum[1] += (*site.neighbor[i][j]).spin[1];
+            spin_sum[2] += (*site.neighbor[i][j]).spin[2];
+        }
+        energy += (*site.super_exchange_parameter)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
+        // TODO: -2H*S, output S_x, S_y
+    }
+
+    // Magnetic anisotropy energy
+    energy += 2 * base_site.anisotropic_factor_D * (*site.anisotropic_factor)*site.spin[2]*site.spin[2];
+    energy += 2 * base_site.anisotropic_factor_En * site.spin[0]*site.spin[0];
+    energy -= 2 * base_site.anisotropic_factor_En * site.spin[1]*site.spin[1];
+
+    // External magnetic field
+    energy -= 4 * (base_site.B[0]*site.spin[0] + base_site.B[1]*site.spin[1] + base_site.B[2]*site.spin[2]);
+
     return energy;
 }
