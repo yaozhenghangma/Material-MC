@@ -30,31 +30,13 @@ jobs:
           xrepo export -o ./packages
 
       - name: zip
-        run: |
-          cd ..
-          zip -r MMC_offline.zip MMC
+        run: zip -r MMC_offline.zip ./
 
-      - name: Upload artifacts
-        uses: 'actions/upload-artifact@v2'
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: MMC_offline.zip
-          path: /home/runner/work/MMC/MMC_offline.zip
-
-  release:
-    needs: export
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: zip/
-
-      - name: Release
-        uses: docker://antonyurchenko/git-release:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: zip/MMC_offline.zip
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: MMC_offline.zip
+          asset_name: MC_offline.zip
+          tag: ${{ github.ref }}
+          overwrite: true
