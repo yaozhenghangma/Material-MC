@@ -178,10 +178,34 @@ void serialize(Archive & ar, MonteCarlo & monte_carlo, const unsigned int versio
 }
 }
 
+class Initialization {
+public:
+    vector<double> direction = {0, 0, 1};
+    bool anti_ferromagnetic = false;
+    vector<vector<int>> anti_ferromagnetic_J;
+
+    int normalized();
+};
+
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, Initialization & initialization, const unsigned int version)
+{
+    ar & initialization.direction;
+    ar & initialization.anti_ferromagnetic;
+    ar & initialization.anti_ferromagnetic_J;
+}
+
+}
+}
+
 class Supercell {
 public:
     Lattice lattice;
     BaseSite base_site;
+    Initialization initialization;
     vector<vector<vector<vector<Site>>>> site;
 
     // Hamiltonian function to calculate energy for one site
@@ -413,6 +437,16 @@ vector<double> Supercell::momentum_component() {
     return {mx, my, mz};
 }
 
+int Initialization::normalized() {
+    double norm = sqrt(1.0 / (this->direction[0]*this->direction[0] + \
+    this->direction[1]*this->direction[1] + \
+    this->direction[2]*this->direction[2]));
+    this->direction[0] *= norm;
+    this->direction[1] *= norm;
+    this->direction[2] *= norm;
+    return 0;
+}
+
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
     // Return the site index randomly.
     static random_device rd;
@@ -560,7 +594,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
     vector<double> tmp_vector;
     vector<string> tmp_string_vector;
     int i=0;
-    while(getline(in, str) && !str.empty()) { // Super-exchange parameters
+    while(getline(in, str) && !str.empty() && str[0] != '=') { // Super-exchange parameters
         supercell.base_site.neighbor_number.push_back(0);
         scn::scan(str, "{} {}", tmp_str, supercell.base_site.neighbor_number[i]);
         supercell.base_site.super_exchange_parameter.push_back(tmp_vector);
@@ -579,6 +613,30 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
         i++;
     }
     
+    getline(in, str);
+    scn::scan(str, "{}", tmp_str);
+    if(tmp_str[0] == 'A' || tmp_str[0] == 'a') {
+        supercell.initialization.anti_ferromagnetic = true;
+    } else {
+        supercell.initialization.anti_ferromagnetic = false;
+    }
+    getline(in, str);
+    scn::scan(str, "{} {} {}", \
+        supercell.initialization.direction[0], \
+        supercell.initialization.direction[1], \
+        supercell.initialization.direction[2]);
+    if(supercell.initialization.anti_ferromagnetic) {
+        for(int i=0; i<supercell.base_site.elements.size(); i++) {
+            supercell.initialization.anti_ferromagnetic_J.push_back({});
+            getline(in, str);
+            for(auto e: ctre::split<pattern>(str)) {
+                tmp_str = string(e.get<0>());
+                if (tmp_str != "" && tmp_str[0] != '#') {
+                    supercell.initialization.anti_ferromagnetic_J[i].push_back(stoi(tmp_str));
+                }
+            }
+        }
+    }
 
     in.close();
     return 0;
@@ -653,11 +711,13 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
         vector<vector<string>> neighbor_elements = supercell.base_site.neighbor_elements;
         vector<vector<double>> neighbor_distance_square = supercell.base_site.neighbor_distance_square;
         vector<vector<double>> super_exchange_parameter = supercell.base_site.super_exchange_parameter;
+        vector<vector<int>> anti_ferromagnetic_J = supercell.initialization.anti_ferromagnetic_J;
         supercell.base_site.elements = {};
         supercell.base_site.neighbor_number = {};
         supercell.base_site.neighbor_elements = {};
         supercell.base_site.neighbor_distance_square = {};
         supercell.base_site.super_exchange_parameter = {};
+        supercell.initialization.anti_ferromagnetic_J = {};
         int k=0;
         for(int i=0; i<elements.size(); i++) {
             if(magnetic_elements[k] == elements[i]) {
@@ -674,6 +734,7 @@ int ReadPOSCAR(Supercell & supercell, string cell_structure_file) {
                     supercell.base_site.neighbor_elements.push_back(neighbor_elements[k]);
                     supercell.base_site.neighbor_distance_square.push_back(neighbor_distance_square[k]);
                     supercell.base_site.super_exchange_parameter.push_back(super_exchange_parameter[k]);
+                    supercell.initialization.anti_ferromagnetic_J.push_back(anti_ferromagnetic_J[k]);
                 }
                 supercell.base_site.number += elements_number[i];
                 k++;
@@ -1020,7 +1081,6 @@ double Heisenberg_external_field(BaseSite & base_site, Site & site) {
             spin_sum[2] += (*site.neighbor[i][j]).spin[2];
         }
         energy += (*site.super_exchange_parameter)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
-        // TODO: -2H*S, output S_x, S_y
     }
 
     // Magnetic anisotropy energy
