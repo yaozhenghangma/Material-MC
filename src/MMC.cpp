@@ -768,15 +768,9 @@ int EnlargeCell(Supercell & supercell) {
     vector<Site> site3;
     Site site4;
 
-    site4.spin[0] = supercell.initialization.direction[0] * supercell.lattice.a[0] + \
-                    supercell.initialization.direction[1] * supercell.lattice.b[0] + \
-                    supercell.initialization.direction[2] * supercell.lattice.b[0];
-    site4.spin[1] = supercell.initialization.direction[0] * supercell.lattice.a[1] + \
-                    supercell.initialization.direction[1] * supercell.lattice.b[1] + \
-                    supercell.initialization.direction[2] * supercell.lattice.b[1];
-    site4.spin[2] = supercell.initialization.direction[0] * supercell.lattice.a[2] + \
-                    supercell.initialization.direction[1] * supercell.lattice.b[2] + \
-                    supercell.initialization.direction[2] * supercell.lattice.b[2];
+    site4.spin[0] = supercell.initialization.direction[0];
+    site4.spin[1] = supercell.initialization.direction[1];
+    site4.spin[2] = supercell.initialization.direction[2];
 
     for(int i=0; i<supercell.lattice.n_x; i++) {
         supercell.site.push_back(site1);

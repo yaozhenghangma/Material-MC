@@ -19,5 +19,5 @@ Cr 0.079 10.28 #J2
 Cr 0.052 13.925 #J3
 =======================================Part 4: Initialization #Comment line=========================================================
 Antiferromagnetic #Initialization configuration
-0 1 0 #Spin direction of first magnetic element, in the basis of a, b and c
+0 1 0 #Spin direction of first magnetic element
 2 3 #J2 and J3 for Cr listed above is antiferromagnetic
