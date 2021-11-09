@@ -94,6 +94,8 @@ public:
 
     // Neighbors' link.
     vector<vector<Site*>> neighbor = {};
+
+    int reverse_spin();
 };
 
 // Information about the lattice.
@@ -447,6 +449,13 @@ int Initialization::normalized() {
     return 0;
 }
 
+int Site::reverse_spin() {
+    this->spin[0] = - this->spin[0];
+    this->spin[1] = - this->spin[1];
+    this->spin[2] = - this->spin[2];
+    return 0;
+}
+
 vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
     // Return the site index randomly.
     static random_device rd;
@@ -633,6 +642,8 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, string inpu
                 tmp_str = string(e.get<0>());
                 if (tmp_str != "" && tmp_str[0] != '#') {
                     supercell.initialization.anti_ferromagnetic_J[i].push_back(stoi(tmp_str));
+                } else {
+                    break;
                 }
             }
         }
@@ -757,7 +768,15 @@ int EnlargeCell(Supercell & supercell) {
     vector<Site> site3;
     Site site4;
 
-    site4.spin[1] = 1.0; //TODO: custom initialaztion direction
+    site4.spin[0] = supercell.initialization.direction[0] * supercell.lattice.a[0] + \
+                    supercell.initialization.direction[1] * supercell.lattice.b[0] + \
+                    supercell.initialization.direction[2] * supercell.lattice.b[0];
+    site4.spin[1] = supercell.initialization.direction[0] * supercell.lattice.a[1] + \
+                    supercell.initialization.direction[1] * supercell.lattice.b[1] + \
+                    supercell.initialization.direction[2] * supercell.lattice.b[1];
+    site4.spin[2] = supercell.initialization.direction[0] * supercell.lattice.a[2] + \
+                    supercell.initialization.direction[1] * supercell.lattice.b[2] + \
+                    supercell.initialization.direction[2] * supercell.lattice.b[2];
 
     for(int i=0; i<supercell.lattice.n_x; i++) {
         supercell.site.push_back(site1);
@@ -767,6 +786,8 @@ int EnlargeCell(Supercell & supercell) {
                 supercell.site[i][j].push_back(site3);
                 for(int l=0; l<supercell.base_site.number; l++) {
                     supercell.site[i][j][k].push_back(site4);
+                    supercell.site[i][j][k][l].spin[0] *= supercell.base_site.spin_scaling[l];
+                    supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
@@ -893,6 +914,26 @@ int InitializeSupercell(Supercell & supercell) {
         }
     }
 
+    // Initialize the spin with given configuration
+    if(supercell.initialization.anti_ferromagnetic) {
+        for(int i=0; i<supercell.lattice.n_x; i++) {
+            for(int j=0; j<supercell.lattice.n_y; j++) {
+                for(int k=0; k<supercell.lattice.n_z; k++) {
+                    for(int l=0; l<supercell.base_site.number; l++) {
+                        for(int m=0; m<supercell.initialization.anti_ferromagnetic_J[l].size(); m++) {
+                            for(int n=0; n<supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1].size(); n++) {
+                                if(supercell.site[i][j][k][l].spin[0] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[0] + \
+                                supercell.site[i][j][k][l].spin[1] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[1] + \
+                                supercell.site[i][j][k][l].spin[2] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[2] > 0) {
+                                    supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->reverse_spin();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     supercell.lattice.total_energy = supercell.energy();
     return 0;

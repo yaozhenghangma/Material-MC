@@ -13,8 +13,11 @@ Heisenberg_external_field #Hamiltonian function type is H = 1/2 * Sigma_ij(J1*Si
 2.0 #Magnify the output lattice.
 =======================================Part 3: Base #Comment line=========================================================
 Cr #List magnetic elements, separated by whitespace.
-Cr 3
-Cr -5.454 3.904
-Cr 0.079 10.28
-Cr 0.052 13.925
-
+Cr 3 #Jn for element Cr, n=3. Elements order should be consistent with above list
+Cr -5.454 3.904 #J1 for Cr-Cr; J1=-5.454; distance is 3.904 angstrom
+Cr 0.079 10.28 #J2
+Cr 0.052 13.925 #J3
+=======================================Part 4: Initialization #Comment line=========================================================
+Antiferromagnetic #Initialization configuration
+0 1 0 #Spin direction of first magnetic element, in the basis of a, b and c
+2 3 #J2 and J3 for Cr listed above is antiferromagnetic
