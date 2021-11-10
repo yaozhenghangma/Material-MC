@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2021.11.10
+### Fixed
+- No broadcasting initialization configure
+
 ## [0.2.0] - 2021.11.07
 ### Added
 - Link neighbors with given distance
@@ -15,5 +19,6 @@ All notable changes to this project will be documented in this file.
 _Initial release._
 
 [Unreleased]: https://github.com/yaozhenghangma/Material-MC/blob/main/CHANGELOG.md
+[0.2.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.2.1
 [0.2.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.2.0
 [0.1.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.1.0

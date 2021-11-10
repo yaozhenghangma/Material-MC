@@ -265,6 +265,7 @@ int main(int argc, char** argv) {
     // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
     broadcast(world, supercell.base_site, 0);
     broadcast(world, supercell.lattice, 0);
+    broadcast(world, supercell.initialization, 0);
     broadcast(world, monte_carlo, 0);
 
     // Enlarge the cell with given n.
