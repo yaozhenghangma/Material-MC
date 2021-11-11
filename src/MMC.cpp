@@ -29,6 +29,7 @@ using namespace std;
 
 const double KB = 0.08617343;
 const double MuB = 5.7883818012e-2;
+const double gs = 2.0;
 
 // Information about base in the cell
 class BaseSite {
@@ -419,7 +420,7 @@ double Supercell::momentum() {
         }
     }
 
-    return sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2]);
+    return sqrt(m[0]*m[0]+m[1]*m[1]+m[2]*m[2])*gs;
 }
 
 vector<double> Supercell::momentum_component() {
@@ -437,7 +438,7 @@ vector<double> Supercell::momentum_component() {
             }
         }
     }
-    return {mx, my, mz};
+    return {mx*gs, my*gs, mz*gs};
 }
 
 int Initialization::normalized() {
@@ -1058,7 +1059,7 @@ vector<double> Ki_x, vector<double> Ki_y, vector<double> Ki_z, string output_fil
     // Output Monte Carlo results.
     double T = monte_carlo.start_temperature;
     auto out = fmt::output_file(output_file);
-    out.print("T\tEnergy\tCv\tMoment\tKi\tmoment_x\tKi_x\tmoment_y\tKi_y\tmoment_z\tKi_z\n");
+    out.print("#T\tEnergy\tCv\tMoment\tKi\tmoment_x\tKi_x\tmoment_y\tKi_y\tmoment_z\tKi_z\n");
     for(int i=0; i<energy.size(); i++) {
         out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\t", T, energy[i], Cv[i], moment[i], Ki[i]);
         out.print("{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\n", moment_x[i], Ki_x[i], moment_y[i], Ki_y[i], moment_z[i], Ki_z[i]);
