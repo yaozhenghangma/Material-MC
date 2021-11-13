@@ -11,6 +11,14 @@
 
 const double gs = 2.0;
 
+enum class HamiltonionType {
+    Heisenberg, Heisenberg_xyz_anisotropy, Heisenberg_with_field, Heisenberg_xyz_anisotropy_with_field,
+    Heisenberg_x_anisotropy, Heisenberg_y_anisotropy, Heisenberg_z_anisotropy,
+    Heisenberg_xy_anisotropy, Heisenberg_yz_anisotropy, Heisenberg_zx_anisotropy,
+    Heisenberg_x_anisotropy_with_field, Heisenberg_y_anisotropy_with_field, Heisenberg_z_anisotropy_with_field,
+    Heisenberg_xy_anisotropy_with_field, Heisenberg_yz_anisotropy_with_field, Heisenberg_zx_anisotropy_with_field
+};
+
 // Information about base in the cell
 class BaseSite {
 public:
@@ -31,6 +39,7 @@ public:
     //TODO: record and output coordination number
 
     // Anisotropy factor
+    //std::vector<double> anisotropic_factor = {0, 0, 0};
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
     double anisotropic_factor_En = 0; //FIXME: different elements with different factor
 
@@ -96,6 +105,7 @@ public:
     double total_energy;
 
     std::string function_choice;
+    HamiltonionType hamiltonion_type = HamiltonionType::Heisenberg;
 
     // Maximum relative error in distance computation
     double tolerance_percentage;
@@ -121,6 +131,7 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
     ar & lattice.function_choice;
+    ar & lattice.hamiltonion_type;
 }
 
 }

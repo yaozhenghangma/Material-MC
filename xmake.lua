@@ -28,6 +28,7 @@ add_requires("scnlib")
 add_requires("fmt")
 add_requires("ctre")
 add_requires("mpi")
+add_requires("spdlog")
 
 if is_plat("macosx") then 
     add_requires("brew::boost", {alias = "boost"})
@@ -67,3 +68,4 @@ target("MMC")
     add_packages("scnlib")
     add_packages("fmt")
     add_packages("ctre")
+    add_packages("spdlog")

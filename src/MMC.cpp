@@ -5,6 +5,8 @@
 #include <unistd.h>
 
 #include <boost/mpi.hpp>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 #include "MC_structure.h"
 #include "structure_in.h"
@@ -12,6 +14,7 @@
 #include "Hamiltonion.h"
 #include "spin_out.h"
 #include "result_out.h"
+#include "log.h"
 
 namespace mpi = boost::mpi;
 
@@ -44,6 +47,8 @@ int main(int argc, char** argv) {
     string output_file = "output.txt";
     string spin_structure_file_prefix = "spin";
 
+    shared_ptr<spdlog::logger> logger;
+
     // Read parameters and broadcast data using root processor
     if(world.rank() == 0) {
         // Read information from command line.
@@ -54,6 +59,10 @@ int main(int argc, char** argv) {
 
         // Read information from POSCAR
         ReadPOSCAR(supercell, cell_structure_file);
+
+        // Log file
+        logger = spdlog::basic_logger_mt("basic_logger", "log.txt");
+        logger->info("Successfully process input file.");
     }
     // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
     broadcast(world, supercell.base_site, 0);
@@ -67,22 +76,8 @@ int main(int argc, char** argv) {
 
     // Output the coordinate number
     if(world.rank() == 0) {
-        cout << "External field: " << supercell.base_site.B[0] << "\t" << supercell.base_site.B[1] << "\t" << supercell.base_site.B[2] <<  endl;
-        cout << "Anisotropy factor: " << supercell.base_site.anisotropic_factor_D << "\t" << supercell.base_site.anisotropic_factor_En << endl;
-        cout << "Coordinate number:" << endl;
-        for(int i=0; i<supercell.base_site.number; i++) {
-            cout << supercell.base_site.elements[i] << "\t" << supercell.base_site.spin_scaling[i] << endl;
-            for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
-                cout << supercell.site[0][0][0][i].neighbor[j].size() << "\t";
-            }
-            cout << endl;
-            for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
-                for(int k=0; k<supercell.site[0][0][0][i].neighbor[j].size(); k++) {
-                    cout << *(supercell.site[0][0][0][i].neighbor[j][k]->spin_scaling) << "\t";
-                }
-                cout << endl;
-            }
-        }
+        logger->info("Successfully initialize the supercell.");
+        WriteLog(supercell, monte_carlo, logger);
     }
     // Arrange the processors.
     int quotient = monte_carlo.temperature_step_number / world.size();
@@ -174,7 +169,9 @@ int main(int argc, char** argv) {
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
+        logger->info("Successfully run Monte Carlo simulation.");
         WriteOutput(monte_carlo, energy, Cv, moment, Ki, moment_x, moment_y, moment_z, Ki_x, Ki_y, Ki_z, output_file);
+        logger->info("Successfully output all results.");
     }
     return 0;
 }

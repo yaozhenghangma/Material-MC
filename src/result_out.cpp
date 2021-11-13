@@ -11,7 +11,7 @@ std::string output_file) {
     out.print("#T\tEnergy\tCv\tMoment\tKi\tmoment_x\tKi_x\tmoment_y\tKi_y\tmoment_z\tKi_z\n");
     for(int i=0; i<energy.size(); i++) {
         out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\t", T, energy[i], Cv[i], moment[i], Ki[i]);
-        out.print("{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\t{:5f}\n", moment_x[i], Ki_x[i], moment_y[i], Ki_y[i], moment_z[i], Ki_z[i]);
+        out.print("{:.5f}\t{:.5f}\t{:.5f}\t{:.5f}\t{:.5f}\t{:.5f}\n", moment_x[i], Ki_x[i], moment_y[i], Ki_y[i], moment_z[i], Ki_z[i]);
         T += monte_carlo.temperature_step;
     }
     out.close();
