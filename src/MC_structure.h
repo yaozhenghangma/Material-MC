@@ -27,6 +27,7 @@ public:
     std::vector<std::vector<double>> coordinate;
     std::vector<double> spin_scaling; // Default value: 1.0.
     std::vector<double> anisotropic_factor; // Default value: 1.0.
+    std::vector<std::vector<double>> anisotropic_ratio;
     std::vector<std::string> elements;
 
     // Input information    
@@ -39,7 +40,7 @@ public:
     //TODO: record and output coordination number
 
     // Anisotropy factor
-    //std::vector<double> anisotropic_factor = {0, 0, 0};
+    std::vector<double> anisotropy = {0, 0, 0};
     double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
     double anisotropic_factor_En = 0; //FIXME: different elements with different factor
 

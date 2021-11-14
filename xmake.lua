@@ -29,6 +29,7 @@ add_requires("fmt")
 add_requires("ctre")
 add_requires("mpi")
 add_requires("spdlog")
+add_requires("toml++")
 
 if is_plat("macosx") then 
     add_requires("brew::boost", {alias = "boost"})
@@ -69,3 +70,4 @@ target("MMC")
     add_packages("fmt")
     add_packages("ctre")
     add_packages("spdlog")
+    add_packages("toml++")

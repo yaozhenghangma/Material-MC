@@ -1,5 +1,7 @@
 #include "configure_in.h"
 
+/*
+
 int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string input_file) {
     // Read information about enlarging and Monte Carlo from given setting file.
     std::string str;
@@ -126,5 +128,50 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
     }
 
     in.close();
+    return 0;
+}
+*/
+
+int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string input_file) {
+    toml::table data = toml::parse(input_file);
+
+    // Monte Carlo parameters
+    monte_carlo.start_temperature = data["MonteCarlo"]["start_temperature"].value_or(0.0);
+    monte_carlo.end_temperature = data["MonteCarlo"]["end_temperature"].value_or(0.0);
+    monte_carlo.temperature_step_number = data["MonteCarlo"]["temperature_points_number"].value_or(1);
+    monte_carlo.temperature_step = (monte_carlo.end_temperature-monte_carlo.start_temperature) / (monte_carlo.temperature_step_number-1);
+    monte_carlo.relax_step = data["MonteCarlo"]["relaxing_steps"].value_or(1);
+    monte_carlo.count_step = data["MonteCarlo"]["counting_steps"].value_or(1);
+    monte_carlo.flip_number = data["MonteCarlo"]["flipping_number"].value_or(1);
+
+    // Cell
+    supercell.lattice.n_x = data["Lattice"]["cell_number"][0].value_or(1);
+    supercell.lattice.n_y = data["Lattice"]["cell_number"][1].value_or(1);
+    supercell.lattice.n_z = data["Lattice"]["cell_number"][2].value_or(1);
+    supercell.lattice.tolerance_percentage = data["Lattice"]["tolerance"].value_or(0.01);
+
+    // Magnetic elements
+    toml::array& elements = *data.get_as<toml::array>("Elements");
+    for(int i=0; i<elements.size(); i++) {
+        supercell.base_site.elements.push_back(data["Elements"][i]["name"].value_or(""));
+        supercell.base_site.spin_scaling.push_back(data["Elements"][i]["spin"].value_or(1.0));
+        supercell.base_site.anisotropic_ratio.push_back({0.0, 0.0, 0.0});
+        supercell.base_site.anisotropic_ratio[i][0] = data["Elements"][i]["anisotropic_factor"][0].value_or(1.0);
+        supercell.base_site.anisotropic_ratio[i][1] = data["Elements"][i]["anisotropic_factor"][1].value_or(1.0);
+        supercell.base_site.anisotropic_ratio[i][2] = data["Elements"][i]["anisotropic_factor"][2].value_or(1.0);
+        auto neighbors = data["Elements"][i]["Neighbors"].as_array();
+        supercell.base_site.neighbor_number.push_back(neighbors->size());
+        supercell.base_site.neighbor_elements.push_back({});
+        supercell.base_site.neighbor_distance_square.push_back({});
+        supercell.base_site.super_exchange_parameter.push_back({});
+        for(int j=0; j<neighbors->size(); j++) {
+            supercell.base_site.neighbor_elements[i].push_back(data["Elements"][i]["Neighbors"][j]["name"].value_or(""));
+            supercell.base_site.neighbor_distance_square[i].push_back(data["Elements"][i]["Neighbors"][j]["distance"].value_or(1.0) * data["Elements"][i]["Neighbors"][j]["distance"].value_or(1.0));
+            supercell.base_site.super_exchange_parameter[i].push_back(data["Elements"][i]["Neighbors"][j]["exchange_parameter"].value_or(1.0));
+        }
+    }
+
+    // Hamiltonion function
+
     return 0;
 }

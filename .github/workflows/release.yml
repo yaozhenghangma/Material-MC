@@ -27,6 +27,8 @@ jobs:
           xrepo install -y scnlib
           xrepo install -y fmt
           xrepo install -y ctre
+          xrepo install -y spdlog
+          xrepo install -y toml++
           xrepo export -o ./packages
 
       - name: zip

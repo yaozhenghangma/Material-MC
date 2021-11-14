@@ -1,0 +1,44 @@
+# Example input file.
+
+# Parameters to control Monte Carlo loops
+[MonteCarlo]
+start_temperature = 0.0
+end_temperature = 400.0
+temperature_points_number = 2
+relaxing_steps = 8000
+counting_steps = 6000
+flipping_number = 6000
+
+# Information about the cell
+[Lattice]
+cell_number = [ 8, 8, 4 ] # A 8*8*4 supercell
+tolerance = 0.01
+
+# Magnetic elements
+[[Elements]]
+name = "Cr"
+spin = 1.5
+anisotropic_factor = [ 1.0, 1.0, 1.0 ]
+[[Elements.Neighbors]]
+name = "Cr"
+exchange_parameter = -5.454
+distance = 3.904
+[[Elements.Neighbors]]
+name = "Cr"
+exchange_parameter = 0.079
+distance = 10.28
+[[Elements.Neighbors]]
+name = "Cr"
+exchange_parameter = 0.052
+distance = 13.925
+
+# Hamiltonian function
+[Hamiltonian]
+magnetic_field = [ 0.0, 0.5, 0.0 ]
+anisotropy = [ 0.150, -0.150, -0.056 ]
+
+# TODO: Initialization configuration
+
+# Parameters to control output
+[Output]
+magnifying_factor = 2.0
