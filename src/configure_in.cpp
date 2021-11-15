@@ -132,6 +132,71 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
 }
 */
 
+int ChooseHamiltonion(Supercell & supercell) {
+    if(supercell.base_site.B[0] == 0.0 && supercell.base_site.B[1] == 0.0 && supercell.base_site.B[2] == 0.0) {
+        if(supercell.base_site.anisotropy[0] == 0.0) {
+            if(supercell.base_site.anisotropy[1] == 0.0) {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_z_anisotropy;
+                }
+            } else {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_y_anisotropy;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_yz_anisotropy;
+                }
+            }
+        } else {
+            if(supercell.base_site.anisotropy[1] == 0.0) {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_x_anisotropy;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_zx_anisotropy;
+                }
+            } else {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_xy_anisotropy;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_xyz_anisotropy;
+                }
+            }
+        }
+    } else {
+        if(supercell.base_site.anisotropy[0] == 0.0) {
+            if(supercell.base_site.anisotropy[1] == 0.0) {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_with_field;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_z_anisotropy_with_field;
+                }
+            } else {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_y_anisotropy_with_field;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_yz_anisotropy_with_field;
+                }
+            }
+        } else {
+            if(supercell.base_site.anisotropy[1] == 0.0) {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_x_anisotropy_with_field;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_zx_anisotropy_with_field;
+                }
+            } else {
+                if(supercell.base_site.anisotropy[2] == 0.0) {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_xy_anisotropy_with_field;
+                } else {
+                    supercell.lattice.hamiltonion_type = HamiltonionType::Heisenberg_xyz_anisotropy_with_field;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string input_file) {
     toml::table data = toml::parse(input_file);
 
@@ -172,6 +237,15 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
     }
 
     // Hamiltonion function
-
+    supercell.base_site.B[0] = data["Hamiltonion"]["magnetic_field"][0].value_or(0.0) * MuB;
+    supercell.base_site.B[1] = data["Hamiltonion"]["magnetic_field"][1].value_or(0.0) * MuB;
+    supercell.base_site.B[1] = data["Hamiltonion"]["magnetic_field"][1].value_or(0.0) * MuB;
+    supercell.base_site.anisotropy[0] = data["Hamiltonion"]["anisotropy"][0].value_or(0.0);
+    supercell.base_site.anisotropy[1] = data["Hamiltonion"]["anisotropy"][1].value_or(0.0);
+    supercell.base_site.anisotropy[2] = data["Hamiltonion"]["anisotropy"][2].value_or(0.0);
+    ChooseHamiltonion(supercell);
+    
+    // Output
+    supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);
     return 0;
 }
