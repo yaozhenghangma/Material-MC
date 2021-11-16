@@ -79,6 +79,7 @@ public:
     double * spin_scaling;
     double * anisotropic_factor;
     int * neighbor_number;
+    std::vector<double> * anisotropic_ratio;
     std::vector<double> * super_exchange_parameter;
 
     //TODO: store the momentum
