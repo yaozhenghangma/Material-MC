@@ -83,22 +83,25 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, std::shared_ptr<sp
     WriteHamiltonion(supercell, logger);
     logger->info("Anisotropy:");
     logger->info("{:12.5f} {:12.5f} {:12.5f}", \
-    supercell.base_site.anisotropic_factor[0], supercell.base_site.anisotropic_factor[1], supercell.base_site.anisotropic_factor[2]);
+    supercell.base_site.anisotropy[0], supercell.base_site.anisotropy[1], supercell.base_site.anisotropy[2]);
     logger->info("Magnetic field (meV/spin):");
     logger->info("{:12.5f} {:12.5f} {:12.5f}", \
     supercell.base_site.B[0], supercell.base_site.B[1], supercell.base_site.B[2]);
-    logger->info("Super-exchange parameters:");
+    logger->info("Cell information:");
     std::string tmp_string;
     for(int i=0; i<supercell.base_site.number; i++) {
-        tmp_string = fmt::format("Element {}, ", supercell.base_site.elements[i]);
+        logger->info("Element {}, spin {}:", supercell.base_site.elements[i], supercell.base_site.spin_scaling[i]);
+        logger->info("Anisotropic ratio: {:12.5f} {:12.5f} {:12.5f}", \
+        supercell.base_site.anisotropic_ratio[i][0], \
+        supercell.base_site.anisotropic_ratio[i][1], \
+        supercell.base_site.anisotropic_ratio[i][2]);
+        logger->info("Super-exchange parameters:");
+        tmp_string = fmt::format("Super-exchange parameters: ");
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             tmp_string += fmt::format("{:12.5f} ", supercell.base_site.super_exchange_parameter[i][j]);
         }
         logger->info(tmp_string);
-    }
-    logger->info("Coordination number:");
-    for(int i=0; i<supercell.base_site.number; i++) {
-        tmp_string = fmt::format("Element {}, ", supercell.base_site.elements[i]);
+        tmp_string = fmt::format("Coordination number: ");
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             tmp_string += fmt::format("{} ", supercell.site[0][0][0][i].neighbor[j].size());
         }

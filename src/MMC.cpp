@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     Supercell supercell;
     MonteCarlo monte_carlo;
     string cell_structure_file = "POSCAR";
-    string input_file = "input.txt"; 
+    string input_file = "input.toml"; 
     string output_file = "output.txt";
     string spin_structure_file_prefix = "spin";
 
@@ -267,7 +267,7 @@ int EnlargeCell(Supercell & supercell) {
                     supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
-                    supercell.site[i][j][k][l].anisotropic_factor = & supercell.base_site.anisotropic_factor[l];
+                    supercell.site[i][j][k][l].anisotropic_ratio = & supercell.base_site.anisotropic_ratio[l];
                     supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
                     supercell.site[i][j][k][l].neighbor_number = & supercell.base_site.neighbor_number[l];
                 }
@@ -316,14 +316,57 @@ int AddDistance(double distance, vector<double> & distance_list, double toleranc
 
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
-    if(supercell.lattice.function_choice == "Heisenberg") {
-        supercell.Hamiltonian = Heisenberg;
-    } else if(supercell.lattice.function_choice == "Heisenberg_3_axis_anisotropy") {
-        supercell.Hamiltonian = Heisenberg_3_anisotropy;
-    } else if(supercell.lattice.function_choice == "Heisenberg_external_field") {
-        supercell.Hamiltonian = Heisenberg_external_field;
-    }  else {
-        supercell.Hamiltonian = Heisenberg;
+    switch (supercell.lattice.hamiltonion_type) {
+        case HamiltonionType::Heisenberg :
+            supercell.Hamiltonian = Heisenberg;
+            break;
+        case HamiltonionType::Heisenberg_with_field :
+            supercell.Hamiltonian = Heisenberg_with_field;
+            break;
+        case HamiltonionType::Heisenberg_x_anisotropy :
+            supercell.Hamiltonian = Heisenberg_x_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_x_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_x_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_y_anisotropy :
+            supercell.Hamiltonian = Heisenberg_y_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_y_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_y_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_z_anisotropy :
+            supercell.Hamiltonian = Heisenberg_z_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_z_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_z_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_xy_anisotropy :
+            supercell.Hamiltonian = Heisenberg_xy_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_xy_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_xy_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_yz_anisotropy :
+            supercell.Hamiltonian = Heisenberg_yz_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_yz_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_yz_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_zx_anisotropy :
+            supercell.Hamiltonian = Heisenberg_zx_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_zx_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_zx_anisotropy_with_field;
+            break;
+        case HamiltonionType::Heisenberg_xyz_anisotropy :
+            supercell.Hamiltonian = Heisenberg_xyz_anisotropy;
+            break;
+        case HamiltonionType::Heisenberg_xyz_anisotropy_with_field :
+            supercell.Hamiltonian = Heisenberg_xyz_anisotropy_with_field;
+            break;
+        default:
+            break;
     }
 
     // Initialize the neighbors' link and energy.

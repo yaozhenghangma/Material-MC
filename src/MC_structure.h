@@ -26,12 +26,10 @@ public:
     int number;
     std::vector<std::vector<double>> coordinate;
     std::vector<double> spin_scaling; // Default value: 1.0.
-    std::vector<double> anisotropic_factor; // Default value: 1.0.
     std::vector<std::vector<double>> anisotropic_ratio;
     std::vector<std::string> elements;
 
     // Input information    
-    bool all_magnetic;
     std::vector<int> neighbor_number;
     std::vector<std::vector<std::string>> neighbor_elements;
     std::vector<std::vector<double>> neighbor_distance_square;
@@ -41,8 +39,6 @@ public:
 
     // Anisotropy factor
     std::vector<double> anisotropy = {0, 0, 0};
-    double anisotropic_factor_D; // Factor D in Hamiltonian: anisotropic_factor_D * anisotropic_factor.
-    double anisotropic_factor_En = 0; //FIXME: different elements with different factor
 
     // External field
     std::vector<double> B = {0, 0, 0};
@@ -57,15 +53,13 @@ void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
     ar & base_site.number;
     ar & base_site.coordinate;
     ar & base_site.spin_scaling;
-    ar & base_site.anisotropic_factor;
+    ar & base_site.anisotropic_ratio;
     ar & base_site.elements;
-    ar & base_site.all_magnetic;
     ar & base_site.neighbor_number;
     ar & base_site.neighbor_elements;
     ar & base_site.neighbor_distance_square;
     ar & base_site.super_exchange_parameter;
-    ar & base_site.anisotropic_factor_D;
-    ar & base_site.anisotropic_factor_En;
+    ar & base_site.anisotropy;
     ar & base_site.B;
 }
 
@@ -77,12 +71,9 @@ class Site {
 public:
     std::vector<double> spin = {0, 0, 0};
     double * spin_scaling;
-    double * anisotropic_factor;
     int * neighbor_number;
     std::vector<double> * anisotropic_ratio;
     std::vector<double> * super_exchange_parameter;
-
-    //TODO: store the momentum
 
     // Neighbors' link.
     std::vector<std::vector<Site*>> neighbor = {};
@@ -106,7 +97,6 @@ public:
 
     double total_energy;
 
-    std::string function_choice;
     HamiltonionType hamiltonion_type = HamiltonionType::Heisenberg;
 
     // Maximum relative error in distance computation
@@ -132,7 +122,6 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.total_energy;
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
-    ar & lattice.function_choice;
     ar & lattice.hamiltonion_type;
 }
 
