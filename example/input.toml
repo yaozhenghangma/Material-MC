@@ -38,6 +38,16 @@ magnetic_field = [ 0.0, 0.5, 0.0 ]
 anisotropy = [ 0.150, -0.150, -0.056 ]
 
 # TODO: Initialization configuration
+[Initialization]
+angleA = [ 0.0, 0.0, 0.0 ] # Rotation angle between same kind of atoms of two nearby cell in a-axis reperesented by Euler angle. Use degree, not radians.
+angleB = [ 0.0, 0.0, 0.0 ]
+anbleC = [ 180.0, 0.0, 0.0 ]
+[[Initialization.Elements]] # Spin direction for atoms in first cell.
+name = "Cr"
+[[Initialization.Elements.Atoms]] # Spin direction for Cr1
+spin_direction = [ 0.0, 1.0, 0.0] # Cartesian coordinate
+[[Initialization.Elements.Atoms]] # Spin direction for Cr2
+spin_direction = [ 0.0, -1.0, 0.0]
 
 # Parameters to control output
 [Output]

@@ -55,12 +55,14 @@ std::vector<double> Supercell::momentum_component() {
 }
 
 int Initialization::normalized() {
-    double norm = sqrt(1.0 / (this->direction[0]*this->direction[0] + \
-    this->direction[1]*this->direction[1] + \
-    this->direction[2]*this->direction[2]));
-    this->direction[0] *= norm;
-    this->direction[1] *= norm;
-    this->direction[2] *= norm;
+    for(int i=0; i<this->direction.size(); i++) { 
+        double norm = sqrt(1.0 / (this->direction[i][0]*this->direction[i][0] + \
+        this->direction[i][1]*this->direction[i][1] + \
+        this->direction[i][2]*this->direction[i][2]));
+        this->direction[i][0] *= norm;
+        this->direction[i][1] *= norm;
+        this->direction[i][2] *= norm;
+    }
     return 0;
 }
 

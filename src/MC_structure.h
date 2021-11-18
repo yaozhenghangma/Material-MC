@@ -165,9 +165,11 @@ void serialize(Archive & ar, MonteCarlo & monte_carlo, const unsigned int versio
 
 class Initialization {
 public:
-    std::vector<double> direction = {0, 0, 1};
-    bool anti_ferromagnetic = false;
-    std::vector<std::vector<int>> anti_ferromagnetic_J;
+    std::vector<std::vector<double>> direction;
+    std::vector<std::string> elements;
+    std::vector<double> angleA = {0, 0, 0};
+    std::vector<double> angleB = {0, 0, 0};
+    std::vector<double> angleC = {0, 0, 0};
 
     int normalized();
 };
@@ -179,8 +181,10 @@ template<class Archive>
 void serialize(Archive & ar, Initialization & initialization, const unsigned int version)
 {
     ar & initialization.direction;
-    ar & initialization.anti_ferromagnetic;
-    ar & initialization.anti_ferromagnetic_J;
+    ar & initialization.elements;
+    ar & initialization.angleA;
+    ar & initialization.angleB;
+    ar & initialization.angleC;
 }
 
 }

@@ -251,9 +251,9 @@ int EnlargeCell(Supercell & supercell) {
     vector<Site> site3;
     Site site4;
 
-    site4.spin[0] = supercell.initialization.direction[0];
-    site4.spin[1] = supercell.initialization.direction[1];
-    site4.spin[2] = supercell.initialization.direction[2];
+    site4.spin[0] = 1;
+    site4.spin[1] = 0;
+    site4.spin[2] = 0;
 
     for(int i=0; i<supercell.lattice.n_x; i++) {
         supercell.site.push_back(site1);
@@ -434,26 +434,7 @@ int InitializeSupercell(Supercell & supercell) {
         }
     }
 
-    // Initialize the spin with given configuration
-    if(supercell.initialization.anti_ferromagnetic) {
-        for(int i=0; i<supercell.lattice.n_x; i++) {
-            for(int j=0; j<supercell.lattice.n_y; j++) {
-                for(int k=0; k<supercell.lattice.n_z; k++) {
-                    for(int l=0; l<supercell.base_site.number; l++) {
-                        for(int m=0; m<supercell.initialization.anti_ferromagnetic_J[l].size(); m++) {
-                            for(int n=0; n<supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1].size(); n++) {
-                                if(supercell.site[i][j][k][l].spin[0] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[0] + \
-                                supercell.site[i][j][k][l].spin[1] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[1] + \
-                                supercell.site[i][j][k][l].spin[2] * supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->spin[2] > 0) {
-                                    supercell.site[i][j][k][l].neighbor[supercell.initialization.anti_ferromagnetic_J[l][m]-1][n]->reverse_spin();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // TODO: Initialize the spin with given configuration
 
     supercell.lattice.total_energy = supercell.energy();
     return 0;

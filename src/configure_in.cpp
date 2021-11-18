@@ -247,5 +247,28 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
     
     // Output
     supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);
+
+    // Initialization
+    supercell.initialization.angleA[0] = data["Initialization"]["angleA"][0].value_or(0.0);
+    supercell.initialization.angleA[1] = data["Initialization"]["angleA"][1].value_or(0.0);
+    supercell.initialization.angleA[2] = data["Initialization"]["angleA"][2].value_or(0.0);
+    supercell.initialization.angleB[0] = data["Initialization"]["angleB"][0].value_or(0.0);
+    supercell.initialization.angleB[1] = data["Initialization"]["angleB"][1].value_or(0.0);
+    supercell.initialization.angleB[2] = data["Initialization"]["angleB"][2].value_or(0.0);
+    supercell.initialization.angleC[0] = data["Initialization"]["angleC"][0].value_or(0.0);
+    supercell.initialization.angleC[1] = data["Initialization"]["angleC"][1].value_or(0.0);
+    supercell.initialization.angleC[2] = data["Initialization"]["angleC"][2].value_or(0.0);
+    auto initialization_elements = data["Initialization"]["Elements"].as_array();
+    for(int i=0; i<initialization_elements->size(); i++) {
+        auto initialization_atoms = data["Initialization"]["Elements"][i]["Atoms"].as_array();
+        for(int j=0; j<initialization_atoms->size(); j++) {
+            supercell.initialization.elements.push_back(data["Initialization"]["Elements"][i]["name"].value_or(""));
+            supercell.initialization.direction.push_back({\
+            data["Initialization"]["Elements"][i]["Atoms"][j]["spin_direction"][0].value_or(1.0),\
+            data["Initialization"]["Elements"][i]["Atoms"][j]["spin_direction"][1].value_or(1.0),\
+            data["Initialization"]["Elements"][i]["Atoms"][j]["spin_direction"][2].value_or(1.0)});
+        }
+    }
+    supercell.initialization.normalized();
     return 0;
 }
