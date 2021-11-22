@@ -59,9 +59,16 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
         supercell.base_site.neighbor_elements = {};
         supercell.base_site.neighbor_distance_square = {};
         supercell.base_site.super_exchange_parameter = {};
+        supercell.base_site.spin_initialization = {};
         int k=0;
         for(int i=0; i<elements.size(); i++) {
             if(magnetic_elements[k] == elements[i]) {
+                int initialization_index = -1;
+                for(int j=0; j<supercell.initialization.elements.size(); j++) {
+                    if(magnetic_elements[k] == supercell.initialization.elements[j]) {
+                        initialization_index = j;
+                    }
+                }
                 for(int j=0; j<elements_number[i]; j++) {
                     getline(in, str);
                     scn::scan(str, "{0} {1} {2}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2]);
@@ -72,6 +79,12 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
                     supercell.base_site.neighbor_elements.push_back(neighbor_elements[k]);
                     supercell.base_site.neighbor_distance_square.push_back(neighbor_distance_square[k]);
                     supercell.base_site.super_exchange_parameter.push_back(super_exchange_parameter[k]);
+                    if(initialization_index != -1 && j+initialization_index < supercell.initialization.elements.size() \
+                    && supercell.initialization.elements[j+initialization_index] == magnetic_elements[k]) {
+                        supercell.base_site.spin_initialization.push_back(supercell.initialization.direction[j+initialization_index]);
+                    } else {
+                        supercell.base_site.spin_initialization.push_back({1, 0, 0});
+                    }
                 }
                 supercell.base_site.number += elements_number[i];
                 k++;

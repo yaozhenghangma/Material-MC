@@ -26,6 +26,7 @@ public:
     int number;
     std::vector<std::vector<double>> coordinate;
     std::vector<double> spin_scaling; // Default value: 1.0.
+    std::vector<std::vector<double>> spin_initialization;
     std::vector<std::vector<double>> anisotropic_ratio;
     std::vector<std::string> elements;
 
@@ -34,8 +35,6 @@ public:
     std::vector<std::vector<std::string>> neighbor_elements;
     std::vector<std::vector<double>> neighbor_distance_square;
     std::vector<std::vector<double>> super_exchange_parameter;
-
-    //TODO: record and output coordination number
 
     // Anisotropy factor
     std::vector<double> anisotropy = {0, 0, 0};
@@ -53,6 +52,7 @@ void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
     ar & base_site.number;
     ar & base_site.coordinate;
     ar & base_site.spin_scaling;
+    ar & base_site.spin_initialization;
     ar & base_site.anisotropic_ratio;
     ar & base_site.elements;
     ar & base_site.neighbor_number;

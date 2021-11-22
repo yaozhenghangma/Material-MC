@@ -14,6 +14,7 @@
 #include "Hamiltonion.h"
 #include "spin_out.h"
 #include "result_out.h"
+#include "rotation.h"
 #include "log.h"
 
 namespace mpi = boost::mpi;
@@ -251,10 +252,6 @@ int EnlargeCell(Supercell & supercell) {
     vector<Site> site3;
     Site site4;
 
-    site4.spin[0] = 1;
-    site4.spin[1] = 0;
-    site4.spin[2] = 0;
-
     for(int i=0; i<supercell.lattice.n_x; i++) {
         supercell.site.push_back(site1);
         for(int j=0; j<supercell.lattice.n_y; j++) {
@@ -263,6 +260,7 @@ int EnlargeCell(Supercell & supercell) {
                 supercell.site[i][j].push_back(site3);
                 for(int l=0; l<supercell.base_site.number; l++) {
                     supercell.site[i][j][k].push_back(site4);
+                    supercell.site[i][j][k][l].spin = supercell.base_site.spin_initialization[l];
                     supercell.site[i][j][k][l].spin[0] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
