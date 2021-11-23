@@ -260,7 +260,19 @@ int EnlargeCell(Supercell & supercell) {
                 supercell.site[i][j].push_back(site3);
                 for(int l=0; l<supercell.base_site.number; l++) {
                     supercell.site[i][j][k].push_back(site4);
-                    supercell.site[i][j][k][l].spin = supercell.base_site.spin_initialization[l];
+                    if(k == 0) {
+                        if(j == 0) {
+                            if(i == 0) {
+                                supercell.site[i][j][k][l].spin = supercell.base_site.spin_initialization[l];
+                            } else {
+                                supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleA, supercell.site[i-1][j][k][l].spin);
+                            }
+                        } else {
+                            supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleB, supercell.site[i][j-1][k][l].spin);
+                        }
+                    } else {
+                        supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleC, supercell.site[i][j][k-1][l].spin);
+                    }
                     supercell.site[i][j][k][l].spin[0] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
