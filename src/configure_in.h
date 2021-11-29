@@ -2,7 +2,6 @@
 #define CONFIGURE_IN
 
 #include <fstream>
-#include <numbers>
 #include <iostream>
 #include <string>
 
@@ -14,6 +13,7 @@
 #include "MC_structure.h"
 
 const double MuB = 5.7883818012e-2;
+const double PI = 3.141592654;
 
 int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string input_file);
 

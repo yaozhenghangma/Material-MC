@@ -254,7 +254,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);
 
         // Initialization
-        double unit_convert = std::numbers::pi/180.0;
+        double unit_convert = PI/180.0;
         supercell.initialization.angleA[0] = data["Initialization"]["angleA"][0].value_or(0.0) * unit_convert;
         supercell.initialization.angleA[1] = data["Initialization"]["angleA"][1].value_or(0.0) * unit_convert;
         supercell.initialization.angleA[2] = data["Initialization"]["angleA"][2].value_or(0.0) * unit_convert;
