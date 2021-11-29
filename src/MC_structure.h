@@ -11,12 +11,13 @@
 
 const double gs = 2.0;
 
-enum class HamiltonionType {
+enum class HamiltonianType {
     Heisenberg, Heisenberg_xyz_anisotropy, Heisenberg_with_field, Heisenberg_xyz_anisotropy_with_field,
     Heisenberg_x_anisotropy, Heisenberg_y_anisotropy, Heisenberg_z_anisotropy,
     Heisenberg_xy_anisotropy, Heisenberg_yz_anisotropy, Heisenberg_zx_anisotropy,
     Heisenberg_x_anisotropy_with_field, Heisenberg_y_anisotropy_with_field, Heisenberg_z_anisotropy_with_field,
-    Heisenberg_xy_anisotropy_with_field, Heisenberg_yz_anisotropy_with_field, Heisenberg_zx_anisotropy_with_field
+    Heisenberg_xy_anisotropy_with_field, Heisenberg_yz_anisotropy_with_field, Heisenberg_zx_anisotropy_with_field,
+    Heisenberg_custom
 };
 
 // Information about base in the cell
@@ -97,7 +98,7 @@ public:
 
     double total_energy;
 
-    HamiltonionType hamiltonion_type = HamiltonionType::Heisenberg;
+    HamiltonianType hamiltonian_type = HamiltonianType::Heisenberg;
 
     // Maximum relative error in distance computation
     double tolerance_percentage;
@@ -122,7 +123,7 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.total_energy;
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
-    ar & lattice.hamiltonion_type;
+    ar & lattice.hamiltonian_type;
 }
 
 }

@@ -11,7 +11,7 @@
 #include "MC_structure.h"
 #include "structure_in.h"
 #include "configure_in.h"
-#include "Hamiltonion.h"
+#include "Hamiltonian.h"
 #include "spin_out.h"
 #include "result_out.h"
 #include "rotation.h"
@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
     if(world.rank() == 0) {
         logger->info("Successfully initialize the supercell.");
         WriteLog(supercell, monte_carlo, logger);
+        WriteSpin(supercell, "initialization_spin_configure", 0.0);
     }
     // Arrange the processors.
     int quotient = monte_carlo.temperature_step_number / world.size();
@@ -264,6 +265,9 @@ int EnlargeCell(Supercell & supercell) {
                         if(j == 0) {
                             if(i == 0) {
                                 supercell.site[i][j][k][l].spin = supercell.base_site.spin_initialization[l];
+                                supercell.site[i][j][k][l].spin[0] *= supercell.base_site.spin_scaling[l];
+                                supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
+                                supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                             } else {
                                 supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleA, supercell.site[i-1][j][k][l].spin);
                             }
@@ -273,9 +277,6 @@ int EnlargeCell(Supercell & supercell) {
                     } else {
                         supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleC, supercell.site[i][j][k-1][l].spin);
                     }
-                    supercell.site[i][j][k][l].spin[0] *= supercell.base_site.spin_scaling[l];
-                    supercell.site[i][j][k][l].spin[1] *= supercell.base_site.spin_scaling[l];
-                    supercell.site[i][j][k][l].spin[2] *= supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_ratio = & supercell.base_site.anisotropic_ratio[l];
                     supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
@@ -326,55 +327,57 @@ int AddDistance(double distance, vector<double> & distance_list, double toleranc
 
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
-    switch (supercell.lattice.hamiltonion_type) {
-        case HamiltonionType::Heisenberg :
+    switch (supercell.lattice.hamiltonian_type) {
+        case HamiltonianType::Heisenberg :
             supercell.Hamiltonian = Heisenberg;
             break;
-        case HamiltonionType::Heisenberg_with_field :
+        case HamiltonianType::Heisenberg_with_field :
             supercell.Hamiltonian = Heisenberg_with_field;
             break;
-        case HamiltonionType::Heisenberg_x_anisotropy :
+        case HamiltonianType::Heisenberg_x_anisotropy :
             supercell.Hamiltonian = Heisenberg_x_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_x_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_x_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_x_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_y_anisotropy :
+        case HamiltonianType::Heisenberg_y_anisotropy :
             supercell.Hamiltonian = Heisenberg_y_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_y_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_y_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_y_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_z_anisotropy :
+        case HamiltonianType::Heisenberg_z_anisotropy :
             supercell.Hamiltonian = Heisenberg_z_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_z_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_z_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_z_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_xy_anisotropy :
+        case HamiltonianType::Heisenberg_xy_anisotropy :
             supercell.Hamiltonian = Heisenberg_xy_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_xy_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_xy_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_xy_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_yz_anisotropy :
+        case HamiltonianType::Heisenberg_yz_anisotropy :
             supercell.Hamiltonian = Heisenberg_yz_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_yz_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_yz_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_yz_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_zx_anisotropy :
+        case HamiltonianType::Heisenberg_zx_anisotropy :
             supercell.Hamiltonian = Heisenberg_zx_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_zx_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_zx_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_zx_anisotropy_with_field;
             break;
-        case HamiltonionType::Heisenberg_xyz_anisotropy :
+        case HamiltonianType::Heisenberg_xyz_anisotropy :
             supercell.Hamiltonian = Heisenberg_xyz_anisotropy;
             break;
-        case HamiltonionType::Heisenberg_xyz_anisotropy_with_field :
+        case HamiltonianType::Heisenberg_xyz_anisotropy_with_field :
             supercell.Hamiltonian = Heisenberg_xyz_anisotropy_with_field;
             break;
+        case HamiltonianType::Heisenberg_custom :
+            supercell.Hamiltonian = Heisenberg_custom_anisotropy_with_field;
         default:
             break;
     }
@@ -443,8 +446,6 @@ int InitializeSupercell(Supercell & supercell) {
             }
         }
     }
-
-    // TODO: Initialize the spin with given configuration
 
     supercell.lattice.total_energy = supercell.energy();
     return 0;

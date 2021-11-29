@@ -1,4 +1,4 @@
-#include "Hamiltonion.h"
+#include "Hamiltonian.h"
 
 double Heisenberg(BaseSite & base_site, Site & site) {
     double energy = 0;

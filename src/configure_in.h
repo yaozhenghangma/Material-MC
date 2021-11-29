@@ -2,6 +2,7 @@
 #define CONFIGURE_IN
 
 #include <fstream>
+#include <numbers>
 #include <iostream>
 #include <string>
 

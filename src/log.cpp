@@ -1,70 +1,70 @@
 #include "log.h"
 
-int WriteHamiltonion(Supercell & supercell, std::shared_ptr<spdlog::logger> logger) {
-    switch (supercell.lattice.hamiltonion_type) {
-        case HamiltonionType::Heisenberg :
-            logger->info("Hamiltonion: Heisenberg model.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j");
+int WriteHamiltonian(Supercell & supercell, std::shared_ptr<spdlog::logger> logger) {
+    switch (supercell.lattice.hamiltonian_type) {
+        case HamiltonianType::Heisenberg :
+            logger->info("Hamiltonian: Heisenberg model.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j");
             break;
-        case HamiltonionType::Heisenberg_x_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x");
+        case HamiltonianType::Heisenberg_x_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x");
             break;
-        case HamiltonionType::Heisenberg_y_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_y*(S_i*S_i)_y");
+        case HamiltonianType::Heisenberg_y_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_y*(S_i*S_i)_y");
             break;
-        case HamiltonionType::Heisenberg_z_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_z*(S_i*S_i)_z");
+        case HamiltonianType::Heisenberg_z_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_z*(S_i*S_i)_z");
             break;
-        case HamiltonionType::Heisenberg_xy_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y");
+        case HamiltonianType::Heisenberg_xy_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y");
             break;
-        case HamiltonionType::Heisenberg_yz_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + D_z*(S_i*S_i)_z");
+        case HamiltonianType::Heisenberg_yz_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + D_z*(S_i*S_i)_z");
             break;
-        case HamiltonionType::Heisenberg_zx_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + D_x*(S_i*S_i)_x");
+        case HamiltonianType::Heisenberg_zx_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + D_x*(S_i*S_i)_x");
             break;
-        case HamiltonionType::Heisenberg_xyz_anisotropy :
-            logger->info("Hamiltonion: Heisenberg model with r axis anisotropy.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + + D_z*(S_i*S_i)_z");
+        case HamiltonianType::Heisenberg_xyz_anisotropy :
+            logger->info("Hamiltonian: Heisenberg model with r axis anisotropy.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + + D_z*(S_i*S_i)_z");
             break;
-        case HamiltonionType::Heisenberg_with_field :
-            logger->info("Hamiltonion: Heisenberg model in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + B*S_i");
+        case HamiltonianType::Heisenberg_with_field :
+            logger->info("Hamiltonian: Heisenberg model in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_x_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + B*S_i");
+        case HamiltonianType::Heisenberg_x_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_y_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + B*S_i");
+        case HamiltonianType::Heisenberg_y_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_z_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 1 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + B*S_i");
+        case HamiltonianType::Heisenberg_z_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 1 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_xy_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + B*S_i");
+        case HamiltonianType::Heisenberg_xy_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_yz_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + D_z*(S_i*S_i)_z + B*S_i");
+        case HamiltonianType::Heisenberg_yz_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_y*(S_i*S_i)_y + D_z*(S_i*S_i)_z + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_zx_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with 2 axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + D_x*(S_i*S_i)_x + B*S_i");
+        case HamiltonianType::Heisenberg_zx_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with 2 axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_z*(S_i*S_i)_z + D_x*(S_i*S_i)_x + B*S_i");
             break;
-        case HamiltonionType::Heisenberg_xyz_anisotropy_with_field :
-            logger->info("Hamiltonion: Heisenberg model with r axis anisotropy in external magnetic field.");
-            logger->info("Hamiltonion function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + + D_z*(S_i*S_i)_z + B*S_i");
+        case HamiltonianType::Heisenberg_xyz_anisotropy_with_field :
+            logger->info("Hamiltonian: Heisenberg model with r axis anisotropy in external magnetic field.");
+            logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + + D_z*(S_i*S_i)_z + B*S_i");
             break;
         default:
             break;
@@ -80,7 +80,7 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, std::shared_ptr<sp
     supercell.lattice.b[0], supercell.lattice.b[1], supercell.lattice.b[2]);
     logger->info("{:12.5f} {:12.5f} {:12.5f}", \
     supercell.lattice.c[0], supercell.lattice.c[1], supercell.lattice.c[2]);
-    WriteHamiltonion(supercell, logger);
+    WriteHamiltonian(supercell, logger);
     logger->info("Anisotropy:");
     logger->info("{:12.5f} {:12.5f} {:12.5f}", \
     supercell.base_site.anisotropy[0], supercell.base_site.anisotropy[1], supercell.base_site.anisotropy[2]);

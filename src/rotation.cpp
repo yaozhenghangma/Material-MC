@@ -1,4 +1,5 @@
 #include "rotation.h"
+#include <iostream>
 
 std::vector<double> RotationX(double theta, std::vector<double> vec) {
     return {vec[0], vec[1]*cos(theta)-vec[2]*sin(theta), vec[1]*sin(theta)+vec[2]*cos(theta)};

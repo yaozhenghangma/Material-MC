@@ -53,6 +53,7 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
         std::vector<std::vector<double>> neighbor_distance_square = supercell.base_site.neighbor_distance_square;
         std::vector<std::vector<double>> super_exchange_parameter = supercell.base_site.super_exchange_parameter;
         supercell.base_site.elements = {};
+        supercell.base_site.coordinate = {};
         supercell.base_site.spin_scaling = {};
         supercell.base_site.anisotropic_ratio = {};
         supercell.base_site.neighbor_number = {};
@@ -67,11 +68,14 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
                 for(int j=0; j<supercell.initialization.elements.size(); j++) {
                     if(magnetic_elements[k] == supercell.initialization.elements[j]) {
                         initialization_index = j;
+                        break;
                     }
                 }
+
                 for(int j=0; j<elements_number[i]; j++) {
                     getline(in, str);
                     scn::scan(str, "{0} {1} {2}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2]);
+                    supercell.base_site.coordinate.push_back(tmp_coordinate);
                     supercell.base_site.elements.push_back(elements[i]);
                     supercell.base_site.spin_scaling.push_back(spin_scaling[k]);
                     supercell.base_site.anisotropic_ratio.push_back(anisotropic_ratio[k]);
@@ -92,6 +96,10 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
                 for(int j=0; j<elements_number[i]; j++) {
                     getline(in, str);
                 }
+            }
+
+            if(k>=magnetic_elements.size()) {
+                break;
             }
         }
     }
