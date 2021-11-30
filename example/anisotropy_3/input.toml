@@ -3,15 +3,15 @@
 # Parameters to control Monte Carlo loops
 [MonteCarlo]
 start_temperature = 0.0
-end_temperature = 400.0
-temperature_points_number = 2
+end_temperature = 200.0
+temperature_points_number = 200
 relaxing_steps = 8000
 counting_steps = 6000
 flipping_number = 6000
 
 # Information about the cell
 [Lattice]
-cell_number = [ 8, 8, 4 ] # A 8*8*4 supercell
+cell_number = [ 8, 8, 8 ] # A 8*8*8 supercell
 tolerance = 0.01
 
 # Magnetic elements
@@ -37,11 +37,11 @@ distance = 13.925
 magnetic_field = [ 0.0, 0.5, 0.0 ]
 anisotropy = [ 0.150, -0.150, -0.056 ]
 
-# TODO: Initialization configuration
+# Initialization configuration
 [Initialization]
 angleA = [ 0.0, 0.0, 0.0 ] # Rotation angle between same kind of atoms of two nearby cell in a-axis reperesented by Euler angle. Use degree, not radians.
 angleB = [ 0.0, 0.0, 0.0 ]
-anbleC = [ 180.0, 0.0, 0.0 ]
+angleC = [ 180.0, 0.0, 0.0 ]
 [[Initialization.Elements]] # Spin direction for atoms in first cell.
 name = "Cr"
 [[Initialization.Elements.Atoms]] # Spin direction for Cr1
