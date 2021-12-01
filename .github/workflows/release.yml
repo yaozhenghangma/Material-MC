@@ -31,8 +31,16 @@ jobs:
           xrepo install -y toml++
           xrepo export -o ./packages
 
+      - name: Download xmake
+        run: |
+          git clone --recursive https://github.com/xmake-io/xmake.git
+          git clone https://github.com/xmake-mirror/build-artifacts
+          git clone https://github.com/xmake-io/xmake-repo.git
+
       - name: zip
-        run: zip -r MMC_offline.zip ./
+        run: |
+          rm -rf .xmake
+          zip -r MMC_offline.zip ./
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2

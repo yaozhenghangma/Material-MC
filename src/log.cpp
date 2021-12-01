@@ -66,7 +66,11 @@ int WriteHamiltonian(Supercell & supercell, std::shared_ptr<spdlog::logger> logg
             logger->info("Hamiltonian: Heisenberg model with r axis anisotropy in external magnetic field.");
             logger->info("Hamiltonian function: H = J*S_i*S_j + D_x*(S_i*S_i)_x + D_y*(S_i*S_i)_y + + D_z*(S_i*S_i)_z + B*S_i");
             break;
+        case HamiltonianType::Heisenberg_custom :
+            logger->info("Hamiltonian: Custom Hamiltonian")
+            break;
         default:
+            logger->info("Known Hamiltonian.")
             break;
     }
     return 0;
