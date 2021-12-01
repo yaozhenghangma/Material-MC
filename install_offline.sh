@@ -17,9 +17,15 @@ rm -rf ./build-artifacts
 rm -rf ./xmake-repo
 fi
 
+if [ $(which MMC) ];
+then 
+# Uninstall old version
+xmake uninstall --installdir=$HOME/.local/
+else 
 # Install packages
 xmake g --network=private
 xrepo import -i ./packages cmake scnlib fmt ctre spdlog toml++
+fi
 
 # Install MMC
 xmake -y

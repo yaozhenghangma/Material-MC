@@ -3,7 +3,20 @@ All notable changes to this project will be documented in this file.
 
 `Material-MC` adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+[Unreleased]
+
+## [0.3.1] - 2021.12.01
+### Fixed
+- Fix offline building
+
+## [0.3.0] - 2021.11.30
+### Added
+- Initialize spin structure
+- Use TOML format
+- Output log file
+
+### Fixed
+- Output moment is not multiplied by g factor.
 
 ## [0.2.1] - 2021.11.10
 ### Fixed
@@ -19,6 +32,8 @@ All notable changes to this project will be documented in this file.
 _Initial release._
 
 [Unreleased]: https://github.com/yaozhenghangma/Material-MC/blob/main/CHANGELOG.md
+[0.3.1]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.3.1
+[0.3.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.3.0
 [0.2.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.2.1
 [0.2.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.2.0
 [0.1.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.1.0

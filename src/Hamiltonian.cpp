@@ -298,12 +298,12 @@ double Heisenberg_zx_anisotropy_with_field(BaseSite & base_site, Site & site) {
 
 double Heisenberg_custom_anisotropy_with_field(BaseSite & base_site, Site & site) {
     double energy = 0;
-    double K1 = -43.2;
-    double K2 = 48.6;
+    static double K1 = -43.2;
+    static double K2 = 48.6;
     std::vector<double> spin_sum;
-    double spin_x_square = site.spin[0]*spin_sum[0];
-    double spin_y_square = site.spin[1]*spin_sum[1];
-    double spin_z_square = site.spin[2]*spin_sum[2];
+    double spin_x_square = site.spin[0]*site.spin[0];
+    double spin_y_square = site.spin[1]*site.spin[1];
+    double spin_z_square = site.spin[2]*site.spin[2];
     for(int i=0; i<*site.neighbor_number; i++) {
         spin_sum = {0, 0, 0};
         for(int j=0; j<site.neighbor[i].size(); j++) {
@@ -311,7 +311,7 @@ double Heisenberg_custom_anisotropy_with_field(BaseSite & base_site, Site & site
             spin_sum[1] += (*site.neighbor[i][j]).spin[1];
             spin_sum[2] += (*site.neighbor[i][j]).spin[2];
         }
-        energy += (*site.super_exchange_parameter)[i] * (spin_x_square + spin_y_square + spin_z_square);
+        energy += (*site.super_exchange_parameter)[i] * (site.spin[0]*spin_sum[0] + site.spin[1]*spin_sum[1] + site.spin[2]*spin_sum[2]);
     }
     energy += 2 * K1 * (spin_x_square * spin_y_square + spin_y_square * spin_z_square + spin_z_square * spin_x_square); 
     energy += 2 * K2 * (spin_x_square * spin_y_square * spin_z_square); 
