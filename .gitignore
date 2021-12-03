@@ -2,3 +2,6 @@ build/
 .DS_Store
 .xmake
 .vscode
+.idea
+cmake-build-debug
+CMakeLists.txt
