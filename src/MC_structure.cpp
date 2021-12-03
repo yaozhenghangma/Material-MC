@@ -74,7 +74,7 @@ int Site::reverse_spin() {
 }
 
 int Lattice::normalize_direction(std::vector<double> B) {
-    double norm = 1.0 / (B[0] * B[0] + B[1] * B[1] + B[2] * B[2]);
+    double norm = 1.0 / sqrt(B[0] * B[0] + B[1] * B[1] + B[2] * B[2]);
     this->field_direction[0] = B[0] * norm;
     this->field_direction[1] = B[1] * norm;
     this->field_direction[2] = B[2] * norm;
