@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "../custom/custom.h"
 #include "MC_structure.h"
 #include "structure_in.h"
 #include "configure_in.h"
@@ -377,7 +378,7 @@ int InitializeSupercell(Supercell & supercell) {
             supercell.Hamiltonian = Heisenberg_xyz_anisotropy_with_field;
             break;
         case HamiltonianType::Heisenberg_custom :
-            supercell.Hamiltonian = Heisenberg_custom_anisotropy_with_field;
+            supercell.Hamiltonian = Hamiltonian_custom;
         default:
             break;
     }

@@ -20,6 +20,4 @@ double Heisenberg_xy_anisotropy_with_field(BaseSite & base_site, Site & site);
 double Heisenberg_yz_anisotropy_with_field(BaseSite & base_site, Site & site); 
 double Heisenberg_zx_anisotropy_with_field(BaseSite & base_site, Site & site);
 
-double Heisenberg_custom_anisotropy_with_field(BaseSite & base_site, Site & site);
-
 #endif
