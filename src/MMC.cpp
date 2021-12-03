@@ -92,33 +92,21 @@ int main(int argc, char** argv) {
     vector<double> energy;
     vector<double> Cv;
     vector<double> moment;
-    vector<double> Ki;
-    vector<double> Ki_x;
-    vector<double> Ki_y;
-    vector<double> Ki_z;
-    vector<double> moment_x;
-    vector<double> moment_y;
-    vector<double> moment_z;
+    vector<double> chi;
+    vector<double> moment_projection;
+    vector<double> chi_projection;
     double energy_every_processor;
     double Cv_every_processor;
     double moment_every_processor;
-    double Ki_every_processor;
-    double Ki_x_every_processor;
-    double Ki_y_every_processor;
-    double Ki_z_every_processor;
-    double moment_x_ever_processor;
-    double moment_y_ever_processor;
-    double moment_z_ever_processor;
+    double moment_projection_every_processor;
+    double chi_projection_every_processor;
+    double chi_every_processor;
     vector<double> gathered_energy;
     vector<double> gathered_Cv;
     vector<double> gathered_moment;
-    vector<double> gathered_Ki;
-    vector<double> gathered_Ki_x;
-    vector<double> gathered_Ki_y;
-    vector<double> gathered_Ki_z;
-    vector<double> gathered_moment_x;
-    vector<double> gathered_moment_y;
-    vector<double> gathered_moment_z;
+    vector<double> gathered_chi;
+    vector<double> gathered_moment_projection;
+    vector<double> gathered_chi_projection;
     static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
     supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<quotient+1; i++) {
@@ -129,27 +117,23 @@ int main(int argc, char** argv) {
             WriteSpin(supercell, spin_structure_file_prefix, T);
 
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
-            Ki_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //Ki
-            Ki_x_every_processor = (result_value[5]-result_value[4]*result_value[4])/(KB*T); //Ki
-            Ki_y_every_processor = (result_value[7]-result_value[6]*result_value[6])/(KB*T); //Ki
-            Ki_z_every_processor = (result_value[9]-result_value[8]*result_value[8])/(KB*T); //Ki
+            chi_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //chi
             energy_every_processor = result_value[0] * one_over_number; //energy
             moment_every_processor = result_value[2] * one_over_number; //moment
-            moment_x_ever_processor = result_value[4] * one_over_number; //moment_x
-            moment_y_ever_processor = result_value[6] * one_over_number; //moment_y
-            moment_z_ever_processor = result_value[8] * one_over_number; //moment_z
+            if(supercell.lattice.field) {
+                chi_projection_every_processor = (result_value[5] - result_value[4]*result_value[4])/(KB*T);
+                moment_projection_every_processor = result_value[4] * one_over_number;
+            }
             
             // Collect data form all processors.
             gather(world, energy_every_processor, gathered_energy, 0);
             gather(world, Cv_every_processor, gathered_Cv, 0);
             gather(world, moment_every_processor, gathered_moment, 0);
-            gather(world, Ki_every_processor, gathered_Ki, 0);
-            gather(world, moment_x_ever_processor, gathered_moment_x, 0);
-            gather(world, moment_y_ever_processor, gathered_moment_y, 0);
-            gather(world, moment_z_ever_processor, gathered_moment_z, 0);
-            gather(world, Ki_x_every_processor, gathered_Ki_x, 0);
-            gather(world, Ki_y_every_processor, gathered_Ki_y, 0);
-            gather(world, Ki_z_every_processor, gathered_Ki_z, 0);
+            gather(world, chi_every_processor, gathered_chi, 0);
+            if(supercell.lattice.field) {
+                gather(world, moment_projection_every_processor, gathered_moment_projection, 0);
+                gather(world, chi_projection_every_processor, gathered_chi_projection, 0);
+            }
 
             // Store these data
             if(world.rank() == 0) {
@@ -157,13 +141,11 @@ int main(int argc, char** argv) {
                     energy.push_back(gathered_energy[j]);
                     Cv.push_back(gathered_Cv[j]);
                     moment.push_back(gathered_moment[j]);
-                    Ki.push_back(gathered_Ki[j]);
-                    moment_x.push_back(gathered_moment_x[j]);
-                    moment_y.push_back(gathered_moment_y[j]);
-                    moment_z.push_back(gathered_moment_z[j]);
-                    Ki_x.push_back(gathered_Ki_x[j]);
-                    Ki_y.push_back(gathered_Ki_y[j]);
-                    Ki_z.push_back(gathered_Ki_z[j]);
+                    chi.push_back(gathered_chi[j]);
+                    if(supercell.lattice.field) {
+                        moment_projection.push_back(gathered_moment_projection[j]);
+                        chi_projection.push_back(gathered_chi_projection[j]);
+                    }
                 }
             }
             
@@ -173,7 +155,7 @@ int main(int argc, char** argv) {
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
         logger->info("Successfully run Monte Carlo simulation.");
-        WriteOutput(monte_carlo, energy, Cv, moment, Ki, moment_x, moment_y, moment_z, Ki_x, Ki_y, Ki_z, output_file);
+        WriteOutput(monte_carlo, energy, Cv, moment, chi, moment_projection, chi_projection, supercell.lattice.field, output_file);
         logger->info("Successfully output all results.");
     }
     return 0;
@@ -473,8 +455,9 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
     double tmp_momentum = 0;
     double total_momentum = 0;
     double total_momentum_square = 0;
-    vector<double> total_m_component = {0, 0, 0};
-    vector<double> total_m_square_component = {0, 0, 0};
+    double tmp_momentum_projection = 0;
+    double total_momentum_projection = 0;
+    double total_momentum_projection_square = 0;
     vector<double> tmp_m_component;
     static double one_over_step = 1.0 / monte_carlo.count_step;
     for(int i=0; i<monte_carlo.count_step; i++) {
@@ -488,19 +471,16 @@ vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, d
         total_momentum += tmp_momentum;
         total_momentum_square += tmp_momentum * tmp_momentum;
         tmp_m_component = supercell.momentum_component();
-        total_m_component[0] += tmp_m_component[0];
-        total_m_component[1] += tmp_m_component[1];
-        total_m_component[2] += tmp_m_component[2];
-        total_m_square_component[0] += tmp_m_component[0] * tmp_m_component[0];
-        total_m_square_component[1] += tmp_m_component[1] * tmp_m_component[1];
-        total_m_square_component[2] += tmp_m_component[2] * tmp_m_component[2];
+        tmp_momentum_projection = supercell.lattice.field_direction[0] * tmp_m_component[0]
+                                + supercell.lattice.field_direction[1] * tmp_m_component[1] 
+                                + supercell.lattice.field_direction[2] * tmp_m_component[2];
+        total_momentum_projection += tmp_momentum_projection;
+        total_momentum_projection_square += tmp_momentum_projection * tmp_momentum_projection;
     }
     
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
     total_momentum * one_over_step, total_momentum_square * one_over_step, \
-    total_m_component[0] * one_over_step, total_m_square_component[0] * one_over_step, \
-    total_m_component[1] * one_over_step, total_m_square_component[1] * one_over_step, \
-    total_m_component[2] * one_over_step, total_m_square_component[2] * one_over_step};
+    total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
 int Flip(Supercell & supercell, Site & one_site, double T) {

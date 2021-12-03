@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 `Material-MC` adheres to [Semantic Versioning](https://semver.org/).
 
 [Unreleased]
+### Added
+- Custom Hamiltonian function
+- Output moment in the direction of external field
+
+### Removed
+- Output x, y and z component of moment
 
 ## [0.3.1] - 2021.12.01
 ### Fixed

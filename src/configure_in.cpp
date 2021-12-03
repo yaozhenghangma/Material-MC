@@ -241,6 +241,10 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         supercell.base_site.B[0] = data["Hamiltonian"]["magnetic_field"][0].value_or(0.0) * MuB;
         supercell.base_site.B[1] = data["Hamiltonian"]["magnetic_field"][1].value_or(0.0) * MuB;
         supercell.base_site.B[1] = data["Hamiltonian"]["magnetic_field"][1].value_or(0.0) * MuB;
+        if(supercell.base_site.B[2] != 0 || supercell.base_site.B[1] != 0 || supercell.base_site.B[0] != 0) {
+            supercell.lattice.field = true;
+            supercell.lattice.normalize_direction(supercell.base_site.B);
+        }
         supercell.base_site.anisotropy[0] = data["Hamiltonian"]["anisotropy"][0].value_or(0.0);
         supercell.base_site.anisotropy[1] = data["Hamiltonian"]["anisotropy"][1].value_or(0.0);
         supercell.base_site.anisotropy[2] = data["Hamiltonian"]["anisotropy"][2].value_or(0.0);

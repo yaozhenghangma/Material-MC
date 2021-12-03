@@ -105,6 +105,10 @@ public:
     
     // Output information
     double magnify_factor = 2.0;
+    bool field = false;
+    std::vector<double> field_direction = {0, 0, 0};
+
+    int normalize_direction(std::vector<double>);
 };
 
 namespace boost {
@@ -124,6 +128,8 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
     ar & lattice.hamiltonian_type;
+    ar & lattice.field;
+    ar & lattice.field_direction;
 }
 
 }
