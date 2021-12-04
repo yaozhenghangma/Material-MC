@@ -206,6 +206,7 @@ public:
 
     // Hamiltonian function to calculate energy for one site
     std::function<double(BaseSite &, Site &)> Hamiltonian;
+    std::function<double(BaseSite &, Site &)> HamiltonianBase;
 
     Site & operator[](std::vector<int> n);
     double energy();

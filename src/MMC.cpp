@@ -310,6 +310,7 @@ int AddDistance(double distance, vector<double> & distance_list, double toleranc
 
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
+    supercell.HamiltonianBase = Heisenberg_base;
     switch (supercell.lattice.hamiltonian_type) {
         case HamiltonianType::Heisenberg :
             supercell.Hamiltonian = Heisenberg;
@@ -361,6 +362,7 @@ int InitializeSupercell(Supercell & supercell) {
             break;
         case HamiltonianType::Heisenberg_custom :
             supercell.Hamiltonian = Hamiltonian_custom;
+            supercell.Hamiltonian = Hamiltonian_custom_base;
         default:
             break;
     }

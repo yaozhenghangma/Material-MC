@@ -11,12 +11,13 @@ double Supercell::energy() {
             for(int k=0; k<this->lattice.n_z; k++) {
                 for(int l=0; l<this->base_site.number; l++) {
                     e += this->Hamiltonian(this->base_site, this->site[i][j][k][l]);
+                    e -= this->HamiltonianBase(this->base_site, this->site[i][j][k][l]);
                 }
             }
         }
     }
 
-    return e*0.5;
+    return e;
 }
 
 double Supercell::momentum() {
