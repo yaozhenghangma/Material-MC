@@ -14,9 +14,9 @@ bool field, std::string output_file) {
         out.print("\n");
     }
     for(int i=0; i<energy.size(); i++) {
-        out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}\t", T, energy[i], Cv[i], moment[i], chi[i]);
+        out.print("{:.2f}\t{:.3f}\t{:.5f}\t{:.5f}\t{:.5f}", T, energy[i], Cv[i], moment[i], chi[i]);
         if(field) {
-            out.print("{:.5f}\t{:.5f}\n", moment_projection[i], chi_projection[i]);
+            out.print("\t{:.5f}\t{:.5f}\n", moment_projection[i], chi_projection[i]);
         } else {
             out.print("\n");
         }
