@@ -362,7 +362,7 @@ int InitializeSupercell(Supercell & supercell) {
             break;
         case HamiltonianType::Heisenberg_custom :
             supercell.Hamiltonian = Hamiltonian_custom;
-            supercell.Hamiltonian = Hamiltonian_custom_base;
+            supercell.HamiltonianBase = Hamiltonian_custom_base;
         default:
             break;
     }
