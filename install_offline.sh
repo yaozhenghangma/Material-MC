@@ -3,18 +3,18 @@
 # Check installation of Xmake
 if [ $(which xmake) ];
 then
-cd ./xmake 
+rm -rf ./xmake
+rm -rf ./build-artifacts
+rm -rf ./xmake-repo
+else
+cd ./xmake
 make build 
-./scripts/get.sh __local__ __install_only__ 
+./scripts/get.sh __local__ __install_only__
 source ~/.xmake/profile
 cd ..
 rm -rf ./xmake
 mv ./build-artifacts ~/.xmake/repositories/
 mv ./xmake-repo ~/.xmake/repositories/
-else
-rm -rf ./xmake
-rm -rf ./build-artifacts
-rm -rf ./xmake-repo
 fi
 
 if [ $(which MMC) ];
