@@ -7,9 +7,6 @@
 [submodule "submodules/ctre"]
 	path = submodules/ctre
 	url = https://github.com/hanickadot/compile-time-regular-expressions.git
-[submodule "submodules/spdlog"]
-	path = submodules/spdlog
-	url = https://github.com/gabime/spdlog.git
 [submodule "submodules/toml++"]
 	path = submodules/toml++
 	url = https://github.com/marzer/tomlplusplus.git

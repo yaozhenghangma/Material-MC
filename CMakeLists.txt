@@ -1,6 +1,7 @@
 # project
 cmake_minimum_required(VERSION 3.13.0)
-project(Material_MC VERSION 0.3.4 LANGUAGES C CXX ASM)
+project(Material_MC VERSION 0.3.4)
+set(CMAKE_CXX_STANDARD 17)
 
 # target
 add_executable(MMC src/MMC.cpp)
@@ -23,10 +24,6 @@ target_link_libraries(MMC PRIVATE fmt::fmt)
 # ctre
 add_subdirectory(submodules/ctre)
 target_link_libraries(MMC PRIVATE ctre)
-
-# spdlog
-add_subdirectory(submodules/spdlog)
-target_link_libraries(MMC PRIVATE spdlog::spdlog)
 
 # toml++
 add_subdirectory(submodules/toml++)

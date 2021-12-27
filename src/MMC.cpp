@@ -5,8 +5,6 @@
 #include <unistd.h>
 
 #include <boost/mpi.hpp>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
 
 #include "../custom/custom.h"
 #include "MC_structure.h"
@@ -49,7 +47,7 @@ int main(int argc, char** argv) {
     string output_file = "output.txt";
     string spin_structure_file_prefix = "spin";
 
-    shared_ptr<spdlog::logger> logger;
+    auto logger = fmt::output_file("log.txt");
 
     // Read parameters and broadcast data using root processor
     if(world.rank() == 0) {
@@ -63,8 +61,7 @@ int main(int argc, char** argv) {
         ReadPOSCAR(supercell, cell_structure_file);
 
         // Log file
-        logger = spdlog::basic_logger_mt("basic_logger", "log.txt");
-        logger->info("Successfully process input file.");
+        logger.print("Successfully process input file.");
     }
     // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
     broadcast(world, supercell.base_site, 0);
@@ -78,7 +75,7 @@ int main(int argc, char** argv) {
 
     // Output the coordinate number
     if(world.rank() == 0) {
-        logger->info("Successfully initialize the supercell.");
+        logger.print("Successfully initialize the supercell.");
         WriteLog(supercell, monte_carlo, logger);
         WriteSpin(supercell, "initialization_spin_configure", 0.0);
     }
@@ -154,9 +151,9 @@ int main(int argc, char** argv) {
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
-        logger->info("Successfully run Monte Carlo simulation.");
+        logger.print("Successfully run Monte Carlo simulation.");
         WriteOutput(monte_carlo, energy, Cv, moment, chi, moment_projection, chi_projection, supercell.lattice.field, output_file);
-        logger->info("Successfully output all results.");
+        logger.print("Successfully output all results.");
     }
     return 0;
 }

@@ -28,7 +28,6 @@ add_requires("scnlib")
 add_requires("fmt")
 add_requires("ctre")
 add_requires("mpi")
-add_requires("spdlog")
 add_requires("toml++")
 
 if is_plat("macosx") then 
@@ -69,5 +68,4 @@ target("MMC")
     add_packages("scnlib")
     add_packages("fmt")
     add_packages("ctre")
-    add_packages("spdlog")
     add_packages("toml++")
