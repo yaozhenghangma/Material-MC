@@ -12,6 +12,7 @@
 #include "configure_in.h"
 #include "Hamiltonian.h"
 #include "spin_out.h"
+#include "random_function.h"
 #include "result_out.h"
 #include "rotation.h"
 #include "log.h"
@@ -23,9 +24,6 @@ using namespace std;
 
 const double KB = 0.08617343;
 
-vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n);
-vector<double> RandomSpin(double scaling);
-double RandomFloat();
 int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T);
 vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T);
 int Flip(Supercell & supercell, Site & one_site, double T);
@@ -151,48 +149,6 @@ int main(int argc, char** argv) {
         logger.print("Successfully output all results.");
     }
     return 0;
-}
-
-vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
-    // Return the site index randomly.
-    static random_device rd;
-    static mt19937 engine(rd());
-    static uniform_int_distribution<int> int_distribution_x(0, n_x-1);
-    static uniform_int_distribution<int> int_distribution_y(0, n_y-1);
-    static uniform_int_distribution<int> int_distribution_z(0, n_z-1);
-    static uniform_int_distribution<int> int_distribution_base(0, base_n-1);
-
-    vector<int> index = {0, 0, 0, 0};
-
-    index[0] = int_distribution_x(engine);
-    index[1] = int_distribution_y(engine);
-    index[2] = int_distribution_z(engine);
-    index[3] = int_distribution_base(engine);
-
-    return index;
-}
-
-vector<double> RandomSpin(double scaling) {
-    // Return a unit spin vector randomly.
-    static random_device rd;
-    static mt19937 engine(rd());
-    static normal_distribution<double> normal{0, 1};
-
-    double x1 = normal(engine);
-    double x2 = normal(engine);
-    double x3 = normal(engine);
-    double factor = scaling/sqrt(x1*x1+x2*x2+x3*x3);
-
-    return {x1*factor, x2*factor, x3*factor};
-}
-
-double RandomFloat() {
-    // Return a float number between 0 and 1.
-    static random_device rd;
-    static mt19937 engine(rd());
-    static uniform_real_distribution<double> double_distribution(0, 1);
-
-    return double_distribution(engine);
 }
 
 int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T) {

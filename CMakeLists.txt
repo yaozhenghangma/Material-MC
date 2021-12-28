@@ -53,6 +53,7 @@ target_sources(MMC PRIVATE
     src/Hamiltonian.cpp
     src/rotation.cpp
     src/initialization.cpp
+    src/random_function.cpp
     custom/custom.cpp
 )
 
