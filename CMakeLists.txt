@@ -52,6 +52,7 @@ target_sources(MMC PRIVATE
     src/MC_structure.cpp
     src/Hamiltonian.cpp
     src/rotation.cpp
+    src/initialization.cpp
     custom/custom.cpp
 )
 
