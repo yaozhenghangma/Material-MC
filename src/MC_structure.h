@@ -9,7 +9,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
-const double gs = 2.0;
+#include "constants.h"
 
 enum class HamiltonianType {
     Heisenberg, Heisenberg_xyz_anisotropy, Heisenberg_with_field, Heisenberg_xyz_anisotropy_with_field,
