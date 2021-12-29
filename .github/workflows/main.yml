@@ -18,11 +18,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install xmake
-        run: |
-          brew install xmake
-          xmake update dev
-
       - name: Install packages
         run: |
           brew install open-mpi
@@ -31,5 +26,5 @@ jobs:
         
       - name: Build the target
         run: |
-          xmake f -y --boost_mpi=boost_mpi_mt
-          xmake -y -rv
+          cmake .
+          make

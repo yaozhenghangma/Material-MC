@@ -7,11 +7,29 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(MMC src/MMC.cpp)
 set_target_properties(MMC PROPERTIES OUTPUT_NAME "MMC")
 set_target_properties(MMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "build/")
-target_include_directories(MMC PRIVATE
-    /usr/local/Cellar/open-mpi/4.1.1_2/include
-    /usr/local/Cellar/boost/1.76.0/include
-    /usr/local/Cellar/boost-mpi/1.76.0/include
-)
+
+# Boost
+find_package(Boost COMPONENTS mpi serialization)
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    
+    MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
+    MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+
+    target_link_libraries (MMC PRIVATE ${Boost_LIBRARIES})
+endif()
+
+# MPI
+find_package(MPI)
+if (MPI_FOUND)
+    include_directories(MMC ${MPI_CXX_INCLUDE_PATH})
+
+    MESSAGE( STATUS "MPI_INCLUDE_DIRS = ${MPI_CXX_INCLUDE_DIRS}.")
+    MESSAGE( STATUS "MPI_CXX_VERSION = ${MPI_CXX_VERSION}")
+
+    target_link_libraries(MMC PRIVATE MPI::MPI_CXX)
+endif ()
 
 # scnlib
 add_subdirectory(submodules/scnlib)
@@ -29,20 +47,6 @@ target_link_libraries(MMC PRIVATE ctre)
 add_subdirectory(submodules/toml++)
 target_include_directories(MMC PRIVATE submodules/toml++/include)
 
-target_link_libraries(MMC PRIVATE
-    mpi
-    boost_serialization
-    boost_mpi
-    z
-)
-target_link_directories(MMC PRIVATE
-    /usr/local/Cellar/open-mpi/4.1.1_2/lib
-    /usr/local/Cellar/boost/1.76.0/lib
-    /usr/local/Cellar/boost-mpi/1.76.0/lib
-)
-target_link_options(MMC PRIVATE
-    -stdlib=libc++
-)
 target_sources(MMC PRIVATE
     src/log.cpp
     src/structure_in.cpp
