@@ -77,6 +77,15 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         monte_carlo.relax_step = data["MonteCarlo"]["relaxing_steps"].value_or(1);
         monte_carlo.count_step = data["MonteCarlo"]["counting_steps"].value_or(1);
         monte_carlo.flip_number = data["MonteCarlo"]["flipping_number"].value_or(1);
+        std::string tmp_string = data["MonteCarlo"]["method"].value_or("classical");
+        if(tmp_string == "classical") {
+            monte_carlo.methods = Methods::classical;
+        } else if(tmp_string == "ptmc") {
+            monte_carlo.methods = Methods::parallel_tempering;
+        } else {
+            monte_carlo.methods = Methods::classical;
+        }
+        monte_carlo.replica_exchange_step_number = data["MonteCarlo"]["exchange_step"].value_or(1);
 
         // Cell
         supercell.lattice.n_x = data["Lattice"]["cell_number"][0].value_or(1);

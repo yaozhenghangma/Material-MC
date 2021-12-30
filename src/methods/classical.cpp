@@ -55,8 +55,8 @@ std::vector<double> & energy, std::vector<double> & Cv,
 std::vector<double> & moment, std::vector<double> & chi,
 std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     // Arrange the processors.
-    int quotient = monte_carlo.temperature_step_number / world.size();
-    int remainder = monte_carlo.temperature_step_number % world.size();
+    const int quotient = monte_carlo.temperature_step_number / world.size();
+    const int remainder = monte_carlo.temperature_step_number % world.size();
 
     // Monte Carlo
     double T;

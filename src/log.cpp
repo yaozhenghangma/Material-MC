@@ -84,6 +84,18 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     supercell.lattice.b[0], supercell.lattice.b[1], supercell.lattice.b[2]);
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \
     supercell.lattice.c[0], supercell.lattice.c[1], supercell.lattice.c[2]);
+    logger.print("Monte Carlo Method: ");
+    switch (monte_carlo.methods) {
+        case Methods::classical:
+            logger.print("Classical Monte Carlo.\n");
+            break;
+        case Methods::parallel_tempering:
+            logger.print("Parallel Tempering Monte Carlo.\n");
+            break;
+        default:
+            logger.print("Unknown method.");
+            break;
+    }
     WriteHamiltonian(supercell, logger);
     logger.print("Anisotropy: ");
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \

@@ -135,6 +135,10 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
 }
 }
 
+enum class Methods {
+    classical, parallel_tempering
+};
+
 // Information to control Monte Carlo circling.
 class MonteCarlo {
 public:
@@ -150,6 +154,10 @@ public:
 
     // Length of Monte Carlo steps.
     int flip_number = 0;
+
+    // Monte Carlo Methods
+    Methods methods = Methods::classical;
+    int replica_exchange_step_number = 1;
 };
 
 namespace boost {
@@ -165,6 +173,8 @@ void serialize(Archive & ar, MonteCarlo & monte_carlo, const unsigned int versio
     ar & monte_carlo.relax_step;
     ar & monte_carlo.count_step;
     ar & monte_carlo.flip_number;
+    ar & monte_carlo.methods;
+    ar & monte_carlo.replica_exchange_step_number;
 }
 
 }

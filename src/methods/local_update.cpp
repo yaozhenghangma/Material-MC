@@ -12,8 +12,7 @@ int LocalUpdate(Supercell & supercell, Site & one_site, double T) {
     double de = energy_new - energy_old;
 
     // Judge whether to flip.
-    double crition = RandomFloat();
-    if (crition > exp(-de/(KB*T))) {
+    if (RandomFloat() > exp(-de/(KB*T))) {
         one_site.spin = old_spin;
     } else {
         supercell.lattice.total_energy += de;

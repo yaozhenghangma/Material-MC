@@ -59,6 +59,7 @@ target_sources(MMC PRIVATE
     src/initialization.cpp
     src/random_function.cpp
     src/methods/classical.cpp
+    src/methods/parallel_tempering.cpp
     src/methods/local_update.cpp
     custom/custom.cpp
 )
