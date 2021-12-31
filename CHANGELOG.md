@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.1] - 2021.12.31
+### Fixed
+- Releasing action
+
 ## [0.4.0] - 2021.12.31
 ### Added
 - Parallel Tempering Monte Carlo
