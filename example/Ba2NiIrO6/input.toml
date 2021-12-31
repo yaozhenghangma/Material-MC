@@ -8,6 +8,8 @@ temperature_points_number = 200
 relaxing_steps = 8000
 counting_steps = 6000
 flipping_number = 6000
+method = "ptmc"
+exchange_step = 1
 
 # Information about the cell
 [Lattice]

@@ -4,7 +4,7 @@ set_version("0.1.0")
 add_rules("mode.release", "mode.debug")
 
 --set_warnings("all", "error")
-set_languages("c++20")
+set_languages("c++17")
 
 package("mpi")
     on_fetch(function (package, opt)
@@ -45,7 +45,7 @@ option_end()
 
 target("MMC")
     set_kind("binary")
-    add_files("src/*.cpp", "custom/custom.cpp")
+    add_files("src/*.cpp", "src/methods/*.cpp", "custom/custom.cpp")
     -- Boost
     if is_plat("macosx") then
         add_packages("mpi")
