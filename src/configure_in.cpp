@@ -133,6 +133,7 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         
         // Output
         supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);
+        supercell.lattice.ground_state = data["Output"]["ground_state"].value_or(false);
 
         // Initialization
         double unit_convert = PI/180.0;

@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     if(world.rank() == 0) {
         logger.print("Successfully initialize the supercell.\n");
         WriteLog(supercell, monte_carlo, logger);
-        WriteSpin(supercell, "initialization_spin_configure", 0.0);
+        WriteSpin(supercell, "structure_initialized");
     }
 
     vector<double> energy;

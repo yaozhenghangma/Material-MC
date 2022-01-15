@@ -49,6 +49,52 @@ std::vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_car
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
+std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
+    // Monte Carlo simulation for outputing ground spin structure mode
+    Supercell supercell_ground = supercell;
+    double minimum_energy = supercell.lattice.total_energy;
+    std::vector<int> site_chosen;
+    double total_energy = 0;
+    double total_energy_square = 0;
+    double tmp_momentum = 0;
+    double total_momentum = 0;
+    double total_momentum_square = 0;
+    double tmp_momentum_projection = 0;
+    double total_momentum_projection = 0;
+    double total_momentum_projection_square = 0;
+    std::vector<double> tmp_m_component;
+    static double one_over_step = 1.0 / monte_carlo.count_step;
+    for(int i=0; i<monte_carlo.count_step; i++) {
+        for(int j=0; j<monte_carlo.flip_number; j++) {
+            site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
+            LocalUpdate(supercell, supercell[site_chosen], T);
+        }
+        total_energy += supercell.lattice.total_energy;
+        total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
+        tmp_momentum = supercell.momentum();
+        total_momentum += tmp_momentum;
+        total_momentum_square += tmp_momentum * tmp_momentum;
+        tmp_m_component = supercell.momentum_component();
+        tmp_momentum_projection = supercell.lattice.field_direction[0] * tmp_m_component[0]
+                                + supercell.lattice.field_direction[1] * tmp_m_component[1] 
+                                + supercell.lattice.field_direction[2] * tmp_m_component[2];
+        total_momentum_projection += tmp_momentum_projection;
+        total_momentum_projection_square += tmp_momentum_projection * tmp_momentum_projection;
+
+        if(supercell.lattice.total_energy < minimum_energy) {
+            supercell_ground = supercell;
+            minimum_energy = supercell.lattice.total_energy;
+        }
+    }
+
+    WriteSpin(supercell_ground, "structure_ground_state", T);
+    std::cout << "Minimum Energy:" << minimum_energy << std::endl;
+    
+    return {total_energy * one_over_step, total_energy_square * one_over_step, \
+    total_momentum * one_over_step, total_momentum_square * one_over_step, \
+    total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
+}
+
 int ClassicalMonteCarlo(boost::mpi::environment & env, boost::mpi::communicator & world, 
 MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix, 
 std::vector<double> & energy, std::vector<double> & Cv,
@@ -79,8 +125,11 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
         if(i<quotient || remainder !=0 ) {
             T = monte_carlo.start_temperature + (i*world.size()+world.rank())*monte_carlo.temperature_step;
             MonteCarloRelaxing(supercell, monte_carlo, T);
-            result_value = MonteCarloStep(supercell, monte_carlo, T);
-            WriteSpin(supercell, spin_structure_file_prefix, T);
+            if(supercell.lattice.ground_state && T == 0.0) {
+                result_value = MonteCarloStepGroundState(supercell, monte_carlo, T);
+            } else {
+                result_value = MonteCarloStep(supercell, monte_carlo, T);
+            }
 
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
             chi_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //chi

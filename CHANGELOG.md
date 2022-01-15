@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 `Material-MC` adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- Output the ground state
+
+### Removed
+- Output a final state at given temperature
 
 ## [0.4.1] - 2021.12.31
 ### Fixed

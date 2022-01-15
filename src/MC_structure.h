@@ -105,6 +105,7 @@ public:
     
     // Output information
     double magnify_factor = 2.0;
+    bool ground_state = false;
     bool field = false;
     std::vector<double> field_direction = {0, 0, 0};
 
@@ -128,6 +129,7 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
     ar & lattice.hamiltonian_type;
+    ar & lattice.ground_state;
     ar & lattice.field;
     ar & lattice.field_direction;
 }
