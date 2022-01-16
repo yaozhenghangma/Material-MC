@@ -17,6 +17,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prune
+        run: |
+          rm -rf .git
+          rm -rf .github
+          rm -rf submodules/ctre/tests
+          rm -rf submodules/fmt/test
+          rm -rf submodules/scnlib/test
+          rm -rf submodules/toml++/external
+          rm -rf submodules/toml++/tests
+
       - name: zip
         run: |
           zip -r MMC.zip ./
