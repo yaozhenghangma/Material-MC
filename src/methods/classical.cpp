@@ -132,7 +132,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
             }
 
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
-            chi_every_processor = (result_value[3]-result_value[2]*result_value[2])/(KB*T); //chi
+            chi_every_processor = (result_value[3]-result_value[2]*result_value[2])*one_over_number/(KB*T); //chi
             energy_every_processor = result_value[0] * one_over_number; //energy
             moment_every_processor = result_value[2] * one_over_number; //moment
             if(supercell.lattice.field) {
