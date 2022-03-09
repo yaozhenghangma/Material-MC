@@ -15,6 +15,7 @@
 #include "initialization.h"
 
 #include "methods/classical.h"
+#include "methods/parallel_tempering.h"
 
 namespace mpi = boost::mpi;
 
@@ -70,12 +71,19 @@ int main(int argc, char** argv) {
     vector<double> chi;
     vector<double> moment_projection;
     vector<double> chi_projection;
-    ClassicalMonteCarlo(env, world, 
-        monte_carlo, supercell, spin_structure_file_prefix, 
-        energy, Cv,
-        moment, chi,
-        moment_projection, chi_projection);
-    
+    if(monte_carlo.methods == Methods::classical) {
+        ClassicalMonteCarlo(env, world, 
+            monte_carlo, supercell, spin_structure_file_prefix, 
+            energy, Cv,
+            moment, chi,
+            moment_projection, chi_projection);
+    } else {
+        ParallelTemperingMonteCarlo(env, world, 
+            monte_carlo, supercell, spin_structure_file_prefix, 
+            energy, Cv,
+            moment, chi,
+            moment_projection, chi_projection);
+    }
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
