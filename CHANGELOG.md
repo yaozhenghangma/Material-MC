@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Output a final state at given temperature
 
+### Fixed
+- PTMC
+
 ## [0.4.1] - 2021.12.31
 ### Fixed
 - Releasing action
