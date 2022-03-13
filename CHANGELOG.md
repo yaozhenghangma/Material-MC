@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 `Material-MC` adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [0.5.0]
 ### Added
 - Output the ground state
 
@@ -68,6 +70,7 @@ All notable changes to this project will be documented in this file.
 _Initial release._
 
 [Unreleased]: https://github.com/yaozhenghangma/Material-MC/blob/main/CHANGELOG.md
+[0.5.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.5.0
 [0.4.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.4.0
 [0.3.4]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.3.4
 [0.3.3]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.3.3
