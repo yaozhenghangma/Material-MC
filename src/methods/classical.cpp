@@ -64,6 +64,8 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     double total_momentum_projection_square = 0;
     std::vector<double> tmp_m_component;
     static double one_over_step = 1.0 / monte_carlo.count_step;
+    static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
+    supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
@@ -88,7 +90,7 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     }
 
     WriteSpin(supercell_ground, "structure_ground_state", T);
-    std::cout << "Minimum Energy:" << minimum_energy << std::endl;
+    std::cout << "Minimum Energy:" << minimum_energy * one_over_number << std::endl;
     
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
     total_momentum * one_over_step, total_momentum_square * one_over_step, \

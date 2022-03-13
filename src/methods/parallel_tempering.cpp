@@ -330,6 +330,8 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     double total_momentum_projection_square = 0;
     std::vector<double> tmp_m_component;
     static double one_over_step = 1.0 / monte_carlo.count_step;
+    static double one_over_number = 1.0 / (supercell.lattice.n_x * supercell.lattice.n_y * \
+    supercell.lattice.n_z * supercell.base_site.number);
 
     double exchange_total_energy;
     double exchange_total_energy_square;
@@ -530,7 +532,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     boost::mpi::all_reduce(world, minimum_energy, global_minimum_energy, boost::mpi::minimum<double>());
     if(minimum_energy == global_minimum_energy) {
         WriteSpin(supercell_ground, "structure_ground_state");
-        std::cout << "Minimum Energy: " << global_minimum_energy << std::endl;
+        std::cout << "Minimum Energy: " << global_minimum_energy * one_over_number << std::endl;
     }
     
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
