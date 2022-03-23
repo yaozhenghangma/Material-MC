@@ -1,3 +1,4 @@
+#include <ctime>
 #include <mpi.h>
 #include <iostream>
 #include <random>
@@ -33,20 +34,23 @@ int main(int argc, char** argv) {
     string spin_structure_file_prefix = "spin";
 
     auto logger = fmt::output_file("log.txt");
+    time_t now = time(0);
+    string dt = ctime(&now);
 
     // Read parameters and broadcast data using root processor
     if(world.rank() == 0) {
+        logger.print("Material Monte Carlo is run on {} CPU cores.\n", world.size());
+        logger.print("Start time: " + dt);
         // Read information from command line.
         ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
         // Read information from input file.
         ReadSettingFile(supercell, monte_carlo, input_file);
+        logger.print("Successfully process input file: " + input_file + ".\n");
 
         // Read information from POSCAR
         ReadPOSCAR(supercell, cell_structure_file);
-
-        // Log file
-        logger.print("Successfully process input file.\n");
+        logger.print("Successfully load structure file: " + cell_structure_file + ".\n");
     }
     // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
     broadcast(world, supercell.base_site, 0);
@@ -60,7 +64,6 @@ int main(int argc, char** argv) {
 
     // Output the coordinate number
     if(world.rank() == 0) {
-        logger.print("Successfully initialize the supercell.\n");
         WriteLog(supercell, monte_carlo, logger);
         WriteSpin(supercell, "structure_initialized");
     }
@@ -87,9 +90,11 @@ int main(int argc, char** argv) {
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
-        logger.print("Successfully run Monte Carlo simulation.\n");
         WriteOutput(monte_carlo, energy, Cv, moment, chi, moment_projection, chi_projection, supercell.lattice.field, output_file);
-        logger.print("Successfully output all results.\n");
+        logger.print("Successfully output all results into " + output_file + ".\n");
+        now = time(0);
+        dt = ctime(&now);
+        logger.print("End time: " + dt);
     }
     return 0;
 }
