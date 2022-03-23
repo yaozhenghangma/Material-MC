@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1]
+### Added
+- Ising model
+
 ## [0.5.0]
 ### Added
 - Output the ground state
@@ -70,6 +74,7 @@ All notable changes to this project will be documented in this file.
 _Initial release._
 
 [Unreleased]: https://github.com/yaozhenghangma/Material-MC/blob/main/CHANGELOG.md
+[0.5.1]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.5.1
 [0.5.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.5.0
 [0.4.0]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.4.0
 [0.3.4]: https://github.com/yaozhenghangma/Material-MC/releases/tag/0.3.4
