@@ -20,6 +20,10 @@ enum class HamiltonianType {
     Heisenberg_custom
 };
 
+enum class ModelType {
+    Heisenberg, Ising
+};
+
 // Information about base in the cell
 class BaseSite {
 public:
@@ -99,6 +103,7 @@ public:
     double total_energy;
 
     HamiltonianType hamiltonian_type = HamiltonianType::Heisenberg;
+    ModelType model_type = ModelType::Heisenberg;
 
     // Maximum relative error in distance computation
     double tolerance_percentage;
@@ -129,6 +134,7 @@ void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
     ar & lattice.magnify_factor;
     ar & lattice.tolerance_percentage;
     ar & lattice.hamiltonian_type;
+    ar & lattice.model_type;
     ar & lattice.ground_state;
     ar & lattice.field;
     ar & lattice.field_direction;
@@ -219,6 +225,9 @@ public:
     // Hamiltonian function to calculate energy for one site
     std::function<double(BaseSite &, Site &)> Hamiltonian;
     std::function<double(BaseSite &, Site &)> HamiltonianBase;
+
+    // Update function of each Monte Carlo step.
+    std::function<int(Supercell &, Site &, double)> Update;
 
     Site & operator[](std::vector<int> n);
     double energy();

@@ -7,6 +7,7 @@
 #include "MC_structure.h"
 #include "rotation.h"
 #include "Hamiltonian.h"
+#include "methods/local_update.h"
 #include "../custom/custom.h"
 
 int ReadOptions(int argc, char** argv, std::string & cell_structure_file, std::string & input_file, std::string & output_file, std::string & spin_structure_file_prefix);

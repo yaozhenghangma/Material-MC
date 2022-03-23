@@ -78,9 +78,9 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         monte_carlo.count_step = data["MonteCarlo"]["counting_steps"].value_or(1);
         monte_carlo.flip_number = data["MonteCarlo"]["flipping_number"].value_or(1);
         std::string tmp_string = data["MonteCarlo"]["method"].value_or("classical");
-        if(tmp_string == "classical") {
+        if(tmp_string[0] == 'c' || tmp_string[0] == 'C') {
             monte_carlo.methods = Methods::classical;
-        } else if(tmp_string == "ptmc") {
+        } else if(tmp_string[0] == 'p' || tmp_string[0] == 'P') {
             monte_carlo.methods = Methods::parallel_tempering;
         } else {
             monte_carlo.methods = Methods::classical;
@@ -126,9 +126,17 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         supercell.base_site.anisotropy[1] = data["Hamiltonian"]["anisotropy"][1].value_or(0.0);
         supercell.base_site.anisotropy[2] = data["Hamiltonian"]["anisotropy"][2].value_or(0.0);
         if(data["Hamiltonian"]["custom"].value_or(false)) {
+            // Using custom Hamiltonian in custom folder
             supercell.lattice.hamiltonian_type = HamiltonianType::Heisenberg_custom;
         } else {
             ChooseHamiltonian(supercell);
+        }
+        // Decide using Heisenberg model or Ising model
+        tmp_string = data["Hamiltonian"]["model"].value_or("Heisenberg");
+        if(tmp_string[0] == 'I' || tmp_string[0] == 'i') {
+            supercell.lattice.model_type = ModelType::Ising;
+        } else {
+            supercell.lattice.model_type = ModelType::Heisenberg;
         }
         
         // Output

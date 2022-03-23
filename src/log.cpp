@@ -96,6 +96,17 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
             logger.print("Unknown method.");
             break;
     }
+    logger.print("Model Type: ");
+    switch (supercell.lattice.model_type) {
+        case ModelType::Heisenberg:
+            logger.print("Heisenberg model.\n");
+            break;
+        case ModelType::Ising:
+            logger.print("Ising model.\n");
+        default:
+            logger.print("Unknown model.\n");
+            break;
+    }
     WriteHamiltonian(supercell, logger);
     logger.print("Anisotropy: ");
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \

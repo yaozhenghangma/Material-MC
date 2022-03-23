@@ -16,7 +16,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     for(int i=0; i<monte_carlo.relax_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
 
         if(i%monte_carlo.replica_exchange_step_number == 0) {
@@ -134,7 +134,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
         total_energy += supercell.lattice.total_energy;
         total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
@@ -350,7 +350,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
         total_energy += supercell.lattice.total_energy;
         total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;

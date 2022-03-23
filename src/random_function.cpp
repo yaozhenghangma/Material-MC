@@ -20,7 +20,7 @@ std::vector<int> RandomSite(int n_x, int n_y, int n_z, int base_n) {
 }
 
 std::vector<double> RandomSpin(double scaling) {
-    // Return a unit spin std::vector randomly.
+    // Return a spin in 3d space randomly.
     static std::random_device rd;
     static std::mt19937 engine(rd());
     static std::normal_distribution<double> normal{0, 1};

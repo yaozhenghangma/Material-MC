@@ -164,6 +164,19 @@ int InitializeSupercell(Supercell & supercell) {
             break;
     }
 
+    // Initialize update function
+    switch (supercell.lattice.model_type) {
+        case ModelType::Heisenberg :
+            supercell.Update = LocalUpdateHeisenberg;
+            break;
+        case ModelType::Ising :
+            supercell.Update = LocalUpdateIsing;
+            break;
+        default:
+            supercell.Update = LocalUpdateHeisenberg;
+            break;
+    }
+
     // Initialize the neighbors' link and energy.
     // Find the neighbors for every base sites in a cell.
     // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.

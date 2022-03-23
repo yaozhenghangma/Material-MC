@@ -6,7 +6,7 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
     for(int i=0; i<monte_carlo.relax_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
     }
     
@@ -29,7 +29,7 @@ std::vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_car
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
         total_energy += supercell.lattice.total_energy;
         total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
@@ -69,7 +69,7 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
-            LocalUpdate(supercell, supercell[site_chosen], T);
+            supercell.Update(supercell, supercell[site_chosen], T);
         }
         total_energy += supercell.lattice.total_energy;
         total_energy_square += supercell.lattice.total_energy * supercell.lattice.total_energy;
