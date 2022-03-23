@@ -42,7 +42,10 @@ exchange_parameter = 0.0
 distance = 5.68
 
 # Hamiltonian function
+[Hamiltonian]
+model = "Heisenberg" # model type: Heisenberg model
 # Heisenberg type
+custom = false
 
 # Initialization configuration
 # Default initialization
