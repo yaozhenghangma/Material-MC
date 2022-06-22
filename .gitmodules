@@ -10,3 +10,6 @@
 [submodule "submodules/toml++"]
 	path = submodules/toml++
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "submodules/doxygen-awesome-css"]
+	path = submodules/doxygen-awesome-css
+	url = https://github.com/jothepro/doxygen-awesome-css.git

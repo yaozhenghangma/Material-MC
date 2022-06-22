@@ -1,6 +1,6 @@
 # project
 cmake_minimum_required(VERSION 3.13.0)
-project(Material_MC VERSION 0.3.4)
+project(Material_MC VERSION 0.5.1)
 set(CMAKE_CXX_STANDARD 17)
 
 # target
@@ -12,7 +12,7 @@ set_target_properties(MMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "build/")
 find_package(Boost COMPONENTS mpi serialization)
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
-    
+
     MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
     MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
     MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
@@ -63,4 +63,3 @@ target_sources(MMC PRIVATE
     src/methods/local_update.cpp
     custom/custom.cpp
 )
-
