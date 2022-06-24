@@ -67,6 +67,6 @@ def monte_carlo_python_function():
     outfile.write("T\tenergy\n")
     for _ in range(0, 101):
         average_energy = hpf.MonteCarlo(T, energy)
-        outfile.write(T, "\t", average_energy, "\n")
+        outfile.write(str(T)+"\t"+str(average_energy)+"\n")
         T += 1
     outfile.close()

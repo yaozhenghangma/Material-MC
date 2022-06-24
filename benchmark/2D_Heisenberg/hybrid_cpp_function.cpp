@@ -72,6 +72,15 @@ double energy(vector<vector<vector<double> > > & lattice, int x, int y){
     return energy;
 }
 
+double RandomFloat() {
+    // Return a float number between 0 and 1.
+    static std::random_device rd;
+    static std::mt19937 engine(rd());
+    static std::uniform_real_distribution<double> double_distribution(0, 1);
+
+    return double_distribution(engine);
+}
+
 std::vector<double> RandomSpin(double scaling) {
     // Return a spin in 3d space randomly.
     static std::random_device rd;
@@ -108,7 +117,7 @@ int flip(vector<vector<vector<double> > > & lattice, double T, double & total_en
     lattice[x][y] = spin;
     double new_energy = energy(lattice, x, y);
     double delta_energy = (new_energy - old_energy) * 2;
-    if(exp(-delta_energy/(kb*T)) > 1) {
+    if(exp(-delta_energy/(kb*T)) > RandomFloat()) {
         total_energy += delta_energy;
     } else {
         lattice[x][y] = old_spin;
@@ -149,5 +158,5 @@ double MonteCarlo(double T) {
 }
 
 PYBIND11_MODULE(hybrid_cpp_function, m) {
-    m.def("MonteCarlo", &MonteCarlo)
+    m.def("MonteCarlo", &MonteCarlo);
 }
