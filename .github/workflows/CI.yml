@@ -1,0 +1,23 @@
+# Checks that we can build and validate the Unittest
+name: CI
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run test
+        run: |
+          python3 setup.py build
+          python3 setup.py install
+          pytest --cov=./ --cov-report=xml
+
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml

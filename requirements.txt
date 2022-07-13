@@ -1,0 +1,7 @@
+setuptools>=42
+pybind11>=2.9.2
+cmake>=3.13
+scikit-build>=0.14.1
+pytest
+pytest-cov
+numpy
