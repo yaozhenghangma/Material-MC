@@ -21,8 +21,6 @@ class Edge {
 };
 
 class Vertex{
-    public:
-    std::vector<Edge *> edges;
 };
 
 class DirectedEdge : public Edge {
@@ -49,6 +47,19 @@ class UndirectedGraph : public Graph {
     public:
     std::vector<UndirectedEdge> edges;
     std::vector<Vertex> vertexes;
+};
+
+class MultiVertex : public Vertex {
+    public:
+    std::vector<DirectedEdge *> directed_edges;
+    std::vector<UndirectedEdge *> undirected_edges;
+};
+
+class MultiGraph : public Graph {
+    public:
+    std::vector<DirectedEdge> directed_edges;
+    std::vector<UndirectedEdge> undirected_edges;
+    std::vector<MultiVertex> vertexes;
 };
 
 #endif
