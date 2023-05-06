@@ -13,7 +13,7 @@ except ImportError:
 from setuptools import find_packages
 
 setup(
-    name="material-monte-carlo",
+    name="mmc",
     version="0.0.1",
     description="A general Monte Carlo Simulation program for materials with arbitrary lattice.",
     author="Yaozhenghang Ma",

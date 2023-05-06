@@ -1,6 +1,6 @@
 # project
 cmake_minimum_required(VERSION 3.13.0)
-project(material-monte-carlo VERSION "0.0.1")
+project(MMC VERSION "0.0.1")
 set(CMAKE_CXX_STANDARD 17)
 
 if(SKBUILD)
@@ -18,3 +18,6 @@ endif()
 find_package(pybind11 CONFIG REQUIRED)
 
 # target
+pybind11_add_module(c_cell src/include/base/cell.cpp)
+
+install(TARGETS c_cell DESTINATION .)
