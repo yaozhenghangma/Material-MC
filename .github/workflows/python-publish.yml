@@ -47,7 +47,7 @@ jobs:
           pip install dist/*.tar.gz
           rm -rf dist
       - name: Test installed SDist
-        run: pytest ./test
+        run: pytest test/*
 
   upload:
     name: Upload to PyPI
