@@ -21,6 +21,7 @@ set_target_properties(MMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "build/")
 # endif()
 
 # cereal
+set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 add_subdirectory(submodules/cereal)
 target_link_libraries(MMC PRIVATE cereal::cereal)
 
@@ -67,4 +68,3 @@ target_sources(MMC PRIVATE
     src/methods/local_update.cpp
     custom/custom.cpp
 )
-
