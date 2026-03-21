@@ -7,4 +7,6 @@
 
 A general Monte Carlo Simulation program for materials with arbitrary lattice.
 
+**For AI agents:** see `agents.md` for guidance.
+
 [**中文版**](./README_ZH.md) ｜ [**English**](./README.md)
