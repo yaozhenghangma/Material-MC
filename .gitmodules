@@ -10,3 +10,6 @@
 [submodule "submodules/toml++"]
 	path = submodules/toml++
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "submodules/cereal"]
+	path = submodules/cereal
+	url = https://github.com/USCiLab/cereal.git

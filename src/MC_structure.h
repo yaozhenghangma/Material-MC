@@ -4,10 +4,8 @@
 #include <functional>
 #include <math.h>
 
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/string.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 
 #include "constants.h"
 
@@ -35,7 +33,7 @@ public:
     std::vector<std::vector<double>> anisotropic_ratio;
     std::vector<std::string> elements;
 
-    // Input information    
+    // Input information
     std::vector<int> neighbor_number;
     std::vector<std::vector<std::string>> neighbor_elements;
     std::vector<std::vector<double>> neighbor_distance_square;
@@ -46,30 +44,23 @@ public:
 
     // External field
     std::vector<double> B = {0, 0, 0};
+
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(number,
+           coordinate,
+           spin_scaling,
+           spin_initialization,
+           anisotropic_ratio,
+           elements,
+           neighbor_number,
+           neighbor_elements,
+           neighbor_distance_square,
+           super_exchange_parameter,
+           anisotropy,
+           B);
+    }
 };
-
-namespace boost {
-namespace serialization {
-
-template<class Archive>
-void serialize(Archive & ar, BaseSite & base_site, const unsigned int version)
-{
-    ar & base_site.number;
-    ar & base_site.coordinate;
-    ar & base_site.spin_scaling;
-    ar & base_site.spin_initialization;
-    ar & base_site.anisotropic_ratio;
-    ar & base_site.elements;
-    ar & base_site.neighbor_number;
-    ar & base_site.neighbor_elements;
-    ar & base_site.neighbor_distance_square;
-    ar & base_site.super_exchange_parameter;
-    ar & base_site.anisotropy;
-    ar & base_site.B;
-}
-
-}
-}
 
 // Data of each site.
 class Site {
@@ -107,7 +98,7 @@ public:
 
     // Maximum relative error in distance computation
     double tolerance_percentage;
-    
+
     // Output information
     double magnify_factor = 2.0;
     bool ground_state = false;
@@ -115,33 +106,26 @@ public:
     std::vector<double> field_direction = {0, 0, 0};
 
     int normalize_direction(std::vector<double>);
+
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(a,
+           b,
+           c,
+           scaling,
+           n_x,
+           n_y,
+           n_z,
+           total_energy,
+           magnify_factor,
+           tolerance_percentage,
+           hamiltonian_type,
+           model_type,
+           ground_state,
+           field,
+           field_direction);
+    }
 };
-
-namespace boost {
-namespace serialization {
-
-template<class Archive>
-void serialize(Archive & ar, Lattice & lattice, const unsigned int version)
-{
-    ar & lattice.a;
-    ar & lattice.b;
-    ar & lattice.c;
-    ar & lattice.scaling;
-    ar & lattice.n_x;
-    ar & lattice.n_y;
-    ar & lattice.n_z;
-    ar & lattice.total_energy;
-    ar & lattice.magnify_factor;
-    ar & lattice.tolerance_percentage;
-    ar & lattice.hamiltonian_type;
-    ar & lattice.model_type;
-    ar & lattice.ground_state;
-    ar & lattice.field;
-    ar & lattice.field_direction;
-}
-
-}
-}
 
 enum class Methods {
     classical, parallel_tempering
@@ -166,27 +150,20 @@ public:
     // Monte Carlo Methods
     Methods methods = Methods::classical;
     int replica_exchange_step_number = 1;
+
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(start_temperature,
+           end_temperature,
+           temperature_step,
+           temperature_step_number,
+           relax_step,
+           count_step,
+           flip_number,
+           methods,
+           replica_exchange_step_number);
+    }
 };
-
-namespace boost {
-namespace serialization {
-
-template<class Archive>
-void serialize(Archive & ar, MonteCarlo & monte_carlo, const unsigned int version)
-{
-    ar & monte_carlo.start_temperature;
-    ar & monte_carlo.end_temperature;
-    ar & monte_carlo.temperature_step;
-    ar & monte_carlo.temperature_step_number;
-    ar & monte_carlo.relax_step;
-    ar & monte_carlo.count_step;
-    ar & monte_carlo.flip_number;
-    ar & monte_carlo.methods;
-    ar & monte_carlo.replica_exchange_step_number;
-}
-
-}
-}
 
 class Initialization {
 public:
@@ -197,23 +174,16 @@ public:
     std::vector<double> angleC = {0, 0, 0};
 
     int normalized();
+
+    template <class Archive>
+    void serialize(Archive & ar) {
+        ar(direction,
+           elements,
+           angleA,
+           angleB,
+           angleC);
+    }
 };
-
-namespace boost {
-namespace serialization {
-
-template<class Archive>
-void serialize(Archive & ar, Initialization & initialization, const unsigned int version)
-{
-    ar & initialization.direction;
-    ar & initialization.elements;
-    ar & initialization.angleA;
-    ar & initialization.angleB;
-    ar & initialization.angleC;
-}
-
-}
-}
 
 class Supercell {
 public:

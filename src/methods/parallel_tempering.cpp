@@ -1,14 +1,19 @@
 #include "parallel_tempering.h"
 
-int ParallelTemperingMonteCarloRelaxing(boost::mpi::environment & env, boost::mpi::communicator & world, 
+int ParallelTemperingMonteCarloRelaxing(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     bool odd = true;
-    static bool even_number_process = (world.size()%2 == 0);
+    int world_size = 0;
+    int world_rank = 0;
+    MPI_Comm_size(world, &world_size);
+    MPI_Comm_rank(world, &world_rank);
+
+    static bool even_number_process = (world_size%2 == 0);
     double energy = 0;
     double exchange_energy = 0;
     double exchange_T = 0;
     double temp_T;
-    static int max_num = world.size()-1;
+    static int max_num = world_size-1;
     bool exchange;
 
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
@@ -24,9 +29,9 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
             exchange_energy = supercell.lattice.total_energy;
             exchange_T = T;
             if(odd) {
-                if(world.rank()%2 == 0 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 0 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -37,32 +42,32 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
                     }
-                } else if(even_number_process || world.rank() != max_num) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(even_number_process || world_rank != max_num) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = false;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             } else {
-                if(world.rank()%2 == 1 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 1 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -73,36 +78,36 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
                     }
-                } else if(world.rank() != 0 && (!even_number_process || world.rank() != max_num)) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(world_rank != 0 && (!even_number_process || world_rank != max_num)) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = true;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             }
         }
     }
-    
+
     return 0;
 }
 
-std::vector<double> ParallelTemperingMonteCarloStep(boost::mpi::environment & env, boost::mpi::communicator & world, 
+std::vector<double> ParallelTemperingMonteCarloStep(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     std::vector<int> site_chosen;
@@ -127,10 +132,14 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     double exchange_energy;
     double exchange_T;
     double temp_T;
-    static bool even_number_process = (world.size()%2 == 0);
+    int world_size = 0;
+    int world_rank = 0;
+    MPI_Comm_size(world, &world_size);
+    MPI_Comm_rank(world, &world_rank);
+    static bool even_number_process = (world_size%2 == 0);
     bool odd = true;
     bool exchange;
-    static int max_num = world.size()-1;
+    static int max_num = world_size-1;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
@@ -143,7 +152,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
         total_momentum_square += tmp_momentum * tmp_momentum;
         tmp_m_component = supercell.momentum_component();
         tmp_momentum_projection = supercell.lattice.field_direction[0] * tmp_m_component[0]
-                                + supercell.lattice.field_direction[1] * tmp_m_component[1] 
+                                + supercell.lattice.field_direction[1] * tmp_m_component[1]
                                 + supercell.lattice.field_direction[2] * tmp_m_component[2];
         total_momentum_projection += tmp_momentum_projection;
         total_momentum_projection_square += tmp_momentum_projection * tmp_momentum_projection;
@@ -153,9 +162,9 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
             exchange_energy = supercell.lattice.total_energy;
             exchange_T = T;
             if(odd) {
-                if(world.rank()%2 == 0 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 0 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -166,23 +175,23 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
-                        world.send(world.rank()+1, 4, total_energy);
-                        world.send(world.rank()+1, 5, total_energy_square);
-                        world.send(world.rank()+1, 6, total_momentum);
-                        world.send(world.rank()+1, 7, total_momentum_square);
-                        world.send(world.rank()+1, 8, total_momentum_projection);
-                        world.send(world.rank()+1, 9, total_momentum_projection_square);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank+1, 4, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank+1, 5, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank+1, 6, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank+1, 7, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 8, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 9, world);
 
-                        world.recv(world.rank()+1, 10, exchange_total_energy);
-                        world.recv(world.rank()+1, 11, exchange_total_energy_square);
-                        world.recv(world.rank()+1, 12, exchange_momentum);
-                        world.recv(world.rank()+1, 13, exchange_momentum_square);
-                        world.recv(world.rank()+1, 14, exchange_momentum_projection);
-                        world.recv(world.rank()+1, 15, exchange_momentum_projection_square);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank+1, 10, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank+1, 11, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank+1, 12, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank+1, 13, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 14, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 15, world, MPI_STATUS_IGNORE);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -191,27 +200,27 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         total_momentum_projection = exchange_momentum_projection;
                         total_momentum_projection_square = exchange_momentum_projection_square;
                     }
-                } else if(even_number_process || world.rank() != max_num) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(even_number_process || world_rank != max_num) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
-                        world.recv(world.rank()-1, 4, exchange_total_energy);
-                        world.recv(world.rank()-1, 5, exchange_total_energy_square);
-                        world.recv(world.rank()-1, 6, exchange_momentum);
-                        world.recv(world.rank()-1, 7, exchange_momentum_square);
-                        world.recv(world.rank()-1, 8, exchange_momentum_projection);
-                        world.recv(world.rank()-1, 9, exchange_momentum_projection_square);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank-1, 4, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank-1, 5, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank-1, 6, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank-1, 7, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 8, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 9, world, MPI_STATUS_IGNORE);
 
-                        world.send(world.rank()-1, 10, total_energy);
-                        world.send(world.rank()-1, 11, total_energy_square);
-                        world.send(world.rank()-1, 12, total_momentum);
-                        world.send(world.rank()-1, 13, total_momentum_square);
-                        world.send(world.rank()-1, 14, total_momentum_projection);
-                        world.send(world.rank()-1, 15, total_momentum_projection_square);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank-1, 10, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank-1, 11, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank-1, 12, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank-1, 13, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 14, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 15, world);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -222,16 +231,16 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = false;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             } else {
-                if(world.rank()%2 == 1 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 1 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -242,23 +251,23 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
-                        world.send(world.rank()+1, 4, total_energy);
-                        world.send(world.rank()+1, 5, total_energy_square);
-                        world.send(world.rank()+1, 6, total_momentum);
-                        world.send(world.rank()+1, 7, total_momentum_square);
-                        world.send(world.rank()+1, 8, total_momentum_projection);
-                        world.send(world.rank()+1, 9, total_momentum_projection_square);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank+1, 4, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank+1, 5, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank+1, 6, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank+1, 7, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 8, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 9, world);
 
-                        world.recv(world.rank()+1, 10, exchange_total_energy);
-                        world.recv(world.rank()+1, 11, exchange_total_energy_square);
-                        world.recv(world.rank()+1, 12, exchange_momentum);
-                        world.recv(world.rank()+1, 13, exchange_momentum_square);
-                        world.recv(world.rank()+1, 14, exchange_momentum_projection);
-                        world.recv(world.rank()+1, 15, exchange_momentum_projection_square);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank+1, 10, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank+1, 11, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank+1, 12, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank+1, 13, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 14, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 15, world, MPI_STATUS_IGNORE);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -267,27 +276,27 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         total_momentum_projection = exchange_momentum_projection;
                         total_momentum_projection_square = exchange_momentum_projection_square;
                     }
-                } else if(world.rank() != 0 && (!even_number_process || world.rank() != max_num)) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(world_rank != 0 && (!even_number_process || world_rank != max_num)) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
-                        world.recv(world.rank()-1, 4, exchange_total_energy);
-                        world.recv(world.rank()-1, 5, exchange_total_energy_square);
-                        world.recv(world.rank()-1, 6, exchange_momentum);
-                        world.recv(world.rank()-1, 7, exchange_momentum_square);
-                        world.recv(world.rank()-1, 8, exchange_momentum_projection);
-                        world.recv(world.rank()-1, 9, exchange_momentum_projection_square);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank-1, 4, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank-1, 5, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank-1, 6, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank-1, 7, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 8, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 9, world, MPI_STATUS_IGNORE);
 
-                        world.send(world.rank()-1, 10, total_energy);
-                        world.send(world.rank()-1, 11, total_energy_square);
-                        world.send(world.rank()-1, 12, total_momentum);
-                        world.send(world.rank()-1, 13, total_momentum_square);
-                        world.send(world.rank()-1, 14, total_momentum_projection);
-                        world.send(world.rank()-1, 15, total_momentum_projection_square);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank-1, 10, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank-1, 11, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank-1, 12, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank-1, 13, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 14, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 15, world);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -298,22 +307,22 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = true;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             }
         }
     }
-    
+
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
     total_momentum * one_over_step, total_momentum_square * one_over_step, \
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
-std::vector<double> ParallelTemperingMonteCarloStepGroundState(boost::mpi::environment & env, boost::mpi::communicator & world, 
+std::vector<double> ParallelTemperingMonteCarloStepGroundState(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     Supercell supercell_ground = supercell;
@@ -343,10 +352,14 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     double exchange_energy;
     double exchange_T;
     double temp_T;
-    static bool even_number_process = (world.size()%2 == 0);
+    int world_size = 0;
+    int world_rank = 0;
+    MPI_Comm_size(world, &world_size);
+    MPI_Comm_rank(world, &world_rank);
+    static bool even_number_process = (world_size%2 == 0);
     bool odd = true;
     bool exchange;
-    static int max_num = world.size()-1;
+    static int max_num = world_size-1;
     for(int i=0; i<monte_carlo.count_step; i++) {
         for(int j=0; j<monte_carlo.flip_number; j++) {
             site_chosen = RandomSite(supercell.lattice.n_x, supercell.lattice.n_y, supercell.lattice.n_z, supercell.base_site.number);
@@ -359,7 +372,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
         total_momentum_square += tmp_momentum * tmp_momentum;
         tmp_m_component = supercell.momentum_component();
         tmp_momentum_projection = supercell.lattice.field_direction[0] * tmp_m_component[0]
-                                + supercell.lattice.field_direction[1] * tmp_m_component[1] 
+                                + supercell.lattice.field_direction[1] * tmp_m_component[1]
                                 + supercell.lattice.field_direction[2] * tmp_m_component[2];
         total_momentum_projection += tmp_momentum_projection;
         total_momentum_projection_square += tmp_momentum_projection * tmp_momentum_projection;
@@ -374,9 +387,9 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
             exchange_energy = supercell.lattice.total_energy;
             exchange_T = T;
             if(odd) {
-                if(world.rank()%2 == 0 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 0 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -387,23 +400,23 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
-                        world.send(world.rank()+1, 4, total_energy);
-                        world.send(world.rank()+1, 5, total_energy_square);
-                        world.send(world.rank()+1, 6, total_momentum);
-                        world.send(world.rank()+1, 7, total_momentum_square);
-                        world.send(world.rank()+1, 8, total_momentum_projection);
-                        world.send(world.rank()+1, 9, total_momentum_projection_square);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank+1, 4, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank+1, 5, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank+1, 6, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank+1, 7, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 8, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 9, world);
 
-                        world.recv(world.rank()+1, 10, exchange_total_energy);
-                        world.recv(world.rank()+1, 11, exchange_total_energy_square);
-                        world.recv(world.rank()+1, 12, exchange_momentum);
-                        world.recv(world.rank()+1, 13, exchange_momentum_square);
-                        world.recv(world.rank()+1, 14, exchange_momentum_projection);
-                        world.recv(world.rank()+1, 15, exchange_momentum_projection_square);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank+1, 10, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank+1, 11, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank+1, 12, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank+1, 13, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 14, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 15, world, MPI_STATUS_IGNORE);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -412,27 +425,27 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         total_momentum_projection = exchange_momentum_projection;
                         total_momentum_projection_square = exchange_momentum_projection_square;
                     }
-                } else if(even_number_process || world.rank() != max_num) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(even_number_process || world_rank != max_num) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
-                        world.recv(world.rank()-1, 4, exchange_total_energy);
-                        world.recv(world.rank()-1, 5, exchange_total_energy_square);
-                        world.recv(world.rank()-1, 6, exchange_momentum);
-                        world.recv(world.rank()-1, 7, exchange_momentum_square);
-                        world.recv(world.rank()-1, 8, exchange_momentum_projection);
-                        world.recv(world.rank()-1, 9, exchange_momentum_projection_square);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank-1, 4, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank-1, 5, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank-1, 6, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank-1, 7, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 8, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 9, world, MPI_STATUS_IGNORE);
 
-                        world.send(world.rank()-1, 10, total_energy);
-                        world.send(world.rank()-1, 11, total_energy_square);
-                        world.send(world.rank()-1, 12, total_momentum);
-                        world.send(world.rank()-1, 13, total_momentum_square);
-                        world.send(world.rank()-1, 14, total_momentum_projection);
-                        world.send(world.rank()-1, 15, total_momentum_projection_square);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank-1, 10, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank-1, 11, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank-1, 12, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank-1, 13, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 14, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 15, world);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -443,16 +456,16 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = false;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             } else {
-                if(world.rank()%2 == 1 && world.rank() != max_num) {
-                    world.recv(world.rank()+1, 0, exchange_energy);
-                    world.recv(world.rank()+1, 1, exchange_T);
+                if(world_rank%2 == 1 && world_rank != max_num) {
+                    MPI_Recv(&exchange_energy, 1, MPI_DOUBLE, world_rank+1, 0, world, MPI_STATUS_IGNORE);
+                    MPI_Recv(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 1, world, MPI_STATUS_IGNORE);
 
                     if (RandomFloat() > exp(-one_over_KB*(1.0/exchange_T - 1.0/T)*(energy - exchange_energy))) {
                         exchange = false;
@@ -463,23 +476,23 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         exchange_T = temp_T;
                     }
 
-                    world.send(world.rank()+1, 2, exchange);
+                    MPI_Send(&exchange, 1, MPI_C_BOOL, world_rank+1, 2, world);
 
                     if(exchange) {
-                        world.send(world.rank()+1, 3, exchange_T);
-                        world.send(world.rank()+1, 4, total_energy);
-                        world.send(world.rank()+1, 5, total_energy_square);
-                        world.send(world.rank()+1, 6, total_momentum);
-                        world.send(world.rank()+1, 7, total_momentum_square);
-                        world.send(world.rank()+1, 8, total_momentum_projection);
-                        world.send(world.rank()+1, 9, total_momentum_projection_square);
+                        MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank+1, 3, world);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank+1, 4, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank+1, 5, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank+1, 6, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank+1, 7, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 8, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 9, world);
 
-                        world.recv(world.rank()+1, 10, exchange_total_energy);
-                        world.recv(world.rank()+1, 11, exchange_total_energy_square);
-                        world.recv(world.rank()+1, 12, exchange_momentum);
-                        world.recv(world.rank()+1, 13, exchange_momentum_square);
-                        world.recv(world.rank()+1, 14, exchange_momentum_projection);
-                        world.recv(world.rank()+1, 15, exchange_momentum_projection_square);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank+1, 10, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank+1, 11, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank+1, 12, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank+1, 13, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank+1, 14, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank+1, 15, world, MPI_STATUS_IGNORE);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -488,27 +501,27 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                         total_momentum_projection = exchange_momentum_projection;
                         total_momentum_projection_square = exchange_momentum_projection_square;
                     }
-                } else if(world.rank() != 0 && (!even_number_process || world.rank() != max_num)) {
-                    world.send(world.rank()-1, 0, exchange_energy);
-                    world.send(world.rank()-1, 1, exchange_T);
+                } else if(world_rank != 0 && (!even_number_process || world_rank != max_num)) {
+                    MPI_Send(&exchange_energy, 1, MPI_DOUBLE, world_rank-1, 0, world);
+                    MPI_Send(&exchange_T, 1, MPI_DOUBLE, world_rank-1, 1, world);
 
-                    world.recv(world.rank()-1, 2, exchange);
+                    MPI_Recv(&exchange, 1, MPI_C_BOOL, world_rank-1, 2, world, MPI_STATUS_IGNORE);
 
                     if(exchange) {
-                        world.recv(world.rank()-1, 3, T);
-                        world.recv(world.rank()-1, 4, exchange_total_energy);
-                        world.recv(world.rank()-1, 5, exchange_total_energy_square);
-                        world.recv(world.rank()-1, 6, exchange_momentum);
-                        world.recv(world.rank()-1, 7, exchange_momentum_square);
-                        world.recv(world.rank()-1, 8, exchange_momentum_projection);
-                        world.recv(world.rank()-1, 9, exchange_momentum_projection_square);
+                        MPI_Recv(&T, 1, MPI_DOUBLE, world_rank-1, 3, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy, 1, MPI_DOUBLE, world_rank-1, 4, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_total_energy_square, 1, MPI_DOUBLE, world_rank-1, 5, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum, 1, MPI_DOUBLE, world_rank-1, 6, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_square, 1, MPI_DOUBLE, world_rank-1, 7, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 8, world, MPI_STATUS_IGNORE);
+                        MPI_Recv(&exchange_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 9, world, MPI_STATUS_IGNORE);
 
-                        world.send(world.rank()-1, 10, total_energy);
-                        world.send(world.rank()-1, 11, total_energy_square);
-                        world.send(world.rank()-1, 12, total_momentum);
-                        world.send(world.rank()-1, 13, total_momentum_square);
-                        world.send(world.rank()-1, 14, total_momentum_projection);
-                        world.send(world.rank()-1, 15, total_momentum_projection_square);
+                        MPI_Send(&total_energy, 1, MPI_DOUBLE, world_rank-1, 10, world);
+                        MPI_Send(&total_energy_square, 1, MPI_DOUBLE, world_rank-1, 11, world);
+                        MPI_Send(&total_momentum, 1, MPI_DOUBLE, world_rank-1, 12, world);
+                        MPI_Send(&total_momentum_square, 1, MPI_DOUBLE, world_rank-1, 13, world);
+                        MPI_Send(&total_momentum_projection, 1, MPI_DOUBLE, world_rank-1, 14, world);
+                        MPI_Send(&total_momentum_projection_square, 1, MPI_DOUBLE, world_rank-1, 15, world);
 
                         total_energy = exchange_total_energy;
                         total_energy_square = exchange_total_energy_square;
@@ -519,35 +532,40 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
                     }
                 }
 
-                if(world.rank()==0) {
+                if(world_rank==0) {
                     if(RandomFloat() >= 0.5) {
                         odd = true;
                     }
                 }
-                broadcast(world, odd, 0);
+                MPI_Bcast(&odd, 1, MPI_C_BOOL, 0, world);
             }
         }
     }
 
-    boost::mpi::all_reduce(world, minimum_energy, global_minimum_energy, boost::mpi::minimum<double>());
+    MPI_Allreduce(&minimum_energy, &global_minimum_energy, 1, MPI_DOUBLE, MPI_MIN, world);
     if(minimum_energy == global_minimum_energy) {
         WriteSpin(supercell_ground, "structure_ground_state");
         std::cout << "Minimum Energy: " << global_minimum_energy * one_over_number << std::endl;
     }
-    
+
     return {total_energy * one_over_step, total_energy_square * one_over_step, \
     total_momentum * one_over_step, total_momentum_square * one_over_step, \
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
-int ParallelTemperingMonteCarlo(boost::mpi::environment & env, boost::mpi::communicator & world, 
-MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix, 
+int ParallelTemperingMonteCarlo(MPI_Comm world,
+MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix,
 std::vector<double> & energy, std::vector<double> & Cv,
 std::vector<double> & moment, std::vector<double> & chi,
 std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     // Arrange the processors.
-    const int quotient = monte_carlo.temperature_step_number / world.size();
-    const int remainder = monte_carlo.temperature_step_number % world.size();
+    int world_size = 0;
+    int world_rank = 0;
+    MPI_Comm_size(world, &world_size);
+    MPI_Comm_rank(world, &world_rank);
+
+    const int quotient = monte_carlo.temperature_step_number / world_size;
+    const int remainder = monte_carlo.temperature_step_number % world_size;
 
     // Monte Carlo
     double T;
@@ -569,12 +587,12 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<quotient+1; i++) {
         if(i<quotient || remainder !=0 ) {
-            T = monte_carlo.start_temperature + (i*world.size()+world.rank())*monte_carlo.temperature_step;
-            ParallelTemperingMonteCarloRelaxing(env, world, supercell, monte_carlo, T);
+            T = monte_carlo.start_temperature + (i*world_size+world_rank)*monte_carlo.temperature_step;
+            ParallelTemperingMonteCarloRelaxing(world, supercell, monte_carlo, T);
             if(supercell.lattice.ground_state) {
-                result_value = ParallelTemperingMonteCarloStepGroundState(env, world, supercell, monte_carlo, T);
+                result_value = ParallelTemperingMonteCarloStepGroundState(world, supercell, monte_carlo, T);
             } else {
-                result_value = ParallelTemperingMonteCarloStep(env, world, supercell, monte_carlo, T);
+                result_value = ParallelTemperingMonteCarloStep(world, supercell, monte_carlo, T);
             }
 
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
@@ -585,26 +603,38 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
                 chi_projection_every_processor = (result_value[5] - result_value[4]*result_value[4])/(KB*T);
                 moment_projection_every_processor = result_value[4] * one_over_number;
             }
-            
+
             // Collect data form all processors.
-            gather(world, T, gathered_T, 0);
-            gather(world, energy_every_processor, gathered_energy, 0);
-            gather(world, Cv_every_processor, gathered_Cv, 0);
-            gather(world, moment_every_processor, gathered_moment, 0);
-            gather(world, chi_every_processor, gathered_chi, 0);
+            gathered_T.resize(world_size);
+            gathered_energy.resize(world_size);
+            gathered_Cv.resize(world_size);
+            gathered_moment.resize(world_size);
+            gathered_chi.resize(world_size);
             if(supercell.lattice.field) {
-                gather(world, moment_projection_every_processor, gathered_moment_projection, 0);
-                gather(world, chi_projection_every_processor, gathered_chi_projection, 0);
+                gathered_moment_projection.resize(world_size);
+                gathered_chi_projection.resize(world_size);
+            }
+
+            MPI_Gather(&T, 1, MPI_DOUBLE, gathered_T.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&energy_every_processor, 1, MPI_DOUBLE, gathered_energy.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&Cv_every_processor, 1, MPI_DOUBLE, gathered_Cv.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&moment_every_processor, 1, MPI_DOUBLE, gathered_moment.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&chi_every_processor, 1, MPI_DOUBLE, gathered_chi.data(), 1, MPI_DOUBLE, 0, world);
+            if(supercell.lattice.field) {
+                MPI_Gather(&moment_projection_every_processor, 1, MPI_DOUBLE,
+                           gathered_moment_projection.data(), 1, MPI_DOUBLE, 0, world);
+                MPI_Gather(&chi_projection_every_processor, 1, MPI_DOUBLE,
+                           gathered_chi_projection.data(), 1, MPI_DOUBLE, 0, world);
             }
 
             // Store these data
-            if(world.rank() == 0) {
-                std::vector<int> index(world.size());
-                for(int j=0; j<world.size(); j++) {
-                    index[round((gathered_T[j]-monte_carlo.start_temperature)/monte_carlo.temperature_step)-i*world.size()] = j;
+            if(world_rank == 0) {
+                std::vector<int> index(world_size);
+                for(int j=0; j<world_size; j++) {
+                    index[round((gathered_T[j]-monte_carlo.start_temperature)/monte_carlo.temperature_step)-i*world_size] = j;
                 }
 
-                for(int j=0; j<world.size(); j++) {
+                for(int j=0; j<world_size; j++) {
                     energy.push_back(gathered_energy[index[j]]);
                     Cv.push_back(gathered_Cv[index[j]]);
                     moment.push_back(gathered_moment[index[j]]);
@@ -615,7 +645,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
                     }
                 }
             }
-            
+
         }
     }
 

@@ -9,16 +9,20 @@ set_target_properties(MMC PROPERTIES OUTPUT_NAME "MMC")
 set_target_properties(MMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "build/")
 
 # Boost
-find_package(Boost COMPONENTS mpi serialization)
-if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-    
-    MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
-    MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
-    MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+# find_package(Boost COMPONENTS mpi serialization)
+# if(Boost_FOUND)
+#     include_directories(${Boost_INCLUDE_DIRS})
+#
+#     MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
+#     MESSAGE( STATUS "Boost_LIBRARIES = ${Boost_LIBRARIES}.")
+#     MESSAGE( STATUS "Boost_LIB_VERSION = ${Boost_LIB_VERSION}.")
+#
+#     target_link_libraries (MMC PRIVATE ${Boost_LIBRARIES})
+# endif()
 
-    target_link_libraries (MMC PRIVATE ${Boost_LIBRARIES})
-endif()
+# cereal
+add_subdirectory(submodules/cereal)
+target_link_libraries(MMC PRIVATE cereal::cereal)
 
 # MPI
 find_package(MPI)

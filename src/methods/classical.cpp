@@ -97,14 +97,19 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
-int ClassicalMonteCarlo(boost::mpi::environment & env, boost::mpi::communicator & world, 
-MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix, 
+int ClassicalMonteCarlo(MPI_Comm world,
+MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix,
 std::vector<double> & energy, std::vector<double> & Cv,
 std::vector<double> & moment, std::vector<double> & chi,
 std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     // Arrange the processors.
-    const int quotient = monte_carlo.temperature_step_number / world.size();
-    const int remainder = monte_carlo.temperature_step_number % world.size();
+    int world_size = 0;
+    int world_rank = 0;
+    MPI_Comm_size(world, &world_size);
+    MPI_Comm_rank(world, &world_rank);
+
+    const int quotient = monte_carlo.temperature_step_number / world_size;
+    const int remainder = monte_carlo.temperature_step_number % world_size;
 
     // Monte Carlo
     double T;
@@ -125,7 +130,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<quotient+1; i++) {
         if(i<quotient || remainder !=0 ) {
-            T = monte_carlo.start_temperature + (i*world.size()+world.rank())*monte_carlo.temperature_step;
+            T = monte_carlo.start_temperature + (i*world_size+world_rank)*monte_carlo.temperature_step;
             MonteCarloRelaxing(supercell, monte_carlo, T);
             if(supercell.lattice.ground_state && T == 0.0) {
                 result_value = MonteCarloStepGroundState(supercell, monte_carlo, T);
@@ -141,20 +146,35 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
                 chi_projection_every_processor = (result_value[5] - result_value[4]*result_value[4])/(KB*T);
                 moment_projection_every_processor = result_value[4] * one_over_number;
             }
-            
+
             // Collect data form all processors.
-            gather(world, energy_every_processor, gathered_energy, 0);
-            gather(world, Cv_every_processor, gathered_Cv, 0);
-            gather(world, moment_every_processor, gathered_moment, 0);
-            gather(world, chi_every_processor, gathered_chi, 0);
+            gathered_energy.resize(world_size);
+            gathered_Cv.resize(world_size);
+            gathered_moment.resize(world_size);
+            gathered_chi.resize(world_size);
             if(supercell.lattice.field) {
-                gather(world, moment_projection_every_processor, gathered_moment_projection, 0);
-                gather(world, chi_projection_every_processor, gathered_chi_projection, 0);
+                gathered_moment_projection.resize(world_size);
+                gathered_chi_projection.resize(world_size);
+            }
+
+            MPI_Gather(&energy_every_processor, 1, MPI_DOUBLE,
+                       gathered_energy.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&Cv_every_processor, 1, MPI_DOUBLE,
+                       gathered_Cv.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&moment_every_processor, 1, MPI_DOUBLE,
+                       gathered_moment.data(), 1, MPI_DOUBLE, 0, world);
+            MPI_Gather(&chi_every_processor, 1, MPI_DOUBLE,
+                       gathered_chi.data(), 1, MPI_DOUBLE, 0, world);
+            if(supercell.lattice.field) {
+                MPI_Gather(&moment_projection_every_processor, 1, MPI_DOUBLE,
+                           gathered_moment_projection.data(), 1, MPI_DOUBLE, 0, world);
+                MPI_Gather(&chi_projection_every_processor, 1, MPI_DOUBLE,
+                           gathered_chi_projection.data(), 1, MPI_DOUBLE, 0, world);
             }
 
             // Store these data
-            if(world.rank() == 0) {
-                for(int j=0; j<world.size(); j++) {
+            if(world_rank == 0) {
+                for(int j=0; j<world_size; j++) {
                     energy.push_back(gathered_energy[j]);
                     Cv.push_back(gathered_Cv[j]);
                     moment.push_back(gathered_moment[j]);
@@ -165,7 +185,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
                     }
                 }
             }
-            
+
         }
     }
 

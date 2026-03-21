@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <boost/mpi.hpp>
+#include <sstream>
+#include <string>
+
+#include <cereal/archives/binary.hpp>
 
 #include "MC_structure.h"
 #include "structure_in.h"
@@ -17,9 +20,42 @@
 #include "methods/classical.h"
 #include "methods/parallel_tempering.h"
 
-namespace mpi = boost::mpi;
-
 using namespace std;
+
+namespace mpi_cereal {
+void bcast_bytes(const void* data, int size, int root, MPI_Comm comm) {
+    MPI_Bcast(const_cast<void*>(data), size, MPI_BYTE, root, comm);
+}
+
+template <typename T>
+void bcast_object(T& obj, int root, MPI_Comm comm) {
+    int rank;
+    MPI_Comm_rank(comm, &rank);
+
+    int size = 0;
+    std::string buffer;
+
+    if (rank == root) {
+        std::ostringstream oss(std::ios::binary);
+        cereal::BinaryOutputArchive archive(oss);
+        archive(obj);
+        buffer = oss.str();
+        size = static_cast<int>(buffer.size());
+    }
+
+    MPI_Bcast(&size, 1, MPI_INT, root, comm);
+    if (rank != root) {
+        buffer.resize(size);
+    }
+    bcast_bytes(buffer.data(), size, root, comm);
+
+    if (rank != root) {
+        std::istringstream iss(buffer, std::ios::binary);
+        cereal::BinaryInputArchive archive(iss);
+        archive(obj);
+    }
+}
+}
 
 /**
  * @brief Program entry: MPI-parallel Monte Carlo simulation for materials.
@@ -38,8 +74,12 @@ int main(int argc, char** argv) {
      * mpi::environment manages MPI init/finalize.
      * mpi::communicator world provides rank/size and collective ops.
      */
-    mpi::environment env;
-    mpi::communicator world;
+    MPI_Init(&argc, &argv);
+    MPI_Comm world = MPI_COMM_WORLD;
+    int world_rank = 0;
+    MPI_Comm_rank(world, &world_rank);
+    int world_size = 0;
+    MPI_Comm_size(world, &world_size);
 
     /**
      * @brief Core simulation data structures.
@@ -69,7 +109,7 @@ int main(int argc, char** argv) {
     auto logger = fmt::output_file("log.txt");
 
     // Read parameters and broadcast data using root processor
-    if(world.rank() == 0) {
+    if(world_rank == 0) {
         /**
          * @brief Parse CLI options (may override default file names).
          */
@@ -91,12 +131,12 @@ int main(int argc, char** argv) {
     /**
      * @brief Broadcast configuration and structure data to all ranks.
      *
-     * These objects must be MPI-serializable (Boost.MPI).
+     * These objects are serialized by cereal and broadcast as bytes.
      */
-    broadcast(world, supercell.base_site, 0);
-    broadcast(world, supercell.lattice, 0);
-    broadcast(world, supercell.initialization, 0);
-    broadcast(world, monte_carlo, 0);
+    mpi_cereal::bcast_object(supercell.base_site, 0, world);
+    mpi_cereal::bcast_object(supercell.lattice, 0, world);
+    mpi_cereal::bcast_object(supercell.initialization, 0, world);
+    mpi_cereal::bcast_object(monte_carlo, 0, world);
 
     /**
      * @brief Build the supercell and initialize spins/structure.
@@ -105,7 +145,7 @@ int main(int argc, char** argv) {
     InitializeSupercell(supercell);
 
     // Output the coordinate number
-    if(world.rank() == 0) {
+    if(world_rank == 0) {
         /**
          * @brief Write initialization logs and initial spin structure.
          */
@@ -137,13 +177,13 @@ int main(int argc, char** argv) {
      * else: parallel tempering (replica exchange) MC.
      */
     if(monte_carlo.methods == Methods::classical) {
-        ClassicalMonteCarlo(env, world,
+        ClassicalMonteCarlo(world,
             monte_carlo, supercell, spin_structure_file_prefix,
             energy, Cv,
             moment, chi,
             moment_projection, chi_projection);
     } else {
-        ParallelTemperingMonteCarlo(env, world,
+        ParallelTemperingMonteCarlo(world,
             monte_carlo, supercell, spin_structure_file_prefix,
             energy, Cv,
             moment, chi,
@@ -151,7 +191,7 @@ int main(int argc, char** argv) {
     }
 
     // Output the thermal dynamic result using root processor.
-    if(world.rank() == 0) {
+    if(world_rank == 0) {
         /**
          * @brief Write final results and completion log.
          */
@@ -159,5 +199,7 @@ int main(int argc, char** argv) {
         WriteOutput(monte_carlo, energy, Cv, moment, chi, moment_projection, chi_projection, supercell.lattice.field, output_file);
         logger.print("Successfully output all results.\n");
     }
+
+    MPI_Finalize();
     return 0;
 }
