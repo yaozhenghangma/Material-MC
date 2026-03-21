@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <unistd.h>
+#include <getopt.h>
 
 #include "MC_structure.h"
 #include "rotation.h"

@@ -3,6 +3,7 @@
 #include <random>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include <sstream>
 #include <string>
