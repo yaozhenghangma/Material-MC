@@ -21,65 +21,130 @@ namespace mpi = boost::mpi;
 
 using namespace std;
 
+/**
+ * @brief Program entry: MPI-parallel Monte Carlo simulation for materials.
+ *
+ * High-level flow (per README):
+ * 1) Parse CLI + input.toml + POSCAR on rank 0.
+ * 2) Broadcast configuration to all ranks.
+ * 3) Build/initialize the supercell.
+ * 4) Run selected MC method (classical or parallel tempering).
+ * 5) Output logs/results on rank 0.
+ */
 int main(int argc, char** argv) {
+    /**
+     * @brief Initialize MPI environment and communicator.
+     *
+     * mpi::environment manages MPI init/finalize.
+     * mpi::communicator world provides rank/size and collective ops.
+     */
     mpi::environment env;
     mpi::communicator world;
 
+    /**
+     * @brief Core simulation data structures.
+     *
+     * Supercell: lattice/structure, spin states, initialization settings.
+     * MonteCarlo: MC parameters, temperature schedule, method selection, etc.
+     */
     Supercell supercell;
     MonteCarlo monte_carlo;
+
+    /**
+     * @brief Default I/O file names (can be overridden by CLI).
+     *
+     * POSCAR: structure input (VASP-style).
+     * input.toml: simulation parameters.
+     * output.txt: thermodynamic results.
+     * spin_*: spin configuration outputs.
+     */
     string cell_structure_file = "POSCAR";
-    string input_file = "input.toml"; 
+    string input_file = "input.toml";
     string output_file = "output.txt";
     string spin_structure_file_prefix = "spin";
 
+    /**
+     * @brief Log file handle (rank 0 writes status messages).
+     */
     auto logger = fmt::output_file("log.txt");
 
     // Read parameters and broadcast data using root processor
     if(world.rank() == 0) {
-        // Read information from command line.
+        /**
+         * @brief Parse CLI options (may override default file names).
+         */
         ReadOptions(argc, argv, cell_structure_file, input_file, output_file, spin_structure_file_prefix);
 
-        // Read information from input file.
+        /**
+         * @brief Read simulation parameters from input.toml.
+         */
         ReadSettingFile(supercell, monte_carlo, input_file);
 
-        // Read information from POSCAR
+        /**
+         * @brief Read crystal structure from POSCAR into supercell.
+         */
         ReadPOSCAR(supercell, cell_structure_file);
 
         // Log file
         logger.print("Successfully process input file.\n");
     }
-    // Broadcast monte_carlo, base_site, lattice and spin_structure_file_prefix.
+    /**
+     * @brief Broadcast configuration and structure data to all ranks.
+     *
+     * These objects must be MPI-serializable (Boost.MPI).
+     */
     broadcast(world, supercell.base_site, 0);
     broadcast(world, supercell.lattice, 0);
     broadcast(world, supercell.initialization, 0);
     broadcast(world, monte_carlo, 0);
 
-    // Enlarge the cell with given n.
+    /**
+     * @brief Build the supercell and initialize spins/structure.
+     */
     EnlargeCell(supercell);
     InitializeSupercell(supercell);
 
     // Output the coordinate number
     if(world.rank() == 0) {
+        /**
+         * @brief Write initialization logs and initial spin structure.
+         */
         logger.print("Successfully initialize the supercell.\n");
         WriteLog(supercell, monte_carlo, logger);
         WriteSpin(supercell, "structure_initialized");
     }
 
+    /**
+     * @brief Containers for thermodynamic observables.
+     *
+     * energy: internal energy
+     * Cv: heat capacity
+     * moment: magnetic moment
+     * chi: susceptibility
+     * *_projection: projected components (field-aligned, etc.)
+     */
     vector<double> energy;
     vector<double> Cv;
     vector<double> moment;
     vector<double> chi;
     vector<double> moment_projection;
     vector<double> chi_projection;
+
+    /**
+     * @brief Dispatch to MC method chosen in input.
+     *
+     * Methods::classical: single-temperature Metropolis MC.
+     * else: parallel tempering (replica exchange) MC.
+     */
     if(monte_carlo.methods == Methods::classical) {
-        ClassicalMonteCarlo(env, world, 
-            monte_carlo, supercell, spin_structure_file_prefix, 
+        ClassicalMonteCarlo(env, world,
+            monte_carlo, supercell, spin_structure_file_prefix,
             energy, Cv,
             moment, chi,
             moment_projection, chi_projection);
     } else {
-        ParallelTemperingMonteCarlo(env, world, 
-            monte_carlo, supercell, spin_structure_file_prefix, 
+        ParallelTemperingMonteCarlo(env, world,
+            monte_carlo, supercell, spin_structure_file_prefix,
             energy, Cv,
             moment, chi,
             moment_projection, chi_projection);
@@ -87,6 +152,9 @@ int main(int argc, char** argv) {
 
     // Output the thermal dynamic result using root processor.
     if(world.rank() == 0) {
+        /**
+         * @brief Write final results and completion log.
+         */
         logger.print("Successfully run Monte Carlo simulation.\n");
         WriteOutput(monte_carlo, energy, Cv, moment, chi, moment_projection, chi_projection, supercell.lattice.field, output_file);
         logger.print("Successfully output all results.\n");
