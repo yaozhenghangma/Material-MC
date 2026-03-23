@@ -13,3 +13,5 @@ Welcome to the documentation for the Material-MC project.
    :caption: Contents:
 
    architecture
+   ba2niiro6_tutorial
+   input_toml_tutorial
