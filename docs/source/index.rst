@@ -15,3 +15,4 @@ Welcome to the documentation for the Material-MC project.
    architecture
    ba2niiro6_tutorial
    input_toml_tutorial
+   log_output_tutorial

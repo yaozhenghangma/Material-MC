@@ -1,6 +1,17 @@
 #include "log.h"
 
+/**
+ * @brief Write a human-readable Hamiltonian summary to the log stream.
+ *
+ * The selected runtime Hamiltonian type is mapped to a text description and
+ * a symbolic formula string.
+ *
+ * @param supercell Runtime container that stores selected hamiltonian_type.
+ * @param logger Open fmt output stream for log.txt.
+ * @return Always 0.
+ */
 int WriteHamiltonian(Supercell & supercell, fmt::v8::ostream & logger) {
+    // Print Hamiltonian family and the corresponding symbolic expression.
     switch (supercell.lattice.hamiltonian_type) {
         case HamiltonianType::Heisenberg :
             logger.print("Hamiltonian: Heisenberg model.\n");
@@ -76,7 +87,19 @@ int WriteHamiltonian(Supercell & supercell, fmt::v8::ostream & logger) {
     return 0;
 }
 
+/**
+ * @brief Write simulation metadata summary to the log stream.
+ *
+ * This function logs lattice vectors, algorithm/model selection, Hamiltonian
+ * description, anisotropy/field values, and per-element interaction summaries.
+ *
+ * @param supercell Runtime structure containing lattice/base-site/site data.
+ * @param monte_carlo Runtime Monte Carlo method selection.
+ * @param logger Open fmt output stream for log.txt.
+ * @return Always 0.
+ */
 int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream & logger) {
+    // Lattice vectors from parsed POSCAR.
     logger.print("Lattice constants:\n");
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \
     supercell.lattice.a[0], supercell.lattice.a[1], supercell.lattice.a[2]);
@@ -84,6 +107,7 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     supercell.lattice.b[0], supercell.lattice.b[1], supercell.lattice.b[2]);
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \
     supercell.lattice.c[0], supercell.lattice.c[1], supercell.lattice.c[2]);
+    // Runtime Monte Carlo algorithm dispatch.
     logger.print("Monte Carlo Method: ");
     switch (monte_carlo.methods) {
         case Methods::classical:
@@ -96,6 +120,7 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
             logger.print("Unknown method.");
             break;
     }
+    // Spin model family used by local updates.
     logger.print("Model Type: ");
     switch (supercell.lattice.model_type) {
         case ModelType::Heisenberg:
@@ -107,6 +132,7 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
             logger.print("Unknown model.\n");
             break;
     }
+    // Hamiltonian summary and formula text.
     WriteHamiltonian(supercell, logger);
     logger.print("Anisotropy: ");
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \
@@ -114,6 +140,7 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     logger.print("Magnetic field (meV/spin): ");
     logger.print("{:12.5f} {:12.5f} {:12.5f}\n", \
     supercell.base_site.B[0], supercell.base_site.B[1], supercell.base_site.B[2]);
+    // Per-element interaction summary in the primitive cell.
     logger.print("Cell information:\n");
     std::string tmp_string;
     for(int i=0; i<supercell.base_site.number; i++) {
@@ -122,12 +149,14 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
         supercell.base_site.anisotropic_ratio[i][0], \
         supercell.base_site.anisotropic_ratio[i][1], \
         supercell.base_site.anisotropic_ratio[i][2]);
+        // List configured exchange parameters by neighbor shell.
         tmp_string = fmt::format("Super-exchange parameters: ");
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             tmp_string += fmt::format("{:12.5f} ", supercell.base_site.super_exchange_parameter[i][j]);
         }
         tmp_string += "\n";
         logger.print(tmp_string);
+        // Coordination numbers are taken from initialized neighbor links at (0,0,0).
         tmp_string = fmt::format("Coordination number: ");
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             tmp_string += fmt::format("{} ", supercell.site[0][0][0][i].neighbor[j].size());

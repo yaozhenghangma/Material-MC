@@ -1,5 +1,25 @@
 #include "initialization.h"
 
+#include <iostream>
+
+/**
+ * @brief Parse command-line options for input/output file paths.
+ *
+ * Supported options:
+ * - -c <file>: structure file (POSCAR)
+ * - -i <file>: input TOML file
+ * - -o <file>: output table file
+ * - -s <prefix>: spin-structure output prefix
+ * - -h: print usage and exit
+ *
+ * @param argc Argument count from main.
+ * @param argv Argument vector from main.
+ * @param cell_structure_file Output: path of structure file.
+ * @param input_file Output: path of input TOML.
+ * @param output_file Output: path of output data file.
+ * @param spin_structure_file_prefix Output: prefix for spin output files.
+ * @return Always 0.
+ */
 int ReadOptions(int argc, char** argv, std::string & cell_structure_file, std::string & input_file, std::string & output_file, std::string & spin_structure_file_prefix) {
     // Process options from command line.
     char option;
@@ -21,11 +41,50 @@ int ReadOptions(int argc, char** argv, std::string & cell_structure_file, std::s
     return 0;
 }
 
+/**
+ * @brief Print command-line usage and terminate.
+ *
+ * @param program Program name from argv[0].
+ */
 void usage(char* program) {
-    //TODO: Usage of the program.
-    exit(1);
+    std::cout
+        << "Material-MC: Monte Carlo simulation for magnetic materials\n\n"
+        << "Usage:\n"
+        << "  " << program << " [options]\n\n"
+        << "Options:\n"
+        << "  -c <file>   Path to structure file (POSCAR format).\n"
+        << "              Default: POSCAR\n"
+        << "  -i <file>   Path to simulation parameter file (TOML).\n"
+        << "              Default: input.toml\n"
+        << "  -o <file>   Path to thermodynamic output file.\n"
+        << "              Default: output.txt\n"
+        << "  -s <prefix> Prefix for spin-structure output files.\n"
+        << "              Default: spin\n"
+        << "  -h          Print this help message and exit.\n\n"
+        << "Examples:\n"
+        << "  mpirun -np 8 " << program << "\n"
+        << "  mpirun -np 8 " << program
+        << " -c example/Ba2NiIrO6/POSCAR -i example/Ba2NiIrO6/input.toml"
+        << " -o Ba2NiIrO6_output.txt -s Ba2NiIrO6_spin\n\n"
+        << "Notes:\n"
+        << "  - Run with MPI (mpirun/mpiexec).\n"
+        << "  - input.toml controls Monte Carlo, lattice, Hamiltonian, and initialization settings.\n"
+        << std::endl;
+    exit(0);
 }
 
+/**
+ * @brief Build the supercell sites and initialize spin vectors.
+ *
+ * Initialization policy:
+ * - (0,0,0) cell uses base-site spin_initialization scaled by spin_scaling.
+ * - +a/+b/+c directions propagate spins by Euler rotations angleA/angleB/angleC.
+ *
+ * Per-site pointers to species-level parameters are attached after spin setup.
+ *
+ * @param supercell Runtime lattice/site container updated in-place.
+ * @return Always 0.
+ */
 int EnlargeCell(Supercell & supercell) {
     // Enlarge the system with given number and initialize the spin.
     std::vector<std::vector<std::vector<Site>>> site1;
@@ -41,6 +100,7 @@ int EnlargeCell(Supercell & supercell) {
                 supercell.site[i][j].push_back(site3);
                 for(int l=0; l<supercell.base_site.number; l++) {
                     supercell.site[i][j][k].push_back(site4);
+                    // Spin initialization is seeded at origin cell and propagated by axis rotations.
                     if(k == 0) {
                         if(j == 0) {
                             if(i == 0) {
@@ -57,6 +117,7 @@ int EnlargeCell(Supercell & supercell) {
                     } else {
                         supercell.site[i][j][k][l].spin = Rotation(supercell.initialization.angleC, supercell.site[i][j][k-1][l].spin);
                     }
+                    // Bind per-site references to species-level immutable parameters.
                     supercell.site[i][j][k][l].spin_scaling = & supercell.base_site.spin_scaling[l];
                     supercell.site[i][j][k][l].anisotropic_ratio = & supercell.base_site.anisotropic_ratio[l];
                     supercell.site[i][j][k][l].super_exchange_parameter = & supercell.base_site.super_exchange_parameter[l];
@@ -69,6 +130,14 @@ int EnlargeCell(Supercell & supercell) {
     return 0;
 }
 
+/**
+ * @brief Compute squared Cartesian distance between two basis sites across a lattice translation.
+ *
+ * Formula uses fractional offset (index + base_site2 - base_site1), then maps it
+ * to Cartesian coordinates by lattice vectors a/b/c, and returns squared norm.
+ *
+ * @return Squared distance in Cartesian units.
+ */
 double Distance(std::vector<double> lattice_constant1, std::vector<double> lattice_constant2, std::vector<double> lattice_constant3, \
 std::vector<int> index, std::vector<double> base_site1, std::vector<double> base_site2) {
     // Return squared distance of index-base_site1+base_site2.
@@ -81,6 +150,17 @@ std::vector<int> index, std::vector<double> base_site1, std::vector<double> base
     return result;
 }
 
+/**
+ * @brief Insert a candidate shell distance into sorted distance_list if not duplicate.
+ *
+ * Distances within min(d1, d2) * tolerance_percentage are treated as the same shell.
+ * The list is maintained in ascending order (zeros are treated as empty slots).
+ *
+ * @param distance Candidate squared distance.
+ * @param distance_list In/out sorted shell distances.
+ * @param tolerance_percentage Relative tolerance for duplicate detection.
+ * @return Always 0.
+ */
 int AddDistance(double distance, std::vector<double> & distance_list, double tolerance_percentage) {
     int s = distance_list.size()-1;
     // Check similar distance
@@ -105,6 +185,19 @@ int AddDistance(double distance, std::vector<double> & distance_list, double tol
     return 0;
 }
 
+/**
+ * @brief Finalize runtime function bindings and neighbor links for the supercell.
+ *
+ * Main steps:
+ * 1) Bind Hamiltonian function pointer from selected HamiltonianType.
+ * 2) Bind local-update kernel from selected ModelType.
+ * 3) Build neighbor index templates around each base site.
+ * 4) Materialize neighbor pointers for each site with periodic boundary conditions.
+ * 5) Compute initial total energy.
+ *
+ * @param supercell Runtime container updated in-place.
+ * @return Always 0.
+ */
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
     supercell.HamiltonianBase = Heisenberg_base;
@@ -164,7 +257,7 @@ int InitializeSupercell(Supercell & supercell) {
             break;
     }
 
-    // Initialize update function
+    // Initialize local spin-update kernel by model type.
     switch (supercell.lattice.model_type) {
         case ModelType::Heisenberg :
             supercell.Update = LocalUpdateHeisenberg;
@@ -177,9 +270,8 @@ int InitializeSupercell(Supercell & supercell) {
             break;
     }
 
-    // Initialize the neighbors' link and energy.
-    // Find the neighbors for every base sites in a cell.
-    // neighbors_index[i][j][k][l]: i-th site's k-th j nearest neighbor's index in l-th direction. 4-th direction is base number.
+    // Build neighbor templates in base-cell coordinates first.
+    // neighbors_index[site][shell] -> list of {dx, dy, dz, base_site_id} entries.
     std::vector<std::vector<std::vector<std::vector<int>>>> neighbors_index;
 
     for(int i=0; i<supercell.base_site.number; i++) {
@@ -194,7 +286,7 @@ int InitializeSupercell(Supercell & supercell) {
     for(int i=0; i<supercell.base_site.number; i++) {
         double distance_square = 0;
 
-        // Find link.
+        // Enumerate translation window and collect matched neighbors by (element, distance).
         for(int j=-supercell.base_site.neighbor_number[i]; j<supercell.base_site.neighbor_number[i]+1; j++) {
             for(int k=-supercell.base_site.neighbor_number[i]; k<supercell.base_site.neighbor_number[i]+1; k++) {
                 for(int l=-supercell.base_site.neighbor_number[i]; l<supercell.base_site.neighbor_number[i]+1; l++) {
@@ -209,6 +301,7 @@ int InitializeSupercell(Supercell & supercell) {
                                 if(supercell.base_site.elements[m] == supercell.base_site.neighbor_elements[i][n] \
                                 && abs(distance_square - supercell.base_site.neighbor_distance_square[i][n]) \
                                 < supercell.lattice.tolerance_percentage*std::min(distance_square, supercell.base_site.neighbor_distance_square[i][n])) {
+                                    // Matched one configured shell for base site i.
                                     std::vector<int> ind = {j, k, l, m};
                                     neighbors_index[i][n].emplace_back(ind);
                                     break;
@@ -221,7 +314,7 @@ int InitializeSupercell(Supercell & supercell) {
         }
     }
 
-    // Set link for every sites.
+    // Materialize neighbor pointers for every real site using periodic wrapping.
     for(int i=0; i<supercell.lattice.n_x; i++) {
         for(int j=0; j<supercell.lattice.n_y; j++) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
@@ -242,6 +335,7 @@ int InitializeSupercell(Supercell & supercell) {
         }
     }
 
+    // Cache initial total energy after topology/function bindings are ready.
     supercell.lattice.total_energy = supercell.energy();
     return 0;
 }
