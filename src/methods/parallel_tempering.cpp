@@ -1,5 +1,22 @@
 #include "parallel_tempering.h"
 
+/**
+ * @file parallel_tempering.cpp
+ * @brief Parallel tempering Monte Carlo workflow with MPI replica exchange.
+ */
+
+/**
+ * @brief Runs relaxation sweeps with periodic replica exchange between ranks.
+ *
+ * Temperature labels are exchanged using a Metropolis criterion based on
+ * neighboring replicas' energies and temperatures.
+ *
+ * @param world MPI communicator.
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo schedule and exchange interval settings.
+ * @param T In/out temperature label carried by the current replica.
+ * @return int Returns 0 on completion.
+ */
 int ParallelTemperingMonteCarloRelaxing(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     bool odd = true;
@@ -107,6 +124,18 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     return 0;
 }
 
+/**
+ * @brief Executes measurement sweeps with on-the-fly replica exchange.
+ *
+ * Returned vector layout:
+ * [0]=<E>, [1]=<E^2>, [2]=<M>, [3]=<M^2>, [4]=<M_B>, [5]=<M_B^2>.
+ *
+ * @param world MPI communicator.
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo schedule and exchange interval settings.
+ * @param T In/out temperature label carried by the current replica.
+ * @return std::vector<double> Averaged observables across count_step sweeps.
+ */
 std::vector<double> ParallelTemperingMonteCarloStep(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
@@ -322,6 +351,18 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
+/**
+ * @brief Measurement sweeps with replica exchange and ground-state tracking.
+ *
+ * Tracks the minimum-energy configuration per rank and writes the global
+ * minimum-energy structure after an MPI reduction.
+ *
+ * @param world MPI communicator.
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo schedule and exchange interval settings.
+ * @param T In/out temperature label carried by the current replica.
+ * @return std::vector<double> Same observable layout as ParallelTemperingMonteCarloStep().
+ */
 std::vector<double> ParallelTemperingMonteCarloStepGroundState(MPI_Comm world,
 Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
@@ -553,6 +594,24 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
+/**
+ * @brief Runs parallel tempering Monte Carlo and gathers observables by temperature.
+ *
+ * MPI ranks carry replicas whose temperature labels may be exchanged; root rank
+ * gathers per-rank results and reorders them by physical temperature index.
+ *
+ * @param world MPI communicator.
+ * @param monte_carlo Monte Carlo schedule and exchange interval settings.
+ * @param supercell Simulation supercell.
+ * @param spin_structure_file_prefix Spin output prefix (currently unused).
+ * @param energy Output average energy per spin.
+ * @param Cv Output heat capacity per spin.
+ * @param moment Output average magnetic moment per spin.
+ * @param chi Output magnetic susceptibility per spin.
+ * @param moment_projection Output projected moment (when field enabled).
+ * @param chi_projection Output projected susceptibility (when field enabled).
+ * @return int Returns 0 on completion.
+ */
 int ParallelTemperingMonteCarlo(MPI_Comm world,
 MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix,
 std::vector<double> & energy, std::vector<double> & Cv,
@@ -564,6 +623,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     MPI_Comm_size(world, &world_size);
     MPI_Comm_rank(world, &world_rank);
 
+    // Divide temperature points across ranks as quotient + possible remainder.
     const int quotient = monte_carlo.temperature_step_number / world_size;
     const int remainder = monte_carlo.temperature_step_number % world_size;
 
@@ -630,6 +690,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
             // Store these data
             if(world_rank == 0) {
                 std::vector<int> index(world_size);
+                // Reorder gathered replicas by physical temperature index.
                 for(int j=0; j<world_size; j++) {
                     index[round((gathered_T[j]-monte_carlo.start_temperature)/monte_carlo.temperature_step)-i*world_size] = j;
                 }

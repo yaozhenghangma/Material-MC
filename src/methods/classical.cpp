@@ -1,5 +1,18 @@
 #include "classical.h"
 
+/**
+ * @file classical.cpp
+ * @brief Classical Monte Carlo workflow and MPI temperature sampling.
+ */
+
+/**
+ * @brief Runs relaxation sweeps at a fixed temperature.
+ *
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo control parameters.
+ * @param T Temperature used by local spin updates.
+ * @return int Returns 0 on completion.
+ */
 int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     std::vector<int> site_chosen;
@@ -13,6 +26,17 @@ int MonteCarloRelaxing(Supercell & supercell, MonteCarlo & monte_carlo, double T
     return 0;
 }
 
+/**
+ * @brief Executes measurement sweeps and accumulates thermal averages.
+ *
+ * Returned vector layout:
+ * [0]=<E>, [1]=<E^2>, [2]=<M>, [3]=<M^2>, [4]=<M_B>, [5]=<M_B^2>.
+ *
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo control parameters.
+ * @param T Temperature used by local spin updates.
+ * @return std::vector<double> Averaged observables across count_step sweeps.
+ */
 std::vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation, with given flipping number and count number, at a specific temperature.
     std::vector<int> site_chosen;
@@ -49,6 +73,17 @@ std::vector<double> MonteCarloStep(Supercell & supercell, MonteCarlo & monte_car
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
+/**
+ * @brief Runs measurement sweeps while tracking the minimum-energy spin state.
+ *
+ * In ground-state mode, the lowest-energy configuration encountered at this
+ * temperature is written via WriteSpin("structure_ground_state", T).
+ *
+ * @param supercell Simulation supercell.
+ * @param monte_carlo Monte Carlo control parameters.
+ * @param T Temperature used by local spin updates.
+ * @return std::vector<double> Same observable layout as MonteCarloStep().
+ */
 std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo & monte_carlo, double T) {
     // Monte Carlo simulation for outputing ground spin structure mode
     Supercell supercell_ground = supercell;
@@ -97,6 +132,25 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     total_momentum_projection * one_over_step, total_momentum_projection_square * one_over_step};
 }
 
+/**
+ * @brief Distributes temperature points across MPI ranks and gathers observables.
+ *
+ * Each rank samples temperatures in a strided pattern and root rank collects
+ * energy, heat capacity, moment, susceptibility, and optional field-projected
+ * quantities into output vectors.
+ *
+ * @param world MPI communicator.
+ * @param monte_carlo Monte Carlo schedule and sampling controls.
+ * @param supercell Simulation supercell.
+ * @param spin_structure_file_prefix Unused in this implementation.
+ * @param energy Output average energy per spin.
+ * @param Cv Output heat capacity per spin.
+ * @param moment Output average magnetic moment per spin.
+ * @param chi Output magnetic susceptibility per spin.
+ * @param moment_projection Output projected moment (when field enabled).
+ * @param chi_projection Output projected susceptibility (when field enabled).
+ * @return int Returns 0 on completion.
+ */
 int ClassicalMonteCarlo(MPI_Comm world,
 MonteCarlo & monte_carlo, Supercell & supercell, std::string & spin_structure_file_prefix,
 std::vector<double> & energy, std::vector<double> & Cv,
@@ -108,6 +162,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     MPI_Comm_size(world, &world_size);
     MPI_Comm_rank(world, &world_rank);
 
+    // Divide temperature points across ranks as quotient + possible remainder.
     const int quotient = monte_carlo.temperature_step_number / world_size;
     const int remainder = monte_carlo.temperature_step_number % world_size;
 
@@ -130,6 +185,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
     supercell.lattice.n_z * supercell.base_site.number);
     for(int i=0; i<quotient+1; i++) {
         if(i<quotient || remainder !=0 ) {
+            // Rank r handles temperature index (i * world_size + r).
             T = monte_carlo.start_temperature + (i*world_size+world_rank)*monte_carlo.temperature_step;
             MonteCarloRelaxing(supercell, monte_carlo, T);
             if(supercell.lattice.ground_state && T == 0.0) {
@@ -138,6 +194,7 @@ std::vector<double> & moment_projection, std::vector<double> & chi_projection) {
                 result_value = MonteCarloStep(supercell, monte_carlo, T);
             }
 
+            // Convert accumulated moments into thermodynamic observables per spin.
             Cv_every_processor = (result_value[1]-result_value[0]*result_value[0])*one_over_number/(KB*T*T); //Cv
             chi_every_processor = (result_value[3]-result_value[2]*result_value[2])*one_over_number/(KB*T); //chi
             energy_every_processor = result_value[0] * one_over_number; //energy

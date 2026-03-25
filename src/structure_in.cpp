@@ -1,7 +1,22 @@
 #include "structure_in.h"
 
+/**
+ * @file structure_in.cpp
+ * @brief POSCAR reader that loads lattice vectors and magnetic base sites.
+ */
+
+/**
+ * @brief Parses a POSCAR file and populates lattice/base-site information.
+ *
+ * The parser reads lattice scaling and vectors, element names/counts, then
+ * keeps only configured magnetic species in @p supercell.base_site.
+ *
+ * @param supercell Supercell object to populate.
+ * @param cell_structure_file POSCAR file path.
+ * @return int Returns 0 on completion.
+ */
 int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
-    // Read information about base and lattice from POSCAR(default).
+    // Read lattice and site information from POSCAR.
     std::string str;
     static constexpr auto pattern = ctll::fixed_string{ R"(\s+)" };
     std::ifstream in;
@@ -40,10 +55,10 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
         }
     }
 
-    // Store magnetic elements
+    // Keep only magnetic species configured in supercell.base_site and copy species-level parameters.
     std::vector<double> tmp_coordinate = {0, 0, 0};
     supercell.base_site.number = 0;
-    getline(in, str); // Direct of Carsitian TODO:
+    getline(in, str); // Coordinate mode line (Direct/Cartesian); current parser assumes fractional input.
     {
         std::vector<std::string> magnetic_elements = supercell.base_site.elements;
         std::vector<double> spin_scaling = supercell.base_site.spin_scaling;
@@ -64,6 +79,7 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
         int k=0;
         for(int i=0; i<elements.size(); i++) {
             if(magnetic_elements[k] == elements[i]) {
+                // Find optional explicit spin initialization entries for this magnetic element.
                 int initialization_index = -1;
                 for(int j=0; j<supercell.initialization.elements.size(); j++) {
                     if(magnetic_elements[k] == supercell.initialization.elements[j]) {
@@ -83,6 +99,7 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
                     supercell.base_site.neighbor_elements.push_back(neighbor_elements[k]);
                     supercell.base_site.neighbor_distance_square.push_back(neighbor_distance_square[k]);
                     supercell.base_site.super_exchange_parameter.push_back(super_exchange_parameter[k]);
+                    // Use per-atom initialization if provided; otherwise fall back to +X.
                     if(initialization_index != -1 && j+initialization_index < supercell.initialization.elements.size() \
                     && supercell.initialization.elements[j+initialization_index] == magnetic_elements[k]) {
                         supercell.base_site.spin_initialization.push_back(supercell.initialization.direction[j+initialization_index]);
@@ -93,6 +110,7 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
                 supercell.base_site.number += elements_number[i];
                 k++;
             } else {
+                // Non-magnetic species are skipped while preserving POSCAR line consumption.
                 for(int j=0; j<elements_number[i]; j++) {
                     getline(in, str);
                 }
