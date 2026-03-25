@@ -1,7 +1,25 @@
 #include "spin_out.h"
 
+/**
+ * @file spin_out.cpp
+ * @brief Utilities for exporting spin configurations in XSF format.
+ */
+
+/**
+ * @brief Writes the current supercell spin configuration to an XSF file.
+ *
+ * Output filename: ``<spin_structure_file_prefix>.xsf``.
+ *
+ * File content follows standard XSF sections:
+ * - ``CRYSTAL``
+ * - ``PRIMVEC`` (scaled lattice vectors)
+ * - ``PRIMCOORD`` (element, x, y, z, sx, sy, sz)
+ *
+ * @param supercell Supercell containing lattice, coordinates, and spin vectors.
+ * @param spin_structure_file_prefix Prefix of the output XSF filename.
+ * @return int Returns 0 on completion.
+ */
 int WriteSpin(Supercell & supercell, std::string spin_structure_file_prefix) {
-    // Output spin states of all atoms.
     std::string output_file_name = spin_structure_file_prefix + ".xsf";
     auto out = fmt::output_file(output_file_name);
     out.print("CRYSTAL\n");
@@ -45,8 +63,20 @@ int WriteSpin(Supercell & supercell, std::string spin_structure_file_prefix) {
     return 0;
 }
 
+/**
+ * @brief Writes the current supercell spin configuration to an XSF file with temperature suffix.
+ *
+ * Output filename: ``<spin_structure_file_prefix><T>.xsf`` where ``T`` is
+ * converted by ``std::to_string``.
+ *
+ * The data layout is the same as the overload without temperature.
+ *
+ * @param supercell Supercell containing lattice, coordinates, and spin vectors.
+ * @param spin_structure_file_prefix Prefix of the output XSF filename.
+ * @param T Temperature value appended to the output filename.
+ * @return int Returns 0 on completion.
+ */
 int WriteSpin(Supercell & supercell, std::string spin_structure_file_prefix, double T) {
-    // Output spin states of all atoms.
     std::string output_file_name = spin_structure_file_prefix + std::to_string(T) + ".xsf";
     auto out = fmt::output_file(output_file_name);
     out.print("CRYSTAL\n");
