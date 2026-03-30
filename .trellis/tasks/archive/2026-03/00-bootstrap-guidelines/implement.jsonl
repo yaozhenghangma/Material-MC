@@ -1,0 +1,10 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/prd.md", "reason": "Bootstrap task requirements and completion criteria"}
+{"file": "agents.md", "reason": "Project-level AI workflow instructions"}
+{"file": "CMakeLists.txt", "reason": "Derive authoritative backend structure and dependencies"}
+{"file": "src/MMC.cpp", "reason": "Capture runtime flow and logging behavior"}
+{"file": "src/configure_in.cpp", "reason": "Document config parsing defaults and error behavior"}
+{"file": "src/log.cpp", "reason": "Capture logging output style and fields"}
+{"file": ".github/workflows/main.yml", "reason": "Document CI quality baseline"}

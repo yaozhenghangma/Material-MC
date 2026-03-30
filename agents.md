@@ -1,17 +1,18 @@
-# Agent Guide
+<!-- TRELLIS:START -->
+# Trellis Instructions
 
-This project uses Sphinx/Read the Docs for documentation.
+These instructions are for AI assistants working in this project.
 
-## Where to read the architecture
+Use the `/trellis:start` command when starting a new session to:
+- Initialize your developer identity
+- Understand current project context
+- Read relevant guidelines
 
-Start with:
-- `docs/source/architecture.rst`
+Use `@/.trellis/` to learn:
+- Development workflow (`workflow.md`)
+- Project structure guidelines (`spec/`)
+- Developer workspace (`workspace/`)
 
-This chapter explains:
-- The high-level simulation flow
-- Core data structures (`Supercell`, `MonteCarlo`, `BaseSite`, `Site`, `Lattice`)
-- Hamiltonian and update selection
-- MPI parallelization strategy
-- Key entry points and files
+Keep this managed block so 'trellis update' can refresh the instructions.
 
-If you need additional context, `docs/source/index.rst` contains the table of contents.
+<!-- TRELLIS:END -->

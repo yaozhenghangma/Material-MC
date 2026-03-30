@@ -1,0 +1,10 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".claude/commands/trellis/check-frontend.md", "reason": "Frontend check spec"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/prd.md", "reason": "Validate completed docs against bootstrap checklist"}
+{"file": "agents.md", "reason": "Ensure updates stay aligned with project AI instructions"}
+{"file": "CMakeLists.txt", "reason": "Cross-check documented structure and toolchain"}
+{"file": "src/MMC.cpp", "reason": "Verify guideline examples for orchestration flow"}
+{"file": "src/configure_in.cpp", "reason": "Verify documented parsing and error patterns"}
+{"file": "src/log.cpp", "reason": "Validate logging guidelines against real implementation"}
+{"file": ".github/workflows/main.yml", "reason": "Validate quality guideline statements about CI"}
