@@ -27,9 +27,9 @@ The codebase is backend/simulation oriented (C++ + MPI).
 
 ## Evidence
 
-- C++ backend entrypoint: `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- CMake-based build target: `/Users/yma/Project/Material-MC/CMakeLists.txt`
-- CI builds C++ target only: `/Users/yma/Project/Material-MC/.github/workflows/main.yml`
+- C++ backend entrypoint: `src/MMC.cpp`
+- CMake-based build target: `CMakeLists.txt`
+- CI builds C++ target only: `.github/workflows/main.yml`
 - No frontend app/tooling files found (`package.json`, `tsconfig.json`, `*.tsx`, `*.jsx`)
 
 ---

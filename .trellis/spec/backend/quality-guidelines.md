@@ -10,7 +10,7 @@ This project is a C++17 scientific simulation backend built with CMake and teste
 
 Current quality gate in CI:
 
-- `/Users/yma/Project/Material-MC/.github/workflows/main.yml`
+- `.github/workflows/main.yml`
   - installs MPI + build tools
   - runs `cmake .` and `make`
 

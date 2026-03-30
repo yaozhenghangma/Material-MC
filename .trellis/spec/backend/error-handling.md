@@ -15,9 +15,9 @@ Error handling is currently **lightweight and imperative**:
 
 Representative examples:
 
-- TOML parse failure path: `/Users/yma/Project/Material-MC/src/configure_in.cpp`
-- CLI help/exit path: `/Users/yma/Project/Material-MC/src/initialization.cpp`
-- status-return-style functions: `/Users/yma/Project/Material-MC/src/spin_out.cpp`, `/Users/yma/Project/Material-MC/src/result_out.cpp`
+- TOML parse failure path: `src/configure_in.cpp`
+- CLI help/exit path: `src/initialization.cpp`
+- status-return-style functions: `src/spin_out.cpp`, `src/result_out.cpp`
 
 ---
 

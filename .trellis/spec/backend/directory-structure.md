@@ -14,7 +14,7 @@ Code is organized by simulation responsibility: input parsing, model definitions
 ## Directory Layout
 
 ```text
-/Users/yma/Project/Material-MC/
+.
 ├── CMakeLists.txt                  # Build target + source registration
 ├── src/
 │   ├── MMC.cpp                     # Program entry and MPI orchestration
@@ -90,7 +90,7 @@ Observed conventions in this repository:
 
 ## Examples
 
-- Program orchestration: `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- Input parsing split: `/Users/yma/Project/Material-MC/src/configure_in.cpp`, `/Users/yma/Project/Material-MC/src/structure_in.cpp`
-- Method-specific algorithms: `/Users/yma/Project/Material-MC/src/methods/classical.cpp`, `/Users/yma/Project/Material-MC/src/methods/parallel_tempering.cpp`
-- Extension point: `/Users/yma/Project/Material-MC/custom/custom.cpp`
+- Program orchestration: `src/MMC.cpp`
+- Input parsing split: `src/configure_in.cpp`, `src/structure_in.cpp`
+- Method-specific algorithms: `src/methods/classical.cpp`, `src/methods/parallel_tempering.cpp`
+- Extension point: `custom/custom.cpp`

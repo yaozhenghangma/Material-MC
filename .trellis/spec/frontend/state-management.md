@@ -19,13 +19,13 @@ No frontend local/global/server state stores exist.
 Equivalent backend runtime state lives in:
 
 - `Supercell`, `Lattice`, `BaseSite`, `Site`, `MonteCarlo`, `Initialization`
-- Defined in `/Users/yma/Project/Material-MC/src/MC_structure.h`
+- Defined in `src/MC_structure.h`
 
 State initialization/parsing flow:
 
-- CLI: `/Users/yma/Project/Material-MC/src/initialization.cpp`
-- TOML: `/Users/yma/Project/Material-MC/src/configure_in.cpp`
-- POSCAR: `/Users/yma/Project/Material-MC/src/structure_in.cpp`
+- CLI: `src/initialization.cpp`
+- TOML: `src/configure_in.cpp`
+- POSCAR: `src/structure_in.cpp`
 
 ---
 

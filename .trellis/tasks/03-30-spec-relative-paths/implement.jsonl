@@ -1,0 +1,14 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Contains absolute path references to normalize to repo-relative style"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Contains absolute path references to normalize to repo-relative style"}

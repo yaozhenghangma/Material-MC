@@ -18,13 +18,13 @@ The project uses C++ type safety and explicit data structures.
 
 Core simulation types are defined in C++ headers:
 
-- `/Users/yma/Project/Material-MC/src/MC_structure.h` (classes and enums)
-- `/Users/yma/Project/Material-MC/src/constants.h` (numeric constants)
-- `/Users/yma/Project/Material-MC/src/Hamiltonian.h` (function interfaces)
+- `src/MC_structure.h` (classes and enums)
+- `src/constants.h` (numeric constants)
+- `src/Hamiltonian.h` (function interfaces)
 
 Build enforces C++17:
 
-- `/Users/yma/Project/Material-MC/CMakeLists.txt` (`set(CMAKE_CXX_STANDARD 17)`)
+- `CMakeLists.txt` (`set(CMAKE_CXX_STANDARD 17)`)
 
 ---
 
@@ -34,7 +34,7 @@ No runtime validation library like Zod/Yup is used.
 
 Current validation style is parser-level defaults and limited parse exception handling:
 
-- TOML defaults via `.value_or(...)` in `/Users/yma/Project/Material-MC/src/configure_in.cpp`
+- TOML defaults via `.value_or(...)` in `src/configure_in.cpp`
 - parse exception catch in same file
 
 ---

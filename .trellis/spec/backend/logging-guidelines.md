@@ -14,10 +14,10 @@ Logging is file-based and split by artifact purpose:
 
 Primary logging/output implementation files:
 
-- `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- `/Users/yma/Project/Material-MC/src/log.cpp`
-- `/Users/yma/Project/Material-MC/src/result_out.cpp`
-- `/Users/yma/Project/Material-MC/src/spin_out.cpp`
+- `src/MMC.cpp`
+- `src/log.cpp`
+- `src/result_out.cpp`
+- `src/spin_out.cpp`
 
 The project uses `fmt::output_file` (from fmt) for file output.
 

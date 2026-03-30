@@ -36,9 +36,9 @@ These docs describe the current backend architecture centered around:
 
 ## Evidence Examples
 
-- MPI orchestration and rank-0 parse/broadcast flow: `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- TOML input parsing and defaults: `/Users/yma/Project/Material-MC/src/configure_in.cpp`
-- File-based logging/output conventions: `/Users/yma/Project/Material-MC/src/log.cpp`, `/Users/yma/Project/Material-MC/src/result_out.cpp`
+- MPI orchestration and rank-0 parse/broadcast flow: `src/MMC.cpp`
+- TOML input parsing and defaults: `src/configure_in.cpp`
+- File-based logging/output conventions: `src/log.cpp`, `src/result_out.cpp`
 
 ---
 

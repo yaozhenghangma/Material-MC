@@ -10,7 +10,7 @@ Frontend quality rules are currently **not applicable** because there is no fron
 
 Current CI quality gate is backend build verification:
 
-- `/Users/yma/Project/Material-MC/.github/workflows/main.yml`
+- `.github/workflows/main.yml`
   - installs toolchain
   - runs `cmake .` and `make`
 

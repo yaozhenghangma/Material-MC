@@ -10,9 +10,9 @@ Not applicable currently: this repository has no frontend framework and no custo
 
 Evidence:
 
-- C++ source tree under `/Users/yma/Project/Material-MC/src/`
-- CMake build pipeline in `/Users/yma/Project/Material-MC/CMakeLists.txt`
-- CI compiles C++ target only (`/Users/yma/Project/Material-MC/.github/workflows/main.yml`)
+- C++ source tree under `src/`
+- CMake build pipeline in `CMakeLists.txt`
+- CI compiles C++ target only (`.github/workflows/main.yml`)
 
 ---
 
@@ -31,8 +31,8 @@ Not applicable currently.
 There is no browser/client-side data fetching layer.
 Simulation input is file-based (`input.toml`, `POSCAR`) parsed in backend code:
 
-- `/Users/yma/Project/Material-MC/src/configure_in.cpp`
-- `/Users/yma/Project/Material-MC/src/structure_in.cpp`
+- `src/configure_in.cpp`
+- `src/structure_in.cpp`
 
 ---
 

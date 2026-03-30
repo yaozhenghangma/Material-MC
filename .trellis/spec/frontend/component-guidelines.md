@@ -12,8 +12,8 @@ There are no React/Vue/Svelte components in the project tree.
 
 Evidence:
 
-- Backend simulation entrypoint: `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- Build config targets C++ binary `MMC`: `/Users/yma/Project/Material-MC/CMakeLists.txt`
+- Backend simulation entrypoint: `src/MMC.cpp`
+- Build config targets C++ binary `MMC`: `CMakeLists.txt`
 - No project-level `*.tsx` / `*.jsx` files
 
 ---

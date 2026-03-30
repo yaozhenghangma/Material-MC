@@ -15,7 +15,7 @@ Frontend directory structure is currently **not applicable** because this reposi
 Relevant observed structure is backend-focused:
 
 ```text
-/Users/yma/Project/Material-MC/
+.
 ├── src/                 # C++ simulation sources
 ├── custom/              # custom Hamiltonian extension
 ├── CMakeLists.txt       # CMake build configuration
@@ -24,9 +24,9 @@ Relevant observed structure is backend-focused:
 
 Evidence references:
 
-- `/Users/yma/Project/Material-MC/src/MMC.cpp`
-- `/Users/yma/Project/Material-MC/CMakeLists.txt`
-- `/Users/yma/Project/Material-MC/.github/workflows/main.yml`
+- `src/MMC.cpp`
+- `CMakeLists.txt`
+- `.github/workflows/main.yml`
 
 ---
 
