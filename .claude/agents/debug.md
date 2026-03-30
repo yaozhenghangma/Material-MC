@@ -2,7 +2,7 @@
 name: debug
 description: |
   Issue fixing expert. Understands issues, fixes against specs, and verifies fixes. Precise fixes only.
-tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
+tools: Read, Write, Edit, Bash, Glob, Grep, mcp__grok_search__web_search, mcp__context7__query-docs, mcp__github_grep__searchGitHub
 model: opus
 ---
 # Debug Agent

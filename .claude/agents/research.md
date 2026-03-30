@@ -2,7 +2,7 @@
 name: research
 description: |
   Code and tech search expert. Pure research, no code modifications. Finds files, patterns, and tech solutions.
-tools: Read, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa, Skill, mcp__chrome-devtools__*
+tools: Read, Glob, Grep, mcp__grok_search__web_search, mcp__context7__query-docs, mcp__github_grep__searchGitHub, Skill, mcp__chrome-devtools__*
 model: opus
 ---
 # Research Agent

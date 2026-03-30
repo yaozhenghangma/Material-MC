@@ -622,7 +622,7 @@ def get_research_context(repo_root: str, task_dir: str | None) -> str:
 - Spec files: `{spec_path}/**/*.md`
 - Known issues: `{DIR_WORKFLOW}/big-question/`
 - Code search: Use Glob and Grep tools
-- Tech solutions: Use mcp__exa__web_search_exa or mcp__exa__get_code_context_exa"""
+- Tech solutions: Use mcp__grok_search__web_search or mcp__context7__query-docs or mcp__github_grep__searchGitHub"""
 
     context_parts.append(project_structure)
 
@@ -677,8 +677,9 @@ You are a documenter, not a reviewer.
 | Glob | Search by filename pattern |
 | Grep | Search by content |
 | Read | Read file content |
-| mcp__exa__web_search_exa | External web search |
-| mcp__exa__get_code_context_exa | External code/doc search |
+| mcp__grok_search__web_search | External web search |
+| mcp__context7__query-docs | External doc search |
+| mcp__github_grep__searchGitHub | External code search |
 
 ## Strict Boundaries
 
