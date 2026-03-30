@@ -38,3 +38,36 @@ Completed and archived bootstrap guideline task 00-bootstrap-guidelines by filli
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Normalize spec paths to relative
+
+**Date**: 2026-03-30
+**Task**: Normalize spec paths to relative
+
+### Summary
+
+Replaced absolute /Users/yma paths in .trellis/spec docs with repo-relative paths and archived the completed Trellis task.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `713573e` | (see git log) |
+| `d969b9f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
