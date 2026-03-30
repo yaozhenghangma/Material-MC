@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
+- **Total Sessions**: 3
 - **Last Active**: 2026-03-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~73 | Active |
+| `journal-1.md` | ~103 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 3 | 2026-03-30 | Plan KH honeycomb task decomposition | - |
 | 2 | 2026-03-30 | Normalize spec paths to relative | `713573e`, `d969b9f` |
 | 1 | 2026-03-30 | Complete bootstrap guidelines for Trellis specs | `2d7955a`, `ad53011` |
 <!-- @@@/auto:session-history -->
