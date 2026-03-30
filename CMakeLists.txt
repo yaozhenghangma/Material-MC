@@ -37,6 +37,7 @@ if (MPI_FOUND)
 endif ()
 
 # scnlib
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 add_subdirectory(submodules/scnlib)
 target_link_libraries(MMC PRIVATE scn::scn)
 
