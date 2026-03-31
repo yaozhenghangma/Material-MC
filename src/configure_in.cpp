@@ -1,5 +1,62 @@
 #include "configure_in.h"
 
+namespace {
+
+void TryReadHamiltonianNumber(const toml::node_view<const toml::node>& node,
+                              const std::string& key,
+                              const std::string& input_file,
+                              double& value) {
+    if(!node) {
+        return;
+    }
+
+    if(const auto parsed = node.value<double>(); parsed.has_value()) {
+        value = *parsed;
+        return;
+    }
+
+    std::cerr << "Invalid numeric value for [Hamiltonian]." << key
+              << " in " << input_file
+              << ": expected integer or floating-point value, got "
+              << node.type() << ".\n";
+    exit(-1);
+}
+
+bool IsKhModelToken(const std::string& model_name) {
+    return model_name == "Kitaev-Heisenberg" || model_name == "kitaev-heisenberg"
+        || model_name == "KH" || model_name == "kh";
+}
+
+void ReadKhGlobalCouplings(Supercell& supercell,
+                           const toml::table& data,
+                           const std::string& input_file,
+                           bool kh_model_selected) {
+    auto hamiltonian = data["Hamiltonian"];
+
+    // Always reset to defaults to keep non-KH compatibility explicit.
+    supercell.base_site.kh_j = 0.0;
+    supercell.base_site.kh_k = 0.0;
+    supercell.base_site.kh_g = 0.0;
+    supercell.base_site.kh_gp = 0.0;
+
+    if(!hamiltonian) {
+        return;
+    }
+
+    // For non-KH models we intentionally ignore KH-only couplings,
+    // preserving current behavior for existing inputs.
+    if(!kh_model_selected) {
+        return;
+    }
+
+    TryReadHamiltonianNumber(hamiltonian["J"], "J", input_file, supercell.base_site.kh_j);
+    TryReadHamiltonianNumber(hamiltonian["K"], "K", input_file, supercell.base_site.kh_k);
+    TryReadHamiltonianNumber(hamiltonian["G"], "G", input_file, supercell.base_site.kh_g);
+    TryReadHamiltonianNumber(hamiltonian["Gp"], "Gp", input_file, supercell.base_site.kh_gp);
+}
+
+} // namespace
+
 /**
  * @brief Select the built-in Hamiltonian variant from field/anisotropy switches.
  *
@@ -173,14 +230,21 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
             // Auto-select built-in Hamiltonian by (field, anisotropy).
             ChooseHamiltonian(supercell);
         }
-        // Select spin model family (Heisenberg or Ising).
+        // Select spin model family (Heisenberg, Ising, or Kitaev-Heisenberg).
         tmp_string = data["Hamiltonian"]["model"].value_or("Heisenberg");
-        if(tmp_string[0] == 'I' || tmp_string[0] == 'i') {
+        bool kh_model_selected = IsKhModelToken(tmp_string);
+        if(!tmp_string.empty() && (tmp_string[0] == 'I' || tmp_string[0] == 'i')) {
             supercell.lattice.model_type = ModelType::Ising;
+        } else if(kh_model_selected) {
+            supercell.lattice.model_type = ModelType::Kitaev_Heisenberg;
         } else {
             supercell.lattice.model_type = ModelType::Heisenberg;
         }
-        
+
+        // KH global couplings are only consumed when KH model is selected.
+        // Missing values default to 0; invalid numeric types fail fast with context.
+        ReadKhGlobalCouplings(supercell, data, input_file, kh_model_selected);
+
         // [Output] visualization/export controls.
         supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);
         supercell.lattice.ground_state = data["Output"]["ground_state"].value_or(false);

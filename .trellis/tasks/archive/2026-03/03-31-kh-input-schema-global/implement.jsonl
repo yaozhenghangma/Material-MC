@@ -1,0 +1,13 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/tasks/03-31-kh-input-schema-global/prd.md", "reason": "Task requirements and acceptance criteria"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Where parser/runtime data structures belong"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required quality and serialization consistency checks"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Fail-fast parser validation and error style"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Logging conventions when adding KH parameter output"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse existing parsing/defaulting patterns"}
+{"file": "src/configure_in.cpp", "reason": "Primary TOML parsing/defaulting pattern and target file"}
+{"file": "src/MC_structure.h", "reason": "Runtime parameter storage and cereal serialization"}
+{"file": "src/initialization.cpp", "reason": "Model-specific dispatch pattern reference"}
+{"file": "src/log.cpp", "reason": "Runtime parameter logging pattern reference"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Input schema documentation location"}

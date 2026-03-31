@@ -128,9 +128,17 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
             break;
         case ModelType::Ising:
             logger.print("Ising model.\n");
+            break;
+        case ModelType::Kitaev_Heisenberg:
+            logger.print("Kitaev-Heisenberg model.\n");
+            break;
         default:
             logger.print("Unknown model.\n");
             break;
+    }
+    if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
+        logger.print("KH global couplings (J, K, G, Gp): {:12.5f} {:12.5f} {:12.5f} {:12.5f}\n", \
+        supercell.base_site.kh_j, supercell.base_site.kh_k, supercell.base_site.kh_g, supercell.base_site.kh_gp);
     }
     // Hamiltonian summary and formula text.
     WriteHamiltonian(supercell, logger);

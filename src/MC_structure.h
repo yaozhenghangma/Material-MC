@@ -19,7 +19,7 @@ enum class HamiltonianType {
 };
 
 enum class ModelType {
-    Heisenberg, Ising
+    Heisenberg, Ising, Kitaev_Heisenberg
 };
 
 // Information about base in the cell
@@ -45,6 +45,13 @@ public:
     // External field
     std::vector<double> B = {0, 0, 0};
 
+    // Global Kitaev-Heisenberg couplings from [Hamiltonian].
+    // These remain zero for non-KH models.
+    double kh_j = 0.0;
+    double kh_k = 0.0;
+    double kh_g = 0.0;
+    double kh_gp = 0.0;
+
     template <class Archive>
     void serialize(Archive & ar) {
         ar(number,
@@ -58,7 +65,11 @@ public:
            neighbor_distance_square,
            super_exchange_parameter,
            anisotropy,
-           B);
+           B,
+           kh_j,
+           kh_k,
+           kh_g,
+           kh_gp);
     }
 };
 

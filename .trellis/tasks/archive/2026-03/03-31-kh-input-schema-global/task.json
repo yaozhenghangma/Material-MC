@@ -1,20 +1,20 @@
 {
-  "id": "kh-bond-input",
-  "name": "kh-bond-input",
-  "title": "KH bond-direction input for honeycomb",
+  "id": "kh-input-schema-global",
+  "name": "kh-input-schema-global",
+  "title": "KH input schema for global J K G Gp",
   "description": "",
-  "status": "planning",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "priority": "P2",
   "creator": "yma",
   "assignee": "yma",
-  "createdAt": "2026-03-30",
-  "completedAt": null,
+  "createdAt": "2026-03-31",
+  "completedAt": "2026-03-31",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
-  "current_phase": 0,
+  "current_phase": 2,
   "next_action": [
     {
       "phase": 1,
@@ -36,11 +36,9 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "03-31-kh-bond-classify-pbc"
-  ],
-  "parent": "03-30-kitaev-heisenberg-mc",
+  "children": [],
+  "parent": "03-30-kh-bond-input",
   "relatedFiles": [],
-  "notes": "Execution order: (1) 03-31-kh-input-schema-global, then (2) 03-31-kh-bond-classify-pbc. Rationale: stabilize KH input contract first, then implement geometry/PBC-based x-y-z bond labeling.",
+  "notes": "",
   "meta": {}
 }

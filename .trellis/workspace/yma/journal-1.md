@@ -101,3 +101,68 @@ Defined parent task and four subtasks with PRDs; confirmed honeycomb lattice, cl
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Split KH bond-input into subtasks
+
+**Date**: 2026-03-31
+**Task**: Split KH bond-input into subtasks
+
+### Summary
+
+Refined KH bond-input requirements, fixed KH input contract to flat global J/K/G/Gp with default 0, and split work into schema and PBC classification subtasks.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dbae0fb` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
+
+
+## Session 5: KH global input schema + task archival
+
+**Date**: 2026-03-31
+**Task**: KH global input schema + task archival
+
+### Summary
+
+Completed KH global J/K/G/Gp input schema parsing with defaults and validation, updated docs/examples, and archived finished subtask 03-31-kh-input-schema-global.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a611f86` | (see git log) |
+| `0c21b30` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

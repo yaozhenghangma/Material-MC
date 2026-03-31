@@ -53,8 +53,15 @@ Printed under:
 
 - ``Model Type: Heisenberg model.``
 - or ``Model Type: Ising model.``
+- or ``Model Type: Kitaev-Heisenberg model.``
 
 This confirms the local update model family.
+
+If KH model is selected, you should also see a coupling summary line:
+
+- ``KH global couplings (J, K, G, Gp): ...``
+
+Use this to verify that optional ``J/K/G/Gp`` values were parsed as expected (omitted fields should appear as ``0.00000``).
 
 Hamiltonian summary
 ~~~~~~~~~~~~~~~~~~~

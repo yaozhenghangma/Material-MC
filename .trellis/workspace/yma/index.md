@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 3
-- **Last Active**: 2026-03-30
+- **Total Sessions**: 5
+- **Last Active**: 2026-03-31
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~103 | Active |
+| `journal-1.md` | ~168 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,8 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 5 | 2026-03-31 | KH global input schema + task archival | `a611f86`, `0c21b30` |
+| 4 | 2026-03-31 | Split KH bond-input into subtasks | `dbae0fb` |
 | 3 | 2026-03-30 | Plan KH honeycomb task decomposition | - |
 | 2 | 2026-03-30 | Normalize spec paths to relative | `713573e`, `d969b9f` |
 | 1 | 2026-03-30 | Complete bootstrap guidelines for Trellis specs | `2d7955a`, `ad53011` |

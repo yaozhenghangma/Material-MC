@@ -265,6 +265,10 @@ int InitializeSupercell(Supercell & supercell) {
         case ModelType::Ising :
             supercell.Update = LocalUpdateIsing;
             break;
+        case ModelType::Kitaev_Heisenberg :
+            // KH uses classical vector spins in this stage; keep Heisenberg local update.
+            supercell.Update = LocalUpdateHeisenberg;
+            break;
         default:
             supercell.Update = LocalUpdateHeisenberg;
             break;

@@ -1,0 +1,10 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/tasks/03-31-kh-input-schema-global/prd.md", "reason": "Validate implementation against accepted requirements"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Check file placement and module boundaries"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Check quality rules and serialization updates"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Check validation errors follow backend style"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Check logging format if log output is changed"}
+{"file": "src/configure_in.cpp", "reason": "Verify parser/default behavior and errors"}
+{"file": "src/MC_structure.h", "reason": "Verify internal storage and cereal serialization consistency"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Verify KH input schema docs and examples"}

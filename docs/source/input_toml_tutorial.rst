@@ -61,10 +61,14 @@ A complete template
    distance = 5.68
 
    [Hamiltonian]
-   model = "Heisenberg"      # "Heisenberg" or "Ising"
+   model = "Heisenberg"      # "Heisenberg", "Ising", or "Kitaev-Heisenberg"
    custom = false
    magnetic_field = [ 0.0, 0.0, 0.0 ]
    anisotropy = [ 0.0, 0.0, 0.0 ]
+   J = 0.0                    # KH-only global coupling (optional)
+   K = 0.0                    # KH-only global coupling (optional)
+   G = 0.0                    # KH-only global coupling (optional)
+   Gp = 0.0                   # KH-only global coupling (optional)
 
    [Initialization]
    angleA = [ 0.0, 0.0, 0.0 ]
@@ -119,10 +123,34 @@ Each ``[[Elements.Neighbors]]`` entry defines one interaction shell:
 Hamiltonian
 ~~~~~~~~~~~
 
-- ``model``: ``Heisenberg`` or ``Ising``.
+- ``model``: ``Heisenberg``, ``Ising``, or ``Kitaev-Heisenberg``.
 - ``custom``: use custom Hamiltonian from ``custom/`` when ``true``.
 - ``magnetic_field = [Bx, By, Bz]``: external field vector.
 - ``anisotropy = [Dx, Dy, Dz]``: anisotropy constants.
+
+When ``model = "Kitaev-Heisenberg"`` (also accepts ``"KH"``), you can additionally provide one global coupling set:
+
+- ``J``: global Heisenberg coupling (optional, default ``0`` when omitted)
+- ``K``: global Kitaev coupling (optional, default ``0`` when omitted)
+- ``G``: global Gamma coupling (optional, default ``0`` when omitted)
+- ``Gp``: global Gamma-prime coupling (optional, default ``0`` when omitted)
+
+.. note::
+   KH coupling fields are parsed only for the Kitaev-Heisenberg model. Each value must be numeric (integer or floating-point).
+
+Minimal KH input example
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: toml
+
+   [Hamiltonian]
+   model = "Kitaev-Heisenberg"
+   custom = false
+   magnetic_field = [ 0.0, 0.0, 0.0 ]
+   anisotropy = [ 0.0, 0.0, 0.0 ]
+   J = -1.0
+   K = 2.0
+   # G and Gp are optional here and default to 0.0
 
 Initialization
 ~~~~~~~~~~~~~~
