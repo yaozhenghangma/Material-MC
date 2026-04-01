@@ -1,0 +1,9 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Follow fail-fast parser validation style for invalid mapping/classification input"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Ensure struct changes update serialization and parser/schema stay in sync"}
+{"file": "src/configure_in.cpp", "reason": "Reference parser patterns for TOML defaults and validation"}
+{"file": "src/initialization.cpp", "reason": "Reference PBC neighbor construction and geometry handling patterns"}
+{"file": "src/MC_structure.h", "reason": "Persist bond direction labels and mapping storage in runtime structs"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Document new bond-type to bond-direction mapping schema"}
+{"file": "example/kh_minimal/input.toml", "reason": "Update minimal KH example with bond mapping configuration"}

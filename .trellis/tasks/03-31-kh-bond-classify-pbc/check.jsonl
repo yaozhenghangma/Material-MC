@@ -1,0 +1,9 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Verify invalid mapping/classification paths emit clear startup errors"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Check serialization updates and parser/schema consistency for new mapping fields"}
+{"file": "src/configure_in.cpp", "reason": "Verify input.toml mapping parse and validation paths"}
+{"file": "src/initialization.cpp", "reason": "Verify PBC-aware bond-direction labeling and persistence"}
+{"file": "src/MC_structure.h", "reason": "Verify new runtime fields are serialized and used consistently"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Check documentation reflects mapping keys and constraints"}
+{"file": "example/kh_minimal/input.toml", "reason": "Verify minimal KH example includes valid bond mapping entries"}
