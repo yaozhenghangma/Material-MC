@@ -10,5 +10,6 @@
 
 int WriteSpin(Supercell & supercell, std::string spin_structure_file_prefix);
 int WriteSpin(Supercell & supercell, std::string spin_structure_file_prefix, double T);
+int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix);
 
 #endif

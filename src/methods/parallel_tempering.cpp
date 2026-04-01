@@ -586,6 +586,7 @@ Supercell & supercell, MonteCarlo & monte_carlo, double & T) {
     MPI_Allreduce(&minimum_energy, &global_minimum_energy, 1, MPI_DOUBLE, MPI_MIN, world);
     if(minimum_energy == global_minimum_energy) {
         WriteSpin(supercell_ground, "structure_ground_state");
+        WriteVestaKhBondColor(supercell_ground, "structure_ground_state_kh_bond_color");
         std::cout << "Minimum Energy: " << global_minimum_energy * one_over_number << std::endl;
     }
 

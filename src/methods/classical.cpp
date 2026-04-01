@@ -1,5 +1,7 @@
 #include "classical.h"
 
+#include <string>
+
 /**
  * @file classical.cpp
  * @brief Classical Monte Carlo workflow and MPI temperature sampling.
@@ -125,6 +127,7 @@ std::vector<double> MonteCarloStepGroundState(Supercell & supercell, MonteCarlo 
     }
 
     WriteSpin(supercell_ground, "structure_ground_state", T);
+    WriteVestaKhBondColor(supercell_ground, "structure_ground_state_kh_bond_color_" + std::to_string(T));
     std::cout << "Minimum Energy:" << minimum_energy * one_over_number << std::endl;
     
     return {total_energy * one_over_step, total_energy_square * one_over_step, \

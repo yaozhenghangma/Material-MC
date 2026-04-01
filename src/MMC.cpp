@@ -153,6 +153,7 @@ int main(int argc, char** argv) {
         logger.print("Successfully initialize the supercell.\n");
         WriteLog(supercell, monte_carlo, logger);
         WriteSpin(supercell, "structure_initialized");
+        WriteVestaKhBondColor(supercell, "structure_initialized_kh_bond_color");
     }
 
     /**
