@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 7
+- **Total Sessions**: 8
 - **Last Active**: 2026-04-01
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~234 | Active |
+| `journal-1.md` | ~285 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 8 | 2026-04-01 | KH bond color visualization with VESTA output | `286a312`, `0d1994e` |
 | 7 | 2026-04-01 | KH Hamiltonian implementation | `6cb6aa1`, `cff277d` |
 | 6 | 2026-04-01 | KH bond classify PBC + mapping | `ad79a23`, `2a5e061` |
 | 5 | 2026-03-31 | KH global input schema + task archival | `a611f86`, `0c21b30` |

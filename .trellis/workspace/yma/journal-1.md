@@ -232,3 +232,54 @@ Implemented KH J/K/G/Gp bond-direction Hamiltonian path, logged convention, and 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: KH bond color visualization with VESTA output
+
+**Date**: 2026-04-01
+**Task**: KH bond color visualization with VESTA output
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| KH bond color export | Added VESTA export path for Kitaev-Heisenberg model using x/y/z direction labels. |
+| Color mapping | Fixed mapping implemented as x->red, y->green, z->blue via VECTR/VECTT records. |
+| Existing outputs | Kept existing XSF WriteSpin outputs unchanged and still generated. |
+| Integration points | Wired VESTA export into initialization and ground-state output flow. |
+
+**Updated Files**:
+- `src/spin_out.h`
+- `src/spin_out.cpp`
+- `src/MMC.cpp`
+- `src/methods/classical.cpp`
+- `src/methods/parallel_tempering.cpp`
+- `.trellis/tasks/03-30-kh-xsf-color/prd.md`
+
+**Notes**:
+- VESTA output strategy switched from SBOND-first idea to VECTR/VECTT vectors for deterministic per-bond-class coloring.
+- Build/test commands were intentionally skipped per user request; user will run manual verification.
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `286a312` | (see git log) |
+| `0d1994e` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
