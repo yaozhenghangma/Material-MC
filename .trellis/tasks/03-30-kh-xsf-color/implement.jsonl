@@ -1,0 +1,10 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Module boundaries for output-layer changes"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Build and output validation requirements"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Keep output artifact conventions and writer style"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Preserve fail-fast setup and lightweight error handling"}
+{"file": "src/spin_out.cpp", "reason": "Reference existing XSF writing implementation and deterministic traversal"}
+{"file": "src/initialization.cpp", "reason": "Reuse KH bond direction classification and deterministic mapping rules"}
+{"file": "src/MMC.cpp", "reason": "Integrate root-rank output invocation in orchestration flow"}
+{"file": "src/spin_out.h", "reason": "Add declaration for VESTA writer alongside existing XSF writer"}

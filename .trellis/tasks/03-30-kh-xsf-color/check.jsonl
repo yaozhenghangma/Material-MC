@@ -1,0 +1,10 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Verify output-layer placement is correct"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Enforce build and output validation"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Check output artifact format conventions"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Verify error handling style consistency"}
+{"file": "src/spin_out.cpp", "reason": "Validate XSF output follows existing patterns"}
+{"file": "src/initialization.cpp", "reason": "Check KH bond mapping consistency with initialization"}
+{"file": "src/MMC.cpp", "reason": "Verify output call is wired only where appropriate"}
+{"file": "src/spin_out.h", "reason": "Validate VESTA writer interface and integration consistency"}
