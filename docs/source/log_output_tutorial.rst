@@ -57,11 +57,12 @@ Printed under:
 
 This confirms the local update model family.
 
-If KH model is selected, you should also see a coupling summary line:
+If KH model is selected, you should also see:
 
 - ``KH global couplings (J, K, G, Gp): ...``
+- ``KH bond type mapping (type1, type2, type3): ...``
 
-Use this to verify that optional ``J/K/G/Gp`` values were parsed as expected (omitted fields should appear as ``0.00000``).
+Use the coupling line to verify that optional ``J/K/G/Gp`` values were parsed as expected (omitted fields should appear as ``0.00000``), and use the mapping line to confirm the parsed ``[Hamiltonian.BondTypeDirection]`` assignment applied to geometric bond types.
 
 Hamiltonian summary
 ~~~~~~~~~~~~~~~~~~~

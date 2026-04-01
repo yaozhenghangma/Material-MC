@@ -139,6 +139,12 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
         logger.print("KH global couplings (J, K, G, Gp): {:12.5f} {:12.5f} {:12.5f} {:12.5f}\n", \
         supercell.base_site.kh_j, supercell.base_site.kh_k, supercell.base_site.kh_g, supercell.base_site.kh_gp);
+        if(supercell.base_site.kh_bond_type_direction.size() == 3) {
+            logger.print("KH bond type mapping (type1, type2, type3): {} {} {}\n",
+            supercell.base_site.kh_bond_type_direction[0],
+            supercell.base_site.kh_bond_type_direction[1],
+            supercell.base_site.kh_bond_type_direction[2]);
+        }
     }
     // Hamiltonian summary and formula text.
     WriteHamiltonian(supercell, logger);

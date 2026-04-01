@@ -52,6 +52,10 @@ public:
     double kh_g = 0.0;
     double kh_gp = 0.0;
 
+    // KH bond-type to direction mapping from [Hamiltonian.BondTypeDirection].
+    // Index: 0->type1, 1->type2, 2->type3. Values are x/y/z.
+    std::vector<char> kh_bond_type_direction = {'x', 'y', 'z'};
+
     template <class Archive>
     void serialize(Archive & ar) {
         ar(number,
@@ -69,7 +73,8 @@ public:
            kh_j,
            kh_k,
            kh_g,
-           kh_gp);
+           kh_gp,
+           kh_bond_type_direction);
     }
 };
 
@@ -84,6 +89,10 @@ public:
 
     // Neighbors' link.
     std::vector<std::vector<Site*>> neighbor = {};
+
+    // Per-edge KH bond direction labels (x/y/z), aligned with neighbor[m][n].
+    // Empty/zero char means unlabeled (non-KH path).
+    std::vector<std::vector<char>> neighbor_direction = {};
 
     int reverse_spin();
 };

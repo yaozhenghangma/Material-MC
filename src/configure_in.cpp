@@ -1,5 +1,10 @@
 #include "configure_in.h"
 
+#include <array>
+#include <cstdlib>
+#include <cctype>
+#include <map>
+
 namespace {
 
 void TryReadHamiltonianNumber(const toml::node_view<const toml::node>& node,
@@ -25,6 +30,94 @@ void TryReadHamiltonianNumber(const toml::node_view<const toml::node>& node,
 bool IsKhModelToken(const std::string& model_name) {
     return model_name == "Kitaev-Heisenberg" || model_name == "kitaev-heisenberg"
         || model_name == "KH" || model_name == "kh";
+}
+
+char NormalizeKhDirectionLabel(const std::string& raw_label,
+                               const std::string& key_path,
+                               const std::string& input_file) {
+    if(raw_label.size() != 1) {
+        std::cerr << "Invalid direction label for " << key_path
+                  << " in " << input_file
+                  << ": expected one of x/y/z, got \"" << raw_label << "\".\n";
+        exit(-1);
+    }
+
+    char label = static_cast<char>(std::tolower(static_cast<unsigned char>(raw_label[0])));
+    if(label != 'x' && label != 'y' && label != 'z') {
+        std::cerr << "Invalid direction label for " << key_path
+                  << " in " << input_file
+                  << ": expected one of x/y/z, got \"" << raw_label << "\".\n";
+        exit(-1);
+    }
+    return label;
+}
+
+void ReadKhBondTypeDirectionMapping(Supercell& supercell,
+                                    const toml::table& data,
+                                    const std::string& input_file,
+                                    bool kh_model_selected) {
+    // Keep defaults explicit for non-KH paths.
+    supercell.base_site.kh_bond_type_direction = {'x', 'y', 'z'};
+
+    if(!kh_model_selected) {
+        return;
+    }
+
+    auto hamiltonian = data["Hamiltonian"];
+    if(!hamiltonian) {
+        std::cerr << "Missing required table [Hamiltonian] for KH model in "
+                  << input_file << ".\n";
+        exit(-1);
+    }
+
+    auto mapping_node = hamiltonian["BondTypeDirection"];
+    if(!mapping_node) {
+        std::cerr << "Missing required table [Hamiltonian.BondTypeDirection] for KH model in "
+                  << input_file << ".\n";
+        exit(-1);
+    }
+
+    auto mapping = mapping_node.as_table();
+    if(mapping == nullptr) {
+        std::cerr << "Invalid type for [Hamiltonian.BondTypeDirection] in "
+                  << input_file << ": expected table.\n";
+        exit(-1);
+    }
+
+    const std::array<std::string, 3> keys = {"type1", "type2", "type3"};
+    supercell.base_site.kh_bond_type_direction.resize(keys.size());
+    std::map<char, std::string> direction_to_key;
+
+    for(size_t i=0; i<keys.size(); i++) {
+        const std::string key_path = "[Hamiltonian.BondTypeDirection]." + keys[i];
+        auto value_node = (*mapping)[keys[i]];
+        if(!value_node) {
+            std::cerr << "Missing required key " << key_path
+                      << " in " << input_file << " for KH model.\n";
+            exit(-1);
+        }
+
+        const auto value = value_node.value<std::string>();
+        if(!value.has_value()) {
+            std::cerr << "Invalid type for " << key_path
+                      << " in " << input_file
+                      << ": expected string x/y/z, got "
+                      << value_node.type() << ".\n";
+            exit(-1);
+        }
+
+        const char label = NormalizeKhDirectionLabel(*value, key_path, input_file);
+        if(direction_to_key.find(label) != direction_to_key.end()) {
+            std::cerr << "Duplicate KH direction label \"" << label << "\" in "
+                      << key_path << " and " << direction_to_key[label]
+                      << " in " << input_file
+                      << ": type1/type2/type3 must map to unique x/y/z labels.\n";
+            exit(-1);
+        }
+
+        direction_to_key[label] = key_path;
+        supercell.base_site.kh_bond_type_direction[i] = label;
+    }
 }
 
 void ReadKhGlobalCouplings(Supercell& supercell,
@@ -244,6 +337,9 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         // KH global couplings are only consumed when KH model is selected.
         // Missing values default to 0; invalid numeric types fail fast with context.
         ReadKhGlobalCouplings(supercell, data, input_file, kh_model_selected);
+
+        // KH bond-type to direction mapping is required for KH model only.
+        ReadKhBondTypeDirectionMapping(supercell, data, input_file, kh_model_selected);
 
         // [Output] visualization/export controls.
         supercell.lattice.magnify_factor = data["Output"]["magnifying_factor"].value_or(1.0);

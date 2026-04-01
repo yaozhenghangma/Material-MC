@@ -70,6 +70,11 @@ A complete template
    G = 0.0                    # KH-only global coupling (optional)
    Gp = 0.0                   # KH-only global coupling (optional)
 
+   [Hamiltonian.BondTypeDirection]
+   type1 = "x"               # KH-only required mapping
+   type2 = "y"               # KH-only required mapping
+   type3 = "z"               # KH-only required mapping
+
    [Initialization]
    angleA = [ 0.0, 0.0, 0.0 ]
    angleB = [ 0.0, 0.0, 0.0 ]
@@ -135,6 +140,25 @@ When ``model = "Kitaev-Heisenberg"`` (also accepts ``"KH"``), you can additional
 - ``G``: global Gamma coupling (optional, default ``0`` when omitted)
 - ``Gp``: global Gamma-prime coupling (optional, default ``0`` when omitted)
 
+For KH runs, you must also provide a bond-type-to-direction mapping table:
+
+.. code-block:: toml
+
+   [Hamiltonian.BondTypeDirection]
+   type1 = "x"
+   type2 = "y"
+   type3 = "z"
+
+Validation rules for ``[Hamiltonian.BondTypeDirection]``:
+
+- ``type1/type2/type3`` are all required for KH model.
+- each value must be one of ``x``, ``y``, ``z`` (case-insensitive in parser).
+- the three mapped values must be unique.
+
+The runtime classifier groups honeycomb bond geometry into three deterministic bond types
+(from PBC-aware neighbor templates) and then maps those three types to ``x/y/z`` using
+this table.
+
 .. note::
    KH coupling fields are parsed only for the Kitaev-Heisenberg model. Each value must be numeric (integer or floating-point).
 
@@ -150,6 +174,12 @@ Minimal KH input example
    anisotropy = [ 0.0, 0.0, 0.0 ]
    J = -1.0
    K = 2.0
+
+   [Hamiltonian.BondTypeDirection]
+   type1 = "x"
+   type2 = "y"
+   type3 = "z"
+
    # G and Gp are optional here and default to 0.0
 
 Initialization

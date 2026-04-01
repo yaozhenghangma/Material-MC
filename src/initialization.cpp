@@ -1,6 +1,202 @@
 #include "initialization.h"
 
+#include <algorithm>
+#include <array>
+#include <cstdlib>
+#include <cmath>
 #include <iostream>
+#include <numeric>
+
+namespace {
+
+constexpr double kKhDirectionNormEpsilon = 1e-12;
+constexpr double kKhDirectionParallelTolerance = 1e-6;
+constexpr double kKhDirectionSortTolerance = 1e-9;
+
+std::array<double, 3> BuildBondVectorCartesian(const Supercell& supercell,
+                                               const std::vector<int>& neighbor_template,
+                                               int source_base_site) {
+    const std::vector<double>& source = supercell.base_site.coordinate[source_base_site];
+    const std::vector<double>& target = supercell.base_site.coordinate[neighbor_template[3]];
+
+    const std::vector<double> fractional = {
+        static_cast<double>(neighbor_template[0]) + target[0] - source[0],
+        static_cast<double>(neighbor_template[1]) + target[1] - source[1],
+        static_cast<double>(neighbor_template[2]) + target[2] - source[2]
+    };
+
+    return {
+        fractional[0]*supercell.lattice.a[0] + fractional[1]*supercell.lattice.b[0] + fractional[2]*supercell.lattice.c[0],
+        fractional[0]*supercell.lattice.a[1] + fractional[1]*supercell.lattice.b[1] + fractional[2]*supercell.lattice.c[1],
+        fractional[0]*supercell.lattice.a[2] + fractional[1]*supercell.lattice.b[2] + fractional[2]*supercell.lattice.c[2]
+    };
+}
+
+double DotProduct(const std::array<double, 3>& left, const std::array<double, 3>& right) {
+    return left[0]*right[0] + left[1]*right[1] + left[2]*right[2];
+}
+
+std::array<double, 3> NormalizeAndCanonicalizeDirection(const std::array<double, 3>& vector,
+                                                        int base_site,
+                                                        int shell,
+                                                        int entry) {
+    const double norm = std::sqrt(DotProduct(vector, vector));
+    if(norm <= kKhDirectionNormEpsilon) {
+        std::cerr << "Invalid KH bond vector during geometry classification: "
+                  << "zero-length vector at base site " << base_site
+                  << ", shell " << shell
+                  << ", entry " << entry << ".\n";
+        exit(-1);
+    }
+
+    std::array<double, 3> direction = {
+        vector[0] / norm,
+        vector[1] / norm,
+        vector[2] / norm
+    };
+
+    int sign = 1;
+    for(int axis=0; axis<3; axis++) {
+        if(std::abs(direction[axis]) > kKhDirectionNormEpsilon) {
+            if(direction[axis] < 0.0) {
+                sign = -1;
+            }
+            break;
+        }
+    }
+
+    if(sign < 0) {
+        direction[0] = -direction[0];
+        direction[1] = -direction[1];
+        direction[2] = -direction[2];
+    }
+
+    return direction;
+}
+
+std::vector<char> ClassifyKhShellDirections(const Supercell& supercell,
+                                            const std::vector<std::vector<int>>& shell_templates,
+                                            int base_site,
+                                            int shell) {
+    if(shell_templates.empty()) {
+        std::cerr << "Missing KH bonds for classification: "
+                  << "base site " << base_site
+                  << ", shell " << shell << " has no neighbors.\n";
+        exit(-1);
+    }
+
+    if(supercell.base_site.kh_bond_type_direction.size() != 3) {
+        std::cerr << "Invalid KH bond-type mapping size in runtime data: expected 3 labels, got "
+                  << supercell.base_site.kh_bond_type_direction.size() << ".\n";
+        exit(-1);
+    }
+
+    struct DirectionGroup {
+        std::array<double, 3> axis;
+        std::vector<int> entries;
+    };
+
+    std::vector<DirectionGroup> groups;
+    std::vector<std::array<double, 3>> directions;
+    directions.reserve(shell_templates.size());
+
+    for(int entry=0; entry<shell_templates.size(); entry++) {
+        std::array<double, 3> bond_vector = BuildBondVectorCartesian(supercell, shell_templates[entry], base_site);
+        directions.push_back(NormalizeAndCanonicalizeDirection(bond_vector, base_site, shell, entry));
+    }
+
+    for(int entry=0; entry<directions.size(); entry++) {
+        int matched_group = -1;
+        for(int group=0; group<groups.size(); group++) {
+            const double parallel_score = std::abs(DotProduct(directions[entry], groups[group].axis));
+            if(parallel_score >= 1.0 - kKhDirectionParallelTolerance) {
+                if(matched_group != -1) {
+                    std::cerr << "Ambiguous KH bond classification: "
+                              << "base site " << base_site
+                              << ", shell " << shell
+                              << ", entry " << entry
+                              << " matches multiple direction groups.\n";
+                    exit(-1);
+                }
+                matched_group = group;
+            }
+        }
+
+        if(matched_group == -1) {
+            DirectionGroup new_group;
+            new_group.axis = directions[entry];
+            new_group.entries.push_back(entry);
+            groups.push_back(new_group);
+        } else {
+            groups[matched_group].entries.push_back(entry);
+        }
+    }
+
+    if(groups.size() != 3) {
+        std::cerr << "Invalid KH bond classification for honeycomb scope: "
+                  << "base site " << base_site
+                  << ", shell " << shell
+                  << " produced " << groups.size()
+                  << " geometric bond types, expected exactly 3.\n";
+        exit(-1);
+    }
+
+    std::vector<int> sorted_group_index(groups.size());
+    std::iota(sorted_group_index.begin(), sorted_group_index.end(), 0);
+    std::sort(sorted_group_index.begin(), sorted_group_index.end(),
+              [&groups](int left, int right) {
+                  for(int axis=0; axis<3; axis++) {
+                      if(std::abs(groups[left].axis[axis] - groups[right].axis[axis]) > kKhDirectionSortTolerance) {
+                          return groups[left].axis[axis] < groups[right].axis[axis];
+                      }
+                  }
+                  return left < right;
+              });
+
+    std::vector<char> shell_labels(shell_templates.size(), '\0');
+    for(int type_index=0; type_index<sorted_group_index.size(); type_index++) {
+        const int group_index = sorted_group_index[type_index];
+        const char mapped_label = supercell.base_site.kh_bond_type_direction[type_index];
+        for(int entry : groups[group_index].entries) {
+            shell_labels[entry] = mapped_label;
+        }
+    }
+
+    for(int entry=0; entry<shell_labels.size(); entry++) {
+        if(shell_labels[entry] == '\0') {
+            std::cerr << "Incomplete KH bond classification: "
+                      << "base site " << base_site
+                      << ", shell " << shell
+                      << ", entry " << entry
+                      << " has no direction label.\n";
+            exit(-1);
+        }
+    }
+
+    return shell_labels;
+}
+
+std::vector<std::vector<std::vector<char>>> BuildKhNeighborDirectionTemplates(
+    const Supercell& supercell,
+    const std::vector<std::vector<std::vector<std::vector<int>>>>& neighbors_index) {
+    std::vector<std::vector<std::vector<char>>> labels;
+    labels.resize(neighbors_index.size());
+
+    for(int base_site=0; base_site<neighbors_index.size(); base_site++) {
+        labels[base_site].resize(neighbors_index[base_site].size());
+        for(int shell=0; shell<neighbors_index[base_site].size(); shell++) {
+            labels[base_site][shell] = ClassifyKhShellDirections(
+                supercell,
+                neighbors_index[base_site][shell],
+                base_site,
+                shell);
+        }
+    }
+
+    return labels;
+}
+
+} // namespace
 
 /**
  * @brief Parse command-line options for input/output file paths.
@@ -303,7 +499,7 @@ int InitializeSupercell(Supercell & supercell) {
                         } else {
                             for(int n=0; n<supercell.base_site.neighbor_number[i]; n++) {
                                 if(supercell.base_site.elements[m] == supercell.base_site.neighbor_elements[i][n] \
-                                && abs(distance_square - supercell.base_site.neighbor_distance_square[i][n]) \
+                                && std::abs(distance_square - supercell.base_site.neighbor_distance_square[i][n]) \
                                 < supercell.lattice.tolerance_percentage*std::min(distance_square, supercell.base_site.neighbor_distance_square[i][n])) {
                                     // Matched one configured shell for base site i.
                                     std::vector<int> ind = {j, k, l, m};
@@ -318,20 +514,45 @@ int InitializeSupercell(Supercell & supercell) {
         }
     }
 
+    // Pre-compute KH direction labels for each neighbor template entry.
+    std::vector<std::vector<std::vector<char>>> kh_neighbor_direction_templates;
+    if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
+        kh_neighbor_direction_templates = BuildKhNeighborDirectionTemplates(supercell, neighbors_index);
+    }
+
     // Materialize neighbor pointers for every real site using periodic wrapping.
     for(int i=0; i<supercell.lattice.n_x; i++) {
         for(int j=0; j<supercell.lattice.n_y; j++) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
                 for(int l=0; l<supercell.base_site.number; l++) {
+                    supercell.site[i][j][k][l].neighbor.clear();
+                    supercell.site[i][j][k][l].neighbor_direction.clear();
                     std::vector<Site*> temp = {};
+                    std::vector<char> temp_direction = {};
                     for(int m=0; m<supercell.base_site.neighbor_number[l]; m++) {
                         supercell.site[i][j][k][l].neighbor.push_back(temp);
+                        supercell.site[i][j][k][l].neighbor_direction.push_back(temp_direction);
                         for(int n=0; n<neighbors_index[l][m].size(); n++) {
-                            supercell.site[i][j][k][l].neighbor[m].push_back( 
+                            supercell.site[i][j][k][l].neighbor[m].push_back(
                             & supercell.site[(i+neighbors_index[l][m][n][0]%supercell.lattice.n_x+supercell.lattice.n_x) % supercell.lattice.n_x] \
                             [(j+neighbors_index[l][m][n][1]%supercell.lattice.n_y+supercell.lattice.n_y) % supercell.lattice.n_y] \
                             [(k+neighbors_index[l][m][n][2]%supercell.lattice.n_z+supercell.lattice.n_z) % supercell.lattice.n_z] \
                             [neighbors_index[l][m][n][3]]);
+
+                            if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
+                                const char direction_label = kh_neighbor_direction_templates[l][m][n];
+                                if(direction_label != 'x' && direction_label != 'y' && direction_label != 'z') {
+                                    std::cerr << "Invalid KH direction label during neighbor materialization: "
+                                              << "base site " << l
+                                              << ", shell " << m
+                                              << ", entry " << n
+                                              << ", label \"" << direction_label << "\".\n";
+                                    exit(-1);
+                                }
+                                supercell.site[i][j][k][l].neighbor_direction[m].push_back(direction_label);
+                            } else {
+                                supercell.site[i][j][k][l].neighbor_direction[m].push_back('\0');
+                            }
                         }
                     }
                 }
