@@ -1,0 +1,9 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Check include placement against backend quality conventions"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Check header/source pairing structure"}
+{"file": "src/methods/classical.h", "reason": "Verify declaration dependencies are in header"}
+{"file": "src/methods/classical.cpp", "reason": "Verify misplaced include removal from cpp"}
+{"file": "src/methods/parallel_tempering.h", "reason": "Verify STL dependencies in header"}
+{"file": "src/result_out.h", "reason": "Verify STL dependencies in header"}
+{"file": ".trellis/tasks/04-01-cpp-include-to-header/prd.md", "reason": "Validate implementation against task acceptance criteria"}

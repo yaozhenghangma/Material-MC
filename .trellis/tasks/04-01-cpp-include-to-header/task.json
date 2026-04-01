@@ -1,0 +1,44 @@
+{
+  "id": "cpp-include-to-header",
+  "name": "cpp-include-to-header",
+  "title": "Move misplaced includes from .cpp to matching .h",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "priority": "P2",
+  "creator": "yma",
+  "assignee": "yma",
+  "createdAt": "2026-04-01",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 0,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "implement"
+    },
+    {
+      "phase": 2,
+      "action": "check"
+    },
+    {
+      "phase": 3,
+      "action": "finish"
+    },
+    {
+      "phase": 4,
+      "action": "create-pr"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "Research completed (Phase 2 only): include-placement convention confirmed from existing header/source pairs; likely targets are methods/classical.{h,cpp}, methods/parallel_tempering.h, and result_out.h. Reminder: update relevant .trellis/spec backend guideline docs after implementation is finished.",
+  "meta": {}
+}

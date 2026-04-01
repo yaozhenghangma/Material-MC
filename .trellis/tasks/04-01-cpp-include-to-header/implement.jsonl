@@ -1,0 +1,12 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Preserve header/source pairing conventions"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Follow observed .h/.cpp pairing structure"}
+{"file": "src/methods/classical.h", "reason": "Primary header likely missing direct STL includes"}
+{"file": "src/methods/classical.cpp", "reason": "Contains candidate misplaced include"}
+{"file": "src/methods/parallel_tempering.h", "reason": "Potential transitive include cleanup target"}
+{"file": "src/result_out.h", "reason": "Potential transitive include cleanup target"}
+{"file": "src/random_function.h", "reason": "Reference pattern for proper header-owned includes"}
+{"file": "src/random_function.cpp", "reason": "Reference pattern for minimal cpp includes"}
+{"file": "src/log.h", "reason": "Reference pattern for declaration dependencies in header"}
+{"file": "src/log.cpp", "reason": "Reference pattern for cpp including paired header only"}
