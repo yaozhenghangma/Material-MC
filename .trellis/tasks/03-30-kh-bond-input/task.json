@@ -36,9 +36,7 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "03-31-kh-bond-classify-pbc"
-  ],
+  "children": [],
   "parent": "03-30-kitaev-heisenberg-mc",
   "relatedFiles": [],
   "notes": "Execution order: (1) 03-31-kh-input-schema-global, then (2) 03-31-kh-bond-classify-pbc. Rationale: stabilize KH input contract first, then implement geometry/PBC-based x-y-z bond labeling.",
