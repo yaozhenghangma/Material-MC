@@ -199,3 +199,36 @@ Implemented KH bond-type to direction mapping in input.toml, added PBC-aware geo
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: KH Hamiltonian implementation
+
+**Date**: 2026-04-01
+**Task**: KH Hamiltonian implementation
+
+### Summary
+
+Implemented KH J/K/G/Gp bond-direction Hamiltonian path, logged convention, and archived completed kh-hamiltonian task.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6cb6aa1` | (see git log) |
+| `cff277d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
