@@ -1,0 +1,10 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify build and architecture constraints"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Validate fail-fast error handling consistency"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Verify KH logging clarity and consistency"}
+{"file": "src/Hamiltonian.cpp", "reason": "Primary KH term implementation target"}
+{"file": "src/initialization.cpp", "reason": "Hamiltonian function-pointer wiring for KH"}
+{"file": "src/Hamiltonian.h", "reason": "Verify KH function declarations match implementation"}
+{"file": "src/log.cpp", "reason": "Verify KH convention logging text"}
+{"file": ".trellis/tasks/03-30-kh-hamiltonian/prd.md", "reason": "Check implementation against acceptance criteria"}

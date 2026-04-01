@@ -1,0 +1,12 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Build and MPI-safe backend quality requirements"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Fail-fast startup validation style for parser and model checks"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Log KH model conventions in log.txt summary"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse existing Heisenberg energy-path patterns"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Keep KH data flow consistent from input to Hamiltonian path"}
+{"file": "src/Hamiltonian.h", "reason": "Declare KH Hamiltonian entrypoints"}
+{"file": "src/Hamiltonian.cpp", "reason": "Implement KH J/K/G/Gp bond-direction energy"}
+{"file": "src/initialization.cpp", "reason": "Bind KH Hamiltonian and base function pointers"}
+{"file": "src/log.cpp", "reason": "Record KH formula convention in runtime log"}
+{"file": ".trellis/tasks/03-30-kh-hamiltonian/prd.md", "reason": "Task requirements and acceptance criteria"}

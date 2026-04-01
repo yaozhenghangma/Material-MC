@@ -22,3 +22,13 @@ Construct the classical-spin honeycomb Kitaev-Heisenberg-family Hamiltonian incl
 ## Out of Scope
 - XSF color rendering details.
 - Broader non-honeycomb generalization.
+
+## Convention Source/Decision
+- Adopted KH nearest-neighbor bond Hamiltonian convention:
+  - H_ij = J Si·Sj + K Si^γ Sj^γ + G (Si^α Sj^β + Si^β Sj^α)
+    + Gp (Si^α Sj^γ + Si^γ Sj^α + Si^β Sj^γ + Si^γ Sj^β)
+  - Cyclic mapping: γ=x => (α,β)=(y,z), γ=y => (α,β)=(z,x), γ=z => (α,β)=(x,y)
+- References consulted and aligned for Γ/Γ' index/sign convention:
+  - https://arxiv.org/abs/1310.7940
+  - https://link.aps.org/doi/10.1103/PhysRevLett.112.077204
+  - https://jeffrau.ca/assets/papers/kitaev-2014.pdf
