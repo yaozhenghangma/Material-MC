@@ -16,9 +16,12 @@ double Heisenberg_zx_anisotropy(BaseSite & base_site, Site & site);
 double Heisenberg_x_anisotropy_with_field(BaseSite & base_site, Site & site); 
 double Heisenberg_y_anisotropy_with_field(BaseSite & base_site, Site & site); 
 double Heisenberg_z_anisotropy_with_field(BaseSite & base_site, Site & site);
-double Heisenberg_xy_anisotropy_with_field(BaseSite & base_site, Site & site); 
-double Heisenberg_yz_anisotropy_with_field(BaseSite & base_site, Site & site); 
+double Heisenberg_xy_anisotropy_with_field(BaseSite & base_site, Site & site);
+double Heisenberg_yz_anisotropy_with_field(BaseSite & base_site, Site & site);
 double Heisenberg_zx_anisotropy_with_field(BaseSite & base_site, Site & site);
+
+double Kitaev_Heisenberg(BaseSite & base_site, Site & site);
+double Kitaev_Heisenberg_base(BaseSite & base_site, Site & site);
 
 double Heisenberg_base(BaseSite & base_site, Site & site);
 

@@ -396,61 +396,66 @@ int AddDistance(double distance, std::vector<double> & distance_list, double tol
  */
 int InitializeSupercell(Supercell & supercell) {
     // Initialize Hamiltonian
-    supercell.HamiltonianBase = Heisenberg_base;
-    switch (supercell.lattice.hamiltonian_type) {
-        case HamiltonianType::Heisenberg :
-            supercell.Hamiltonian = Heisenberg;
-            break;
-        case HamiltonianType::Heisenberg_with_field :
-            supercell.Hamiltonian = Heisenberg_with_field;
-            break;
-        case HamiltonianType::Heisenberg_x_anisotropy :
-            supercell.Hamiltonian = Heisenberg_x_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_x_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_x_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_y_anisotropy :
-            supercell.Hamiltonian = Heisenberg_y_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_y_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_y_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_z_anisotropy :
-            supercell.Hamiltonian = Heisenberg_z_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_z_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_z_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_xy_anisotropy :
-            supercell.Hamiltonian = Heisenberg_xy_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_xy_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_xy_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_yz_anisotropy :
-            supercell.Hamiltonian = Heisenberg_yz_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_yz_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_yz_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_zx_anisotropy :
-            supercell.Hamiltonian = Heisenberg_zx_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_zx_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_zx_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_xyz_anisotropy :
-            supercell.Hamiltonian = Heisenberg_xyz_anisotropy;
-            break;
-        case HamiltonianType::Heisenberg_xyz_anisotropy_with_field :
-            supercell.Hamiltonian = Heisenberg_xyz_anisotropy_with_field;
-            break;
-        case HamiltonianType::Heisenberg_custom :
-            supercell.Hamiltonian = Hamiltonian_custom;
-            supercell.HamiltonianBase = Hamiltonian_custom_base;
-        default:
-            break;
+    if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
+        supercell.Hamiltonian = Kitaev_Heisenberg;
+        supercell.HamiltonianBase = Kitaev_Heisenberg_base;
+    } else {
+        supercell.HamiltonianBase = Heisenberg_base;
+        switch (supercell.lattice.hamiltonian_type) {
+            case HamiltonianType::Heisenberg :
+                supercell.Hamiltonian = Heisenberg;
+                break;
+            case HamiltonianType::Heisenberg_with_field :
+                supercell.Hamiltonian = Heisenberg_with_field;
+                break;
+            case HamiltonianType::Heisenberg_x_anisotropy :
+                supercell.Hamiltonian = Heisenberg_x_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_x_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_x_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_y_anisotropy :
+                supercell.Hamiltonian = Heisenberg_y_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_y_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_y_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_z_anisotropy :
+                supercell.Hamiltonian = Heisenberg_z_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_z_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_z_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_xy_anisotropy :
+                supercell.Hamiltonian = Heisenberg_xy_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_xy_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_xy_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_yz_anisotropy :
+                supercell.Hamiltonian = Heisenberg_yz_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_yz_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_yz_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_zx_anisotropy :
+                supercell.Hamiltonian = Heisenberg_zx_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_zx_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_zx_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_xyz_anisotropy :
+                supercell.Hamiltonian = Heisenberg_xyz_anisotropy;
+                break;
+            case HamiltonianType::Heisenberg_xyz_anisotropy_with_field :
+                supercell.Hamiltonian = Heisenberg_xyz_anisotropy_with_field;
+                break;
+            case HamiltonianType::Heisenberg_custom :
+                supercell.Hamiltonian = Hamiltonian_custom;
+                supercell.HamiltonianBase = Hamiltonian_custom_base;
+            default:
+                break;
+        }
     }
 
     // Initialize local spin-update kernel by model type.

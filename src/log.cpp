@@ -11,6 +11,12 @@
  * @return Always 0.
  */
 int WriteHamiltonian(Supercell & supercell, fmt::v8::ostream & logger) {
+    // KH energy is dispatched by model_type rather than hamiltonian_type.
+    if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
+        logger.print("Hamiltonian: Kitaev-Heisenberg model (bond-dependent J/K/G/Gp terms).\n");
+        return 0;
+    }
+
     // Print Hamiltonian family and the corresponding symbolic expression.
     switch (supercell.lattice.hamiltonian_type) {
         case HamiltonianType::Heisenberg :
@@ -139,6 +145,8 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
         logger.print("KH global couplings (J, K, G, Gp): {:12.5f} {:12.5f} {:12.5f} {:12.5f}\n", \
         supercell.base_site.kh_j, supercell.base_site.kh_k, supercell.base_site.kh_g, supercell.base_site.kh_gp);
+        logger.print("KH convention: H_ij = J*Si*Sj + K*Si_gamma*Sj_gamma + G*(Si_alpha*Sj_beta + Si_beta*Sj_alpha) + Gp*(Si_alpha*Sj_gamma + Si_gamma*Sj_alpha + Si_beta*Sj_gamma + Si_gamma*Sj_beta).\n");
+        logger.print("KH cyclic mapping: gamma=x => (alpha,beta)=(y,z), gamma=y => (alpha,beta)=(z,x), gamma=z => (alpha,beta)=(x,y).\n");
         if(supercell.base_site.kh_bond_type_direction.size() == 3) {
             logger.print("KH bond type mapping (type1, type2, type3): {} {} {}\n",
             supercell.base_site.kh_bond_type_direction[0],
