@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
-- **Last Active**: 2026-03-31
+- **Total Sessions**: 6
+- **Last Active**: 2026-04-01
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~168 | Active |
+| `journal-1.md` | ~201 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 6 | 2026-04-01 | KH bond classify PBC + mapping | `ad79a23`, `2a5e061` |
 | 5 | 2026-03-31 | KH global input schema + task archival | `a611f86`, `0c21b30` |
 | 4 | 2026-03-31 | Split KH bond-input into subtasks | `dbae0fb` |
 | 3 | 2026-03-30 | Plan KH honeycomb task decomposition | - |

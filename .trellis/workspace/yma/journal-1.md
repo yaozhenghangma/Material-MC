@@ -166,3 +166,36 @@ Completed KH global J/K/G/Gp input schema parsing with defaults and validation, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: KH bond classify PBC + mapping
+
+**Date**: 2026-04-01
+**Task**: KH bond classify PBC + mapping
+
+### Summary
+
+Implemented KH bond-type to direction mapping in input.toml, added PBC-aware geometry-based honeycomb x/y/z classification and per-edge direction persistence, updated docs/examples, and archived completed subtask 03-31-kh-bond-classify-pbc.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ad79a23` | (see git log) |
+| `2a5e061` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
