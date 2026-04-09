@@ -3,6 +3,8 @@
 
 #include <functional>
 #include <math.h>
+#include <string>
+#include <vector>
 
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>

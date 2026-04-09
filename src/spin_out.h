@@ -1,7 +1,15 @@
 #ifndef SPIN_OUT
 #define SPIN_OUT
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <map>
+#include <set>
+#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <fmt/core.h>
 #include <fmt/os.h>

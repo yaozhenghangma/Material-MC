@@ -1,7 +1,5 @@
 #include "classical.h"
 
-#include <string>
-
 /**
  * @file classical.cpp
  * @brief Classical Monte Carlo workflow and MPI temperature sampling.

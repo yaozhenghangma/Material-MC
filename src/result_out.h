@@ -1,6 +1,9 @@
 #ifndef RESULT_OUT
 #define RESULT_OUT
 
+#include <string>
+#include <vector>
+
 #include <fmt/core.h>
 #include <fmt/os.h>
 

@@ -1,8 +1,12 @@
 #ifndef CONFIGURE_IN
 #define CONFIGURE_IN
 
+#include <array>
+#include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 
 #include <ctll.hpp>

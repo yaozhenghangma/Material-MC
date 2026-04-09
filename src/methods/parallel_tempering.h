@@ -3,6 +3,9 @@
 
 #include <mpi.h>
 
+#include <string>
+#include <vector>
+
 #include "../constants.h"
 #include "../MC_structure.h"
 #include "../random_function.h"

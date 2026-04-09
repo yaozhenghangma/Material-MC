@@ -1,8 +1,15 @@
 #ifndef INITIALIZATION
 #define INITIALIZATION
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <numeric>
 #include <string>
 #include <vector>
+
 #include <unistd.h>
 #include <getopt.h>
 

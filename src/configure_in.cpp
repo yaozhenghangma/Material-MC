@@ -1,10 +1,5 @@
 #include "configure_in.h"
 
-#include <array>
-#include <cstdlib>
-#include <cctype>
-#include <map>
-
 namespace {
 
 void TryReadHamiltonianNumber(const toml::node_view<const toml::node>& node,

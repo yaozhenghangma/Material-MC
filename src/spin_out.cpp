@@ -1,15 +1,5 @@
 #include "spin_out.h"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <map>
-#include <set>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
-
 namespace {
 
 std::array<double, 3> BuildCartesianFromFractional(const Supercell& supercell, const std::array<double, 3>& fractional) {

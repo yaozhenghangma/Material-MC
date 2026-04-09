@@ -1,6 +1,9 @@
 #ifndef HAMILTONION
 #define HAMILTONION
 
+#include <cstdlib>
+#include <iostream>
+
 #include "MC_structure.h"
 
 double Heisenberg(BaseSite & base_site, Site & site); 

@@ -1,12 +1,5 @@
 #include "initialization.h"
 
-#include <algorithm>
-#include <array>
-#include <cstdlib>
-#include <cmath>
-#include <iostream>
-#include <numeric>
-
 namespace {
 
 constexpr double kKhDirectionNormEpsilon = 1e-12;

@@ -1,8 +1,5 @@
 #include "Hamiltonian.h"
 
-#include <cstdlib>
-#include <iostream>
-
 namespace {
 
 void ResolveKhCyclicComponents(char direction_label,

@@ -1,5 +1,4 @@
 #include "rotation.h"
-#include <iostream>
 
 /**
  * @file rotation.cpp
