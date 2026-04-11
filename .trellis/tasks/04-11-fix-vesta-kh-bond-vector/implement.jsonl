@@ -1,0 +1,4 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": "src/spin_out.cpp", "reason": "Implement KH VESTA bond vector PBC and source-index output fixes"}
+{"file": "src/initialization.cpp", "reason": "Reference KH neighbor construction and PBC wrapping behavior"}

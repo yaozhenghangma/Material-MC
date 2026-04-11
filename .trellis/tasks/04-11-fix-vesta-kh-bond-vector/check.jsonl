@@ -1,0 +1,4 @@
+{"file": ".opencode/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify backend output-layer change quality expectations"}
+{"file": "example/kh_minimal/VALIDATION_CHECKLIST.md", "reason": "Manual KH VESTA color/vector validation checklist"}

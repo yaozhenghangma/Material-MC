@@ -12,7 +12,7 @@ Current CI quality gate is backend build verification:
 
 - `.github/workflows/main.yml`
   - installs toolchain
-  - runs `cmake .` and `make`
+  - runs CMake + make build steps
 
 ---
 
@@ -37,7 +37,7 @@ Frontend testing requirements are not applicable currently.
 
 Repository-level quality checks today are backend checks:
 
-1. Local build succeeds (`cmake . && make`)
+1. Local backend build succeeds from `build/` (out-of-source): `cmake .. && make`
 2. GitHub Actions build succeeds (`.github/workflows/main.yml`)
 
 ---

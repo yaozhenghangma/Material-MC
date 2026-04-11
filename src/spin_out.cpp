@@ -1,6 +1,11 @@
 #include "spin_out.h"
 
+#include <iostream>
+
 namespace {
+
+constexpr double kVectorNormEpsilon = 1e-12;
+constexpr double kBasisDeterminantEpsilon = 1e-12;
 
 std::array<double, 3> BuildCartesianFromFractional(const Supercell& supercell, const std::array<double, 3>& fractional) {
     return {
@@ -10,13 +15,85 @@ std::array<double, 3> BuildCartesianFromFractional(const Supercell& supercell, c
     };
 }
 
-std::array<double, 3> BuildSiteCartesian(const Supercell& supercell, int i, int j, int k, int l) {
-    const std::array<double, 3> fractional = {
-        supercell.base_site.coordinate[l][0] + static_cast<double>(i),
-        supercell.base_site.coordinate[l][1] + static_cast<double>(j),
-        supercell.base_site.coordinate[l][2] + static_cast<double>(k)
+double WrapPeriodicComponent(double delta, int period) {
+    if(period <= 0) {
+        return delta;
+    }
+    const double period_double = static_cast<double>(period);
+    return delta - std::round(delta / period_double) * period_double;
+}
+
+double DotProduct(const std::array<double, 3>& left, const std::array<double, 3>& right) {
+    return left[0]*right[0] + left[1]*right[1] + left[2]*right[2];
+}
+
+std::array<double, 3> CrossProduct(const std::array<double, 3>& left, const std::array<double, 3>& right) {
+    return {
+        left[1]*right[2] - left[2]*right[1],
+        left[2]*right[0] - left[0]*right[2],
+        left[0]*right[1] - left[1]*right[0]
     };
-    return BuildCartesianFromFractional(supercell, fractional);
+}
+
+std::array<double, 3> NormalizeVector(const std::array<double, 3>& vector, const char* name) {
+    const double norm = std::sqrt(DotProduct(vector, vector));
+    if(norm <= kVectorNormEpsilon) {
+        std::cerr << "Invalid lattice vector for VESTA coordinate conversion: " << name << " has zero length.\n";
+        exit(-1);
+    }
+    return {
+        vector[0] / norm,
+        vector[1] / norm,
+        vector[2] / norm
+    };
+}
+
+std::array<std::array<double, 3>, 3> BuildNormalizedLatticeDirectionBasis(const Supercell& supercell) {
+    const std::array<double, 3> lattice_a = {
+        supercell.lattice.a[0],
+        supercell.lattice.a[1],
+        supercell.lattice.a[2]
+    };
+    const std::array<double, 3> lattice_b = {
+        supercell.lattice.b[0],
+        supercell.lattice.b[1],
+        supercell.lattice.b[2]
+    };
+    const std::array<double, 3> lattice_c = {
+        supercell.lattice.c[0],
+        supercell.lattice.c[1],
+        supercell.lattice.c[2]
+    };
+
+    return {
+        NormalizeVector(lattice_a, "a"),
+        NormalizeVector(lattice_b, "b"),
+        NormalizeVector(lattice_c, "c")
+    };
+}
+
+std::array<double, 3> ConvertCartesianToDirectionBasis(
+    const std::array<double, 3>& cartesian,
+    const std::array<std::array<double, 3>, 3>& basis) {
+    const std::array<double, 3>& axis_a = basis[0];
+    const std::array<double, 3>& axis_b = basis[1];
+    const std::array<double, 3>& axis_c = basis[2];
+
+    const std::array<double, 3> cross_bc = CrossProduct(axis_b, axis_c);
+    const std::array<double, 3> cross_ca = CrossProduct(axis_c, axis_a);
+    const std::array<double, 3> cross_ab = CrossProduct(axis_a, axis_b);
+
+    const double determinant = DotProduct(axis_a, cross_bc);
+    if(std::abs(determinant) <= kBasisDeterminantEpsilon) {
+        std::cerr << "Invalid lattice basis for VESTA coordinate conversion: normalized a/b/c are linearly dependent.\n";
+        exit(-1);
+    }
+
+    return {
+        DotProduct(cartesian, cross_bc) / determinant,
+        DotProduct(cartesian, cross_ca) / determinant,
+        DotProduct(cartesian, cross_ab) / determinant
+    };
 }
 
 std::array<int, 3> BondColorFromDirection(char direction) {
@@ -160,19 +237,59 @@ int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix)
     auto out = fmt::output_file(output_file_name);
 
     struct BondVector {
-        std::array<double, 3> tail;
+        int source_atom_index;
         std::array<double, 3> delta;
         char direction;
     };
 
+    struct SiteLocator {
+        int i;
+        int j;
+        int k;
+        int l;
+        int atom_index;
+        std::array<double, 3> fractional;
+    };
+
     std::vector<BondVector> bond_vectors;
     std::set<std::string> visited_bonds;
+    const auto normalized_direction_basis = BuildNormalizedLatticeDirectionBasis(supercell);
+
+    std::map<const Site*, SiteLocator> site_locator;
+    int atom_index_counter = 1;
+    for(int i=0; i<supercell.lattice.n_x; i++) {
+        for(int j=0; j<supercell.lattice.n_y; j++) {
+            for(int k=0; k<supercell.lattice.n_z; k++) {
+                for(int l=0; l<supercell.base_site.number; l++) {
+                    site_locator[&supercell.site[i][j][k][l]] = {
+                        i,
+                        j,
+                        k,
+                        l,
+                        atom_index_counter,
+                        {
+                            supercell.base_site.coordinate[l][0] + static_cast<double>(i),
+                            supercell.base_site.coordinate[l][1] + static_cast<double>(j),
+                            supercell.base_site.coordinate[l][2] + static_cast<double>(k)
+                        }
+                    };
+                    atom_index_counter += 1;
+                }
+            }
+        }
+    }
 
     for(int i=0; i<supercell.lattice.n_x; i++) {
         for(int j=0; j<supercell.lattice.n_y; j++) {
             for(int k=0; k<supercell.lattice.n_z; k++) {
                 for(int l=0; l<supercell.base_site.number; l++) {
-                    const auto source_cart = BuildSiteCartesian(supercell, i, j, k, l);
+                    const Site* source_ptr = &supercell.site[i][j][k][l];
+                    const auto source_it = site_locator.find(source_ptr);
+                    if(source_it == site_locator.end()) {
+                        continue;
+                    }
+                    const SiteLocator& source_site = source_it->second;
+
                     for(int shell=0; shell<supercell.site[i][j][k][l].neighbor.size(); shell++) {
                         for(int entry=0; entry<supercell.site[i][j][k][l].neighbor[shell].size(); entry++) {
                             const char direction = supercell.site[i][j][k][l].neighbor_direction[shell][entry];
@@ -180,35 +297,17 @@ int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix)
                                 continue;
                             }
 
-                            Site* neighbor_ptr = supercell.site[i][j][k][l].neighbor[shell][entry];
-                            int ni = -1;
-                            int nj = -1;
-                            int nk = -1;
-                            int nl = -1;
-                            bool found = false;
-                            for(int ii=0; ii<supercell.lattice.n_x && !found; ii++) {
-                                for(int jj=0; jj<supercell.lattice.n_y && !found; jj++) {
-                                    for(int kk=0; kk<supercell.lattice.n_z && !found; kk++) {
-                                        for(int ll=0; ll<supercell.base_site.number; ll++) {
-                                            if(&supercell.site[ii][jj][kk][ll] == neighbor_ptr) {
-                                                ni = ii;
-                                                nj = jj;
-                                                nk = kk;
-                                                nl = ll;
-                                                found = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if(!found) {
+                            const Site* neighbor_ptr = supercell.site[i][j][k][l].neighbor[shell][entry];
+                            const auto target_it = site_locator.find(neighbor_ptr);
+                            if(target_it == site_locator.end()) {
                                 continue;
                             }
+                            const SiteLocator& target_site = target_it->second;
 
-                            std::array<int, 8> left = {i, j, k, l, ni, nj, nk, nl};
-                            std::array<int, 8> right = {ni, nj, nk, nl, i, j, k, l};
+                            std::array<int, 8> left = {source_site.i, source_site.j, source_site.k, source_site.l,
+                                                       target_site.i, target_site.j, target_site.k, target_site.l};
+                            std::array<int, 8> right = {target_site.i, target_site.j, target_site.k, target_site.l,
+                                                        source_site.i, source_site.j, source_site.k, source_site.l};
                             const std::array<int, 8>& key = (left < right) ? left : right;
                             std::ostringstream key_stream;
                             for(int key_index=0; key_index<8; key_index++) {
@@ -223,14 +322,20 @@ int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix)
                             }
                             visited_bonds.insert(key_stream.str());
 
-                            const auto target_cart = BuildSiteCartesian(supercell, ni, nj, nk, nl);
+                            std::array<double, 3> delta_fractional = {
+                                target_site.fractional[0] - source_site.fractional[0],
+                                target_site.fractional[1] - source_site.fractional[1],
+                                target_site.fractional[2] - source_site.fractional[2]
+                            };
+                            delta_fractional[0] = WrapPeriodicComponent(delta_fractional[0], supercell.lattice.n_x);
+                            delta_fractional[1] = WrapPeriodicComponent(delta_fractional[1], supercell.lattice.n_y);
+                            delta_fractional[2] = WrapPeriodicComponent(delta_fractional[2], supercell.lattice.n_z);
+
                             bond_vectors.push_back({
-                                source_cart,
-                                {
-                                    target_cart[0] - source_cart[0],
-                                    target_cart[1] - source_cart[1],
-                                    target_cart[2] - source_cart[2]
-                                },
+                                source_site.atom_index,
+                                ConvertCartesianToDirectionBasis(
+                                    BuildCartesianFromFractional(supercell, delta_fractional),
+                                    normalized_direction_basis),
                                 direction
                             });
                         }
@@ -335,7 +440,7 @@ int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix)
     out.print("VECTR\n");
     for(int i=0; i<bond_vectors.size(); i++) {
         out.print("{} {} {} {} 0\n", i+1, bond_vectors[i].delta[0], bond_vectors[i].delta[1], bond_vectors[i].delta[2]);
-        out.print("{} {} {} {} 0\n", i+1, bond_vectors[i].tail[0], bond_vectors[i].tail[1], bond_vectors[i].tail[2]);
+        out.print("{} 0 0 0 0\n", bond_vectors[i].source_atom_index);
         out.print("0 0 0 0 0\n");
     }
     out.print("0 0 0 0 0\n");

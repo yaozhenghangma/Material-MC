@@ -12,7 +12,7 @@ Current quality gate in CI:
 
 - `.github/workflows/main.yml`
   - installs MPI + build tools
-  - runs `cmake .` and `make`
+  - runs CMake + make build steps
 
 There is currently no configured formatter/linter/test framework in repo-level tooling.
 
@@ -66,8 +66,12 @@ Based on existing architecture, avoid these patterns:
 Current required verification for changes:
 
 1. **Build passes locally**
-   - `cmake .`
-   - `make`
+   - Build from `build/` directory (out-of-source):
+     - `mkdir -p build`
+     - `cd build`
+     - `cmake ..`
+     - `make`
+   - Do **not** run `cmake .` in repository root.
 
 2. **CI build remains green**
    - `.github/workflows/main.yml` build job
@@ -93,6 +97,7 @@ Note: there is no formal unit-test suite yet.
 ## Common Mistakes
 
 - Forgetting to add new source files to CMake target sources.
+- Running in-source builds from repository root (`cmake .`) instead of building under `build/`.
 - Editing hot-loop code without considering performance impact from extra logging/output.
 - Adjusting TOML schema keys without matching parser updates in `ReadSettingFile`.
 - Introducing partial feature logic in multiple files without clear single ownership.
