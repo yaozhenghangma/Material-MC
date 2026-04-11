@@ -174,13 +174,28 @@ Minimal KH input example
    anisotropy = [ 0.0, 0.0, 0.0 ]
    J = -1.0
    K = 2.0
+   G = 0.5
+   Gp = -0.25
 
    [Hamiltonian.BondTypeDirection]
    type1 = "x"
    type2 = "y"
    type3 = "z"
 
-   # G and Gp are optional here and default to 0.0
+Reference reproducible sample
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For a lightweight reproducible KH sanity run, use:
+
+- ``example/kh_minimal/POSCAR``
+- ``example/kh_minimal/input.toml``
+
+This sample intentionally keeps the system and MC schedule minimal while still
+covering:
+
+- KH global couplings ``J``, ``K``, ``G``, ``Gp``
+- required ``[Hamiltonian.BondTypeDirection]`` mapping
+- minimal honeycomb geometry classification into three KH bond types
 
 Initialization
 ~~~~~~~~~~~~~~

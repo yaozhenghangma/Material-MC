@@ -1,0 +1,11 @@
+{"file": ".opencode/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Verify validation failure paths emit clear fail-fast diagnostics"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Check that sanity checkpoints are reproducible and documented via logs/artifacts"}
+{"file": "src/configure_in.cpp", "reason": "Review KH parsing sanity checks and error message clarity"}
+{"file": "src/spin_out.cpp", "reason": "Review direction to color mapping expectations for validation output"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Review documented validation checklist and reproducibility guidance"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify implementation follows backend quality constraints and conventions"}
+{"file": "docs/source/log_output_tutorial.rst", "reason": "Review expected sanity logs/artifacts documentation"}
+{"file": "src/Hamiltonian.cpp", "reason": "Review runtime KH invocation checks for metadata consistency"}
+{"file": "example/kh_minimal/input.toml", "reason": "Verify sample covers required KH keys and mapping"}

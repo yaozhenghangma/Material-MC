@@ -1,0 +1,14 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Ensures validation additions follow backend quality constraints"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Keeps validation outputs reproducible and observable in logs"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Defines backend module/file placement for validation artifacts"}
+{"file": "src/configure_in.cpp", "reason": "KH parameter and BondTypeDirection parse validation patterns"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Aligns parser and runtime sanity checks with fail-fast style"}
+{"file": "src/Hamiltonian.cpp", "reason": "KH runtime invocation and neighbor-direction consistency checks"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Document KH sample configuration and expected validation checkpoints"}
+{"file": "example/kh_minimal/input.toml", "reason": "Canonical minimal KH sample input for validation flow"}
+{"file": "docs/source/log_output_tutorial.rst", "reason": "Document log-based sanity checks for reproducible KH validation"}
+{"file": "src/spin_out.cpp", "reason": "Bond direction to RGB mapping for KH color sanity output"}
+{"file": "example/kh_minimal/POSCAR", "reason": "Minimal honeycomb structure used by KH validation sample"}
+{"file": "src/initialization.cpp", "reason": "KH bond classification and direction metadata initialization path"}

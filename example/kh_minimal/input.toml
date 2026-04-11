@@ -32,7 +32,8 @@ magnetic_field = [ 0.0, 0.0, 0.0 ]
 anisotropy = [ 0.0, 0.0, 0.0 ]
 J = -1.0
 K = 2.0
-# G and Gp are intentionally omitted; parser defaults both to 0.0
+G = 0.5
+Gp = -0.25
 
 [Hamiltonian.BondTypeDirection]
 type1 = "x"

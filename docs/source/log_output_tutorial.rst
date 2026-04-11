@@ -125,3 +125,60 @@ From project root:
 
    # Check method/model lines quickly
    grep -n "Monte Carlo Method\|Model Type" log.txt
+
+KH validation checklist (lightweight and reproducible)
+------------------------------------------------------
+
+Use this checklist with ``example/kh_minimal/`` to sanity-check KH setup end-to-end.
+
+Recommended run (from project root):
+
+.. code-block:: bash
+
+   mpirun -np 1 ./build/MMC -c example/kh_minimal/POSCAR -i example/kh_minimal/input.toml -o kh_validation_output.txt -s kh_validation_spin
+
+Checkpoint A: bond-direction parsing sanity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Confirm KH-specific parser outputs are present in ``log.txt``:
+
+- ``Model Type: Kitaev-Heisenberg model.``
+- ``KH global couplings (J, K, G, Gp): ...``
+- ``KH bond type mapping (type1, type2, type3): x y z``
+
+For the bundled minimal sample, expected coupling line is:
+
+- ``KH global couplings (J, K, G, Gp):     -1.00000      2.00000      0.50000     -0.25000``
+
+Checkpoint B: Hamiltonian path invocation sanity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Confirm KH Hamiltonian dispatch line is present:
+
+- ``Hamiltonian: Kitaev-Heisenberg model (bond-dependent J/K/G/Gp terms).``
+
+This line verifies runtime is on KH energy path, not a Heisenberg fallback.
+
+Checkpoint C: x/y/z color output sanity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For KH model runs, rank 0 writes:
+
+- ``structure_initialized_kh_bond_color.vesta``
+
+In that file, verify ``VECTT`` color lines follow KH direction convention:
+
+- ``x`` bonds -> ``255 0 0`` (red)
+- ``y`` bonds -> ``0 255 0`` (green)
+- ``z`` bonds -> ``0 0 255`` (blue)
+
+Reproducibility checkpoint (same input -> same artifacts)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Run the same command twice and compare checksums:
+
+.. code-block:: bash
+
+   shasum log.txt structure_initialized_kh_bond_color.vesta
+
+For identical environment and inputs, checksums should match across reruns.

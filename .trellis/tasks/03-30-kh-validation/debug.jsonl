@@ -1,0 +1,6 @@
+{"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": "src/Hamiltonian.cpp", "reason": "Primary location for KH invocation metadata mismatch failures"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Reference fail-fast diagnostics while debugging KH validation failures"}
+{"file": "src/configure_in.cpp", "reason": "Primary location for KH parse failures and validation errors"}
+{"file": "src/spin_out.cpp", "reason": "Primary location for KH color output mismatch debugging"}
+{"file": "example/kh_minimal/input.toml", "reason": "Reference sample input while reproducing validation issues"}
