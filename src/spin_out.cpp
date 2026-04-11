@@ -418,7 +418,7 @@ int WriteVestaKhBondColor(Supercell & supercell, std::string output_file_prefix)
     out.print("0 1 1.000 0 0 0\n");
     out.print("COMPS 1\n");
     out.print("LABEL 1 12 1.000 0\n");
-    out.print("PROJT 1 1.000\n");
+    out.print("PROJT 0 1.000\n");
     out.print("BKGRC\n");
     out.print("255 255 255\n");
     out.print("DPTHQ 1 -0.5000 3.5000\n");

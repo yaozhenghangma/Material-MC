@@ -1,0 +1,6 @@
+{"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": "src/spin_out.cpp", "reason": "Primary debugging target for STRUC/VECTR coordinate frame consistency."}
+{"file": "src/initialization.cpp", "reason": "Debug upstream neighbor direction generation for KH bonds."}
+{"file": "src/methods/classical.cpp", "reason": "Ground-state VESTA output entrypoint for reproduction."}
+{"file": "src/methods/parallel_tempering.cpp", "reason": "Parallel tempering VESTA output entrypoint for consistency checks."}
+{"file": "src/MMC.cpp", "reason": "Initialization-phase VESTA output entrypoint for minimal repro."}

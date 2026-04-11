@@ -1,0 +1,6 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": "src/spin_out.cpp", "reason": "VESTA export core implementation with coordinate/vector writing logic."}
+{"file": "src/spin_out.h", "reason": "Header declaration for WriteVestaKhBondColor export API."}
+{"file": "src/initialization.cpp", "reason": "Builds KH neighbor direction templates consumed by export coloring."}
+{"file": "src/MC_structure.h", "reason": "Defines neighbor_direction, lattice, and model data structures used by export."}

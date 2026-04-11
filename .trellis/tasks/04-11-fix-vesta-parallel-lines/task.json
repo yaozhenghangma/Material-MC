@@ -1,0 +1,44 @@
+{
+  "id": "fix-vesta-parallel-lines",
+  "name": "fix-vesta-parallel-lines",
+  "title": "Fix VESTA parallel line rendering in spin_out",
+  "description": "Fix VESTA file export in src/spin_out.cpp so geometrically parallel lines remain parallel when visualized in VESTA.",
+  "status": "planning",
+  "dev_type": "backend",
+  "scope": "output",
+  "priority": "P2",
+  "creator": "yma",
+  "assignee": "yma",
+  "createdAt": "2026-04-11",
+  "completedAt": null,
+  "branch": "feature/fix-vesta-parallel-lines",
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 0,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "implement"
+    },
+    {
+      "phase": 2,
+      "action": "check"
+    },
+    {
+      "phase": 3,
+      "action": "finish"
+    },
+    {
+      "phase": 4,
+      "action": "create-pr"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
