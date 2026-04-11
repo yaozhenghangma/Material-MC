@@ -283,3 +283,35 @@ Implemented KH J/K/G/Gp bond-direction Hamiltonian path, logged convention, and 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Fix macOS ctre build with upstream tag update
+
+**Date**: 2026-04-11
+**Task**: Fix macOS ctre build with upstream tag update
+
+### Summary
+
+Updated ctre submodule to v3.10.0 and fixed dynamic logger.print calls for newer fmt; verified successful local macOS build.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b2ddd31` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
