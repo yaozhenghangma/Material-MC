@@ -177,14 +177,14 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
             tmp_string += fmt::format("{:12.5f} ", supercell.base_site.super_exchange_parameter[i][j]);
         }
         tmp_string += "\n";
-        logger.print(tmp_string);
+        logger.print("{}", tmp_string);
         // Coordination numbers are taken from initialized neighbor links at (0,0,0).
         tmp_string = fmt::format("Coordination number: ");
         for(int j=0; j<supercell.base_site.neighbor_number[i]; j++) {
             tmp_string += fmt::format("{} ", supercell.site[0][0][0][i].neighbor[j].size());
         }
         tmp_string += "\n";
-        logger.print(tmp_string);
+        logger.print("{}", tmp_string);
     }
     logger.print("Initialization:\n");
     logger.print("\n");
