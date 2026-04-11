@@ -347,3 +347,53 @@ Confirmed the issue was perspective display in VESTA and switched PROJT default 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: Fix KH VESTA vector output semantics
+
+**Date**: 2026-04-11
+**Task**: Fix KH VESTA vector output semantics
+
+### Summary
+
+Fixed KH VESTA bond vector export in spin_out.cpp: applied PBC minimum-image vectors, wrote VECTR source atom index records, converted vector components to normalized lattice-direction basis, and updated spec to enforce build/ out-of-source builds.
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| KH bond vector PBC fix | Replaced wrapped-index cartesian subtraction with fractional minimum-image vector handling under PBC before export. |
+| VECTR source index format | Updated VECTR second line to `source_atom_index 0 0 0 0` using STRUC-order 1-based atom index mapping. |
+| Lattice-direction basis output | Converted exported vector components to normalized lattice-axis basis (â, b̂, ĉ) as requested. |
+| Color semantics preserved | Kept KH x/y/z color mapping in VECTT unchanged. |
+| Spec update | Added explicit rule in backend/frontend quality specs: build and test from `build/` using `cmake .. && make`; avoid `cmake .` in repo root. |
+
+**Updated Files**:
+- `src/spin_out.cpp`
+- `.trellis/spec/backend/quality-guidelines.md`
+- `.trellis/spec/frontend/quality-guidelines.md`
+- `.trellis/tasks/archive/2026-04/04-11-fix-vesta-kh-bond-vector/*`
+
+**Validation**:
+- Build succeeded with CMake + Make.
+- KH minimal run generated `structure_initialized_kh_bond_color.vesta` with updated VECTR semantics.
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `220d915` | (see git log) |
+| `4996a71` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

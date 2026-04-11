@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
+- **Total Sessions**: 11
 - **Last Active**: 2026-04-11
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~349 | Active |
+| `journal-1.md` | ~399 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 11 | 2026-04-11 | Fix KH VESTA vector output semantics | `220d915`, `4996a71` |
 | 10 | 2026-04-11 | Fix VESTA projection for parallel-line visualization | `6a2dec2` |
 | 9 | 2026-04-11 | Fix macOS ctre build with upstream tag update | `b2ddd31` |
 | 8 | 2026-04-01 | KH bond color visualization with VESTA output | `286a312`, `0d1994e` |
