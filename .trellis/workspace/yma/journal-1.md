@@ -315,3 +315,35 @@ Updated ctre submodule to v3.10.0 and fixed dynamic logger.print calls for newer
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: Fix VESTA projection for parallel-line visualization
+
+**Date**: 2026-04-11
+**Task**: Fix VESTA projection for parallel-line visualization
+
+### Summary
+
+Confirmed the issue was perspective display in VESTA and switched PROJT default to parallel projection so parallel bonds render correctly by default.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6a2dec2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
