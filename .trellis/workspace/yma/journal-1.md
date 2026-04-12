@@ -397,3 +397,36 @@ Fixed KH VESTA bond vector export in spin_out.cpp: applied PBC minimum-image vec
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: KH epsilon/tolerance configurable via input.toml
+
+**Date**: 2026-04-12
+**Task**: KH epsilon/tolerance configurable via input.toml
+
+### Summary
+
+Added configurable KitaevEpsilon/KitaevTolerance parsing with defaults and validation, wired thresholds into KH direction classification/runtime logging, updated KH example/docs, and archived the completed task.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2f78c39` | (see git log) |
+| `3099207` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
