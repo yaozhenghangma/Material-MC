@@ -2,8 +2,6 @@
 
 namespace {
 
-constexpr double kKhDirectionNormEpsilon = 1e-12;
-constexpr double kKhDirectionParallelTolerance = 1e-6;
 constexpr double kKhDirectionSortTolerance = 1e-9;
 
 std::array<double, 3> BuildBondVectorCartesian(const Supercell& supercell,
@@ -30,11 +28,12 @@ double DotProduct(const std::array<double, 3>& left, const std::array<double, 3>
 }
 
 std::array<double, 3> NormalizeAndCanonicalizeDirection(const std::array<double, 3>& vector,
-                                                        int base_site,
-                                                        int shell,
-                                                        int entry) {
+                                                         double direction_epsilon,
+                                                         int base_site,
+                                                         int shell,
+                                                         int entry) {
     const double norm = std::sqrt(DotProduct(vector, vector));
-    if(norm <= kKhDirectionNormEpsilon) {
+    if(norm <= direction_epsilon) {
         std::cerr << "Invalid KH bond vector during geometry classification: "
                   << "zero-length vector at base site " << base_site
                   << ", shell " << shell
@@ -50,7 +49,7 @@ std::array<double, 3> NormalizeAndCanonicalizeDirection(const std::array<double,
 
     int sign = 1;
     for(int axis=0; axis<3; axis++) {
-        if(std::abs(direction[axis]) > kKhDirectionNormEpsilon) {
+        if(std::abs(direction[axis]) > direction_epsilon) {
             if(direction[axis] < 0.0) {
                 sign = -1;
             }
@@ -71,6 +70,21 @@ std::vector<char> ClassifyKhShellDirections(const Supercell& supercell,
                                             const std::vector<std::vector<int>>& shell_templates,
                                             int base_site,
                                             int shell) {
+    const double direction_epsilon = supercell.base_site.kh_direction_epsilon;
+    const double direction_tolerance = supercell.base_site.kh_direction_tolerance;
+
+    if(direction_epsilon <= 0.0) {
+        std::cerr << "Invalid KH direction epsilon in runtime data: expected > 0, got "
+                  << direction_epsilon << ".\n";
+        exit(-1);
+    }
+
+    if(direction_tolerance <= 0.0 || direction_tolerance >= 1.0) {
+        std::cerr << "Invalid KH direction tolerance in runtime data: expected 0 < value < 1, got "
+                  << direction_tolerance << ".\n";
+        exit(-1);
+    }
+
     if(shell_templates.empty()) {
         std::cerr << "Missing KH bonds for classification: "
                   << "base site " << base_site
@@ -95,14 +109,19 @@ std::vector<char> ClassifyKhShellDirections(const Supercell& supercell,
 
     for(int entry=0; entry<shell_templates.size(); entry++) {
         std::array<double, 3> bond_vector = BuildBondVectorCartesian(supercell, shell_templates[entry], base_site);
-        directions.push_back(NormalizeAndCanonicalizeDirection(bond_vector, base_site, shell, entry));
+        directions.push_back(NormalizeAndCanonicalizeDirection(
+            bond_vector,
+            direction_epsilon,
+            base_site,
+            shell,
+            entry));
     }
 
     for(int entry=0; entry<directions.size(); entry++) {
         int matched_group = -1;
         for(int group=0; group<groups.size(); group++) {
             const double parallel_score = std::abs(DotProduct(directions[entry], groups[group].axis));
-            if(parallel_score >= 1.0 - kKhDirectionParallelTolerance) {
+            if(parallel_score >= 1.0 - direction_tolerance) {
                 if(matched_group != -1) {
                     std::cerr << "Ambiguous KH bond classification: "
                               << "base site " << base_site

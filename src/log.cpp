@@ -145,6 +145,8 @@ int WriteLog(Supercell & supercell, MonteCarlo & monte_carlo, fmt::v8::ostream &
     if(supercell.lattice.model_type == ModelType::Kitaev_Heisenberg) {
         logger.print("KH global couplings (J, K, G, Gp): {:12.5f} {:12.5f} {:12.5f} {:12.5f}\n", \
         supercell.base_site.kh_j, supercell.base_site.kh_k, supercell.base_site.kh_g, supercell.base_site.kh_gp);
+        logger.print("KH direction thresholds (KitaevEpsilon, KitaevTolerance): {:12.5e} {:12.5e}\n",
+        supercell.base_site.kh_direction_epsilon, supercell.base_site.kh_direction_tolerance);
         logger.print("KH convention: H_ij = J*Si*Sj + K*Si_gamma*Sj_gamma + G*(Si_alpha*Sj_beta + Si_beta*Sj_alpha) + Gp*(Si_alpha*Sj_gamma + Si_gamma*Sj_alpha + Si_beta*Sj_gamma + Si_gamma*Sj_beta).\n");
         logger.print("KH cyclic mapping: gamma=x => (alpha,beta)=(y,z), gamma=y => (alpha,beta)=(z,x), gamma=z => (alpha,beta)=(x,y).\n");
         if(supercell.base_site.kh_bond_type_direction.size() == 3) {

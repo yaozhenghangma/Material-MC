@@ -58,6 +58,12 @@ public:
     // Index: 0->type1, 1->type2, 2->type3. Values are x/y/z.
     std::vector<char> kh_bond_type_direction = {'x', 'y', 'z'};
 
+    // KH geometry-classification thresholds from [Hamiltonian].
+    // - kh_direction_epsilon: near-zero threshold for vector normalization/sign canonicalization.
+    // - kh_direction_tolerance: near-parallel threshold for grouping bond directions.
+    double kh_direction_epsilon = 1e-12;
+    double kh_direction_tolerance = 1e-6;
+
     template <class Archive>
     void serialize(Archive & ar) {
         ar(number,
@@ -76,7 +82,9 @@ public:
            kh_k,
            kh_g,
            kh_gp,
-           kh_bond_type_direction);
+           kh_bond_type_direction,
+           kh_direction_epsilon,
+           kh_direction_tolerance);
     }
 };
 

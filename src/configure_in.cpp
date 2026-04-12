@@ -143,6 +143,44 @@ void ReadKhGlobalCouplings(Supercell& supercell,
     TryReadHamiltonianNumber(hamiltonian["Gp"], "Gp", input_file, supercell.base_site.kh_gp);
 }
 
+void ReadKhDirectionThresholds(Supercell& supercell,
+                               const toml::table& data,
+                               const std::string& input_file,
+                               bool kh_model_selected) {
+    auto hamiltonian = data["Hamiltonian"];
+
+    // Defaults preserve existing KH geometry-classification behavior.
+    supercell.base_site.kh_direction_epsilon = 1e-12;
+    supercell.base_site.kh_direction_tolerance = 1e-6;
+
+    // Keep non-KH behavior untouched.
+    if(!kh_model_selected || !hamiltonian) {
+        return;
+    }
+
+    TryReadHamiltonianNumber(hamiltonian["KitaevEpsilon"], "KitaevEpsilon", input_file,
+                             supercell.base_site.kh_direction_epsilon);
+    TryReadHamiltonianNumber(hamiltonian["KitaevTolerance"], "KitaevTolerance", input_file,
+                             supercell.base_site.kh_direction_tolerance);
+
+    if(supercell.base_site.kh_direction_epsilon <= 0.0) {
+        std::cerr << "Invalid value for [Hamiltonian].KitaevEpsilon in "
+                  << input_file
+                  << ": expected > 0, got "
+                  << supercell.base_site.kh_direction_epsilon << ".\n";
+        exit(-1);
+    }
+
+    if(supercell.base_site.kh_direction_tolerance <= 0.0
+    || supercell.base_site.kh_direction_tolerance >= 1.0) {
+        std::cerr << "Invalid value for [Hamiltonian].KitaevTolerance in "
+                  << input_file
+                  << ": expected 0 < value < 1, got "
+                  << supercell.base_site.kh_direction_tolerance << ".\n";
+        exit(-1);
+    }
+}
+
 } // namespace
 
 /**
@@ -332,6 +370,10 @@ int ReadSettingFile(Supercell & supercell, MonteCarlo & monte_carlo, std::string
         // KH global couplings are only consumed when KH model is selected.
         // Missing values default to 0; invalid numeric types fail fast with context.
         ReadKhGlobalCouplings(supercell, data, input_file, kh_model_selected);
+
+        // KH direction-classification thresholds are optional and model-scoped.
+        // Missing values keep backward-compatible defaults.
+        ReadKhDirectionThresholds(supercell, data, input_file, kh_model_selected);
 
         // KH bond-type to direction mapping is required for KH model only.
         ReadKhBondTypeDirectionMapping(supercell, data, input_file, kh_model_selected);

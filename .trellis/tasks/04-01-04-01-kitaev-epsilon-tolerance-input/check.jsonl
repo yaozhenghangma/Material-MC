@@ -1,0 +1,6 @@
+{"file": ".opencode/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": "src/configure_in.cpp", "reason": "Verify fallback defaults and numeric parsing conventions"}
+{"file": "src/initialization.cpp", "reason": "Verify KH logic consumes configured epsilon and tolerance"}
+{"file": "src/log.cpp", "reason": "Runtime verification point for KH-specific values"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Ensure docs match parser keys and defaults"}

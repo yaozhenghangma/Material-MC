@@ -1,0 +1,8 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Parser/schema changes must stay synchronized with ReadSettingFile"}
+{"file": "src/configure_in.cpp", "reason": "Central TOML parser and default-value pattern location"}
+{"file": "src/MC_structure.h", "reason": "Store runtime-configurable KH fields in shared structs"}
+{"file": "src/initialization.cpp", "reason": "KH classification uses hardcoded tolerances to replace"}
+{"file": "example/kh_minimal/input.toml", "reason": "Canonical KH example should include new keys"}
+{"file": "docs/source/input_toml_tutorial.rst", "reason": "Document new input.toml keys and defaults"}

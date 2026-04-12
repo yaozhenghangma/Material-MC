@@ -65,6 +65,8 @@ A complete template
    custom = false
    magnetic_field = [ 0.0, 0.0, 0.0 ]
    anisotropy = [ 0.0, 0.0, 0.0 ]
+   KitaevEpsilon = 1e-12       # KH-only direction epsilon (optional)
+   KitaevTolerance = 1e-6      # KH-only direction grouping tolerance (optional)
    J = 0.0                    # KH-only global coupling (optional)
    K = 0.0                    # KH-only global coupling (optional)
    G = 0.0                    # KH-only global coupling (optional)
@@ -135,6 +137,8 @@ Hamiltonian
 
 When ``model = "Kitaev-Heisenberg"`` (also accepts ``"KH"``), you can additionally provide one global coupling set:
 
+- ``KitaevEpsilon``: KH bond-direction normalization/sign epsilon (optional, default ``1e-12``)
+- ``KitaevTolerance``: KH near-parallel grouping tolerance (optional, default ``1e-6``; must satisfy ``0 < value < 1``)
 - ``J``: global Heisenberg coupling (optional, default ``0`` when omitted)
 - ``K``: global Kitaev coupling (optional, default ``0`` when omitted)
 - ``G``: global Gamma coupling (optional, default ``0`` when omitted)
@@ -160,7 +164,9 @@ The runtime classifier groups honeycomb bond geometry into three deterministic b
 this table.
 
 .. note::
-   KH coupling fields are parsed only for the Kitaev-Heisenberg model. Each value must be numeric (integer or floating-point).
+   KH-only fields (``KitaevEpsilon``, ``KitaevTolerance``, ``J``, ``K``, ``G``, ``Gp``)
+   are parsed only for the Kitaev-Heisenberg model. Each value must be numeric
+   (integer or floating-point).
 
 Minimal KH input example
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,6 +178,8 @@ Minimal KH input example
    custom = false
    magnetic_field = [ 0.0, 0.0, 0.0 ]
    anisotropy = [ 0.0, 0.0, 0.0 ]
+   KitaevEpsilon = 1e-12
+   KitaevTolerance = 1e-6
    J = -1.0
    K = 2.0
    G = 0.5
@@ -194,6 +202,7 @@ This sample intentionally keeps the system and MC schedule minimal while still
 covering:
 
 - KH global couplings ``J``, ``K``, ``G``, ``Gp``
+- KH direction thresholds ``KitaevEpsilon`` and ``KitaevTolerance``
 - required ``[Hamiltonian.BondTypeDirection]`` mapping
 - minimal honeycomb geometry classification into three KH bond types
 
