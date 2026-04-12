@@ -45,7 +45,9 @@ Based on existing architecture, avoid these patterns:
 1. **Preserve header/source pairing and include guard style**
    - Examples: `log.h/.cpp`, `result_out.h/.cpp`.
    - Headers must include the STL/system headers required by their declarations (for example, `std::string`/`std::vector` in function signatures).
+   - If a declaration in `foo.h` needs a type from another header, include that dependency in `foo.h` (do not rely on `foo.cpp` to supply declaration-time dependencies).
    - Keep `.cpp` includes implementation-focused: include the paired header first, then only additional headers needed by definitions.
+   - Treat transitive includes as unstable implementation details; each touched header should be self-sufficient for its own declarations.
 
 2. **Register new source files in `CMakeLists.txt`**
    - Use `target_sources(MMC PRIVATE ...)`.
