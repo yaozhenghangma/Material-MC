@@ -2,6 +2,9 @@
 description: |
   Code and tech search expert. Pure research, no code modifications. Finds files, patterns, and tech solutions.
 mode: subagent
+model: cpa/gpt-5.3-codex
+variant: high
+reasoningEffort: high
 permission:
   read: allow
   write: deny

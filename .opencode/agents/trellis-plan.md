@@ -2,6 +2,9 @@
 description: |
   Multi-Agent Pipeline planner. Analyzes requirements and produces a fully configured task directory ready for dispatch.
 mode: primary
+model: cpa/gpt-5.3-codex
+variant: xhigh
+reasoningEffort: xhigh
 permission:
   read: allow
   write: allow

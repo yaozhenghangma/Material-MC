@@ -2,6 +2,9 @@
 description: |
   Code quality check expert. Reviews code changes against specs and self-fixes issues.
 mode: subagent
+model: cpa/gpt-5.3-codex
+variant: high
+reasoningEffort: high
 permission:
   read: allow
   write: allow

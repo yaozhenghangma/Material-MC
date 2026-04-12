@@ -2,6 +2,9 @@
 description: |
   Multi-Agent Pipeline main dispatcher. Pure dispatcher. Only responsible for calling subagents and scripts in phase order.
 mode: primary
+model: cpa/gpt-5.3-codex
+variant: high
+reasoningEffort: high
 permission:
   read: allow
   write: deny

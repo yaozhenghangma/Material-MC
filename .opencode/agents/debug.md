@@ -2,6 +2,9 @@
 description: |
   Issue fixing expert. Understands issues, fixes against specs, and verifies fixes. Precise fixes only.
 mode: subagent
+model: cpa/gpt-5.3-codex
+variant: xhigh
+reasoningEffort: xhigh
 permission:
   read: allow
   write: allow
