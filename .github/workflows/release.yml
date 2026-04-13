@@ -24,6 +24,7 @@ jobs:
           rm -rf submodules/ctre/tests
           rm -rf submodules/fmt/test
           rm -rf submodules/scnlib/test
+          rm -rf submodules/scnlib/tests
           rm -rf submodules/toml++/external
           rm -rf submodules/toml++/tests
 

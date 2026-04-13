@@ -11,7 +11,7 @@
 
 #include <ctll.hpp>
 #include <ctre.hpp>
-#include <scn/scn.h>
+#include <scn/scan.h>
 #include <toml++/toml.h>
 
 #include "constants.h"

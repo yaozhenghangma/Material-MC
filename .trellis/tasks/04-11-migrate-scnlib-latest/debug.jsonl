@@ -1,1 +1,8 @@
 {"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": "src/structure_in.cpp", "reason": "Primary failure surface for scan API and format behavior changes"}
+{"file": "src/structure_in.h", "reason": "Include path or type resolution issues surface here"}
+{"file": "CMakeLists.txt", "reason": "Debug target naming and linking errors after submodule bump"}
+{"file": "submodules/scnlib/CMakeLists.txt", "reason": "Debug upstream option and target export changes"}
+{"file": "submodules/scnlib/include/scn/detail/config.h", "reason": "Version sanity check during mismatch investigation"}
+{"file": ".github/workflows/main.yml", "reason": "Debug CI-only Linux build regressions"}
+{"file": ".github/workflows/release.yml", "reason": "Debug release-time submodule packaging regressions"}

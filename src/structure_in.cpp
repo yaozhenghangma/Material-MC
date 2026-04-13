@@ -1,5 +1,39 @@
 #include "structure_in.h"
 
+namespace {
+
+bool ScanDouble(const std::string& line, double& value) {
+    if (auto result = scn::scan<double>(line, "{}")) {
+        value = result->value();
+        return true;
+    }
+    return false;
+}
+
+bool ScanTripleSequential(const std::string& line, std::vector<double>& values) {
+    if (auto result = scn::scan<double, double, double>(line, "{} {} {}")) {
+        const auto parsed = result->values();
+        values[0] = std::get<0>(parsed);
+        values[1] = std::get<1>(parsed);
+        values[2] = std::get<2>(parsed);
+        return true;
+    }
+    return false;
+}
+
+bool ScanTriplePositional(const std::string& line, std::vector<double>& values) {
+    if (auto result = scn::scan<double, double, double>(line, "{0} {1} {2}")) {
+        const auto parsed = result->values();
+        values[0] = std::get<0>(parsed);
+        values[1] = std::get<1>(parsed);
+        values[2] = std::get<2>(parsed);
+        return true;
+    }
+    return false;
+}
+
+} // namespace
+
 /**
  * @file structure_in.cpp
  * @brief POSCAR reader that loads lattice vectors and magnetic base sites.
@@ -24,15 +58,15 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
 
     getline(in, str); // Comment line.
     getline(in, str); // Lattice constant.
-    scn::scan(str, "{}", supercell.lattice.scaling);
+    ScanDouble(str, supercell.lattice.scaling);
 
     // Vector a, b and c.
     getline(in, str); 
-    scn::scan(str, "{} {} {}", supercell.lattice.a[0], supercell.lattice.a[1], supercell.lattice.a[2]);
+    ScanTripleSequential(str, supercell.lattice.a);
     getline(in, str); 
-    scn::scan(str, "{} {} {}", supercell.lattice.b[0], supercell.lattice.b[1], supercell.lattice.b[2]);
+    ScanTripleSequential(str, supercell.lattice.b);
     getline(in, str); 
-    scn::scan(str, "{} {} {}", supercell.lattice.c[0], supercell.lattice.c[1], supercell.lattice.c[2]);
+    ScanTripleSequential(str, supercell.lattice.c);
 
     // All elements.
     std::vector<std::string> elements;
@@ -90,7 +124,7 @@ int ReadPOSCAR(Supercell & supercell, std::string cell_structure_file) {
 
                 for(int j=0; j<elements_number[i]; j++) {
                     getline(in, str);
-                    scn::scan(str, "{0} {1} {2}", tmp_coordinate[0], tmp_coordinate[1], tmp_coordinate[2]);
+                    ScanTriplePositional(str, tmp_coordinate);
                     supercell.base_site.coordinate.push_back(tmp_coordinate);
                     supercell.base_site.elements.push_back(elements[i]);
                     supercell.base_site.spin_scaling.push_back(spin_scaling[k]);

@@ -1,2 +1,6 @@
 {"file": ".opencode/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
 {"file": ".opencode/commands/trellis/check-backend.md", "reason": "Backend check spec"}
+{"file": ".github/workflows/main.yml", "reason": "Linux CI build path must stay green after migration"}
+{"file": ".github/workflows/release.yml", "reason": "Release packaging flow must remain compatible with submodule update"}
+{"file": "CMakeLists.txt", "reason": "Verify root build and link integration after scnlib update"}
+{"file": "src/structure_in.cpp", "reason": "Validate migrated scan API behavior and compilation"}

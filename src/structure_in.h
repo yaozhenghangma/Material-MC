@@ -7,7 +7,7 @@
 
 #include <ctll.hpp>
 #include <ctre.hpp>
-#include <scn/scn.h>
+#include <scn/scan.h>
 
 #include "MC_structure.h"
 

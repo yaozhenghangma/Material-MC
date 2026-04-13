@@ -1,2 +1,13 @@
 {"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
 {"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required build and verification conventions and backend change constraints"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Confirms parser and build file ownership in src and root CMakeLists"}
+{"file": "CMakeLists.txt", "reason": "Main integration point for scnlib and link target scn::scn"}
+{"file": ".gitmodules", "reason": "Submodule source definition for submodules/scnlib"}
+{"file": "src/structure_in.h", "reason": "Direct public include dependency on scn/scn.h"}
+{"file": "src/structure_in.cpp", "reason": "Current scn::scan call sites in POSCAR parsing"}
+{"file": "src/configure_in.h", "reason": "Header-level include of scn/scn.h possibly impacted by migration"}
+{"file": "submodules/scnlib/CMakeLists.txt", "reason": "Current exported target names and upstream CMake behavior"}
+{"file": "submodules/scnlib/include/scn/detail/config.h", "reason": "Confirm currently vendored scnlib version and migration delta"}
+{"file": "submodules/scnlib/CHANGELOG.md", "reason": "API and behavior history reference from legacy 0.4"}
+{"file": "submodules/scnlib/README.md", "reason": "Documented API and CMake usage patterns"}
