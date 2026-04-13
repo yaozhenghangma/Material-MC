@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-04-13
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~464 | Active |
+| `journal-1.md` | ~497 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 14 | 2026-04-13 | Migrate scnlib to v4 and adapt parser | `b0e8a71`, `c5d85e5` |
 | 13 | 2026-04-13 | Archive include-header task | `aab46ea` |
 | 12 | 2026-04-12 | KH epsilon/tolerance configurable via input.toml | `2f78c39`, `3099207` |
 | 11 | 2026-04-11 | Fix KH VESTA vector output semantics | `220d915`, `4996a71` |

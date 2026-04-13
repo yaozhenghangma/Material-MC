@@ -462,3 +462,36 @@ Archived completed task 04-01-cpp-include-to-header after validating include-str
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: Migrate scnlib to v4 and adapt parser
+
+**Date**: 2026-04-13
+**Task**: Migrate scnlib to v4 and adapt parser
+
+### Summary
+
+Upgraded scnlib submodule to v4.0.1, migrated scn includes and scan API usage in POSCAR parser, fixed release workflow prune path for scnlib/tests, verified build and smoke run, then archived task 04-11-migrate-scnlib-latest.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b0e8a71` | (see git log) |
+| `c5d85e5` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
